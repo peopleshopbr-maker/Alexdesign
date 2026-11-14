@@ -1,0 +1,2 @@
+/** @type {import('tailwindcss').Config} */
+export default { content: ['./index.html', './src/**/*.{ts,tsx}'], theme: { extend: { colors: { paper: '#EEEEEE', panel: '#E6E6E6', rule: '#D5D5D5', steel: '#5C7180', accent: '#1F41A8', ink: '#1F41A8', orange: '#FB6221' }, fontFamily: { sans: ['Almarai', 'sans-serif'], serif: ['Instrument Serif', 'serif'] }, letterSpacing: { tightest: '-.055em' } } }, plugins: [] }
