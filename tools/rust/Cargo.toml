@@ -1,0 +1,10 @@
+[package]
+name = "alexdesign-glb-cli"
+version = "0.1.0"
+edition = "2021"
+description = "Auditor binário de alta velocidade para arquivos GLB/glTF 2.0 no ecossistema AlexDesign"
+
+[profile.release]
+opt-level = 3
+lto = true
+strip = true
