@@ -47,7 +47,7 @@ export const MeshHierarchyDrawer: React.FC<MeshHierarchyDrawerProps> = ({
   const hiddenCount = meshes.filter((m) => !m.visible).length;
 
   return (
-    <aside className="absolute top-20 left-5 z-10 w-72 max-h-[calc(100vh-19rem)] rounded-xl bg-[#141923]/95 border border-slate-700/80 shadow-2xl flex flex-col overflow-hidden text-xs">
+    <aside className="absolute top-4 right-4 z-10 w-72 max-h-[calc(100vh-7rem)] rounded-xl bg-[#141923]/95 border border-slate-700/80 shadow-2xl flex flex-col overflow-hidden text-xs">
       <div className="px-3.5 py-2.5 border-b border-slate-800 flex items-center justify-between gap-2">
         <div className="flex items-center gap-2 font-semibold text-slate-100">
           <Layers className="w-3.5 h-3.5 text-orange-400" />

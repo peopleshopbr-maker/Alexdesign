@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { TransformControls } from 'three/addons/controls/TransformControls.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
@@ -9,19 +10,26 @@ import { HDRLoader } from 'three/addons/loaders/HDRLoader.js';
 import { EXRLoader } from 'three/addons/loaders/EXRLoader.js';
 import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
 import { GLTFExporter } from 'three/addons/exporters/GLTFExporter.js';
+import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 import JSZip from 'jszip';
 import {
   Archive,
   Bone,
   Box,
+  Camera,
   ChevronDown,
-  ChevronUp,
+  ChevronLeft,
+  ChevronRight,
+  Code2,
   Download,
   Eraser,
+  Eye,
   Grid,
   ImagePlus,
   Layers,
-  Link2,
   Maximize2,
   MousePointer2,
   Paintbrush,
@@ -30,6 +38,7 @@ import {
   Play,
   RotateCcw,
   ShieldCheck,
+  SlidersHorizontal,
   Sparkles,
   Sun,
   Undo2,
@@ -40,13 +49,17 @@ import {
 import {
   RIG_PRESET_DEFINITIONS,
   RigPreset,
-} from '../addon/blenderAddonTemplates';
+} from '../types/studioConfig';
 import {
   PROCEDURAL_PBR_PRESETS,
   ProceduralPbrParams,
   ThreePbrTextureBundle,
   createThreePbrTextureBundle,
 } from '../utils/pbrTextureGenerator';
+import {
+  SubstanceTextureSetRequest,
+  loadSubstanceBundleToThree,
+} from '../utils/substanceImporter';
 import {
   auditThreeScene,
   ContainerCheckResult,
@@ -68,6 +81,20 @@ import {
   buildThreeLightFromSpec,
   renderSceneToPngBlob,
 } from '../utils/studioLighting';
+import { BooleanOperation, performMeshBoolean } from '../utils/csgBoolean';
+import {
+  PRIMITIVE_CATALOG,
+  PrimitiveShapeKind,
+  SelectedObjectInspector,
+  SplineInteractionType,
+  SplineMaterialStyle,
+  SplineTemplateId,
+  SplineToolMode,
+  applySplineStyleToPhysicalMaterial,
+  createSplinePrimitiveGeometry,
+  generateReactThreeFiberCode,
+  generateThreeJsSceneCode,
+} from '../utils/splineSceneObjects';
 import { FileVerificationModal } from './FileVerificationModal';
 import {
   MeshHierarchyDrawer,
@@ -76,10 +103,12 @@ import {
 } from './MeshHierarchyDrawer';
 import { LightingRenderPanel } from './LightingRenderPanel';
 import { HdriEnvironmentPanel } from './HdriEnvironmentPanel';
+import { SplineDesignPanel } from './SplineDesignPanel';
+import { SplineCodeExportModal } from './SplineCodeExportModal';
 
 type ShadingMode = 'pbr' | 'uv_checker' | 'normals' | 'cel_borde';
 type CameraPreset = 'q34' | 'front' | 'side' | 'back';
-type ToolMode = 'orbit' | 'paint' | 'assign_mat';
+type ToolMode = SplineToolMode;
 
 interface PbrMaterialPreset {
   id: string;
@@ -144,6 +173,7 @@ interface Viewport3DProps {
   onConfigChange: (patch: Partial<ViewportSceneConfig>) => void;
   onImportedUvs?: (meshes: ImportedUvMesh[] | null) => void;
   proceduralMaterialRequest?: { params: ProceduralPbrParams; nonce: number } | null;
+  substanceTextureRequest?: SubstanceTextureSetRequest | null;
   pendingImportFiles?: File[] | null;
   onConsumedPendingImport?: () => void;
   exportZipNonce?: number;
@@ -315,6 +345,7 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
   onConfigChange,
   onImportedUvs,
   proceduralMaterialRequest,
+  substanceTextureRequest,
   pendingImportFiles,
   onConsumedPendingImport,
   exportZipNonce,
@@ -329,6 +360,7 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
   const textureFileInputRef = useRef<HTMLInputElement>(null);
   const pbrChannelInputRef = useRef<HTMLInputElement>(null);
   const hdriFileInputRef = useRef<HTMLInputElement>(null);
+  const videoFileInputRef = useRef<HTMLInputElement>(null);
 
   const [shadingMode, setShadingMode] = useState<ShadingMode>(
     config.shaderPreset === 'PBR_PRINCIPLED' ? 'pbr' : 'cel_borde'
@@ -339,7 +371,27 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
   const [roughnessOverride, setRoughnessOverride] = useState(0.55);
   const [metalnessOverride, setMetalnessOverride] = useState(0.15);
   const [dockExpanded, setDockExpanded] = useState(true);
+  const [openSections, setOpenSections] = useState<{
+    file: boolean;
+    view: boolean;
+    anim: boolean;
+    rig: boolean;
+    tools: boolean;
+    pbr: boolean;
+  }>({
+    file: true,
+    view: false,
+    anim: false,
+    rig: false,
+    tools: false,
+    pbr: false,
+  });
+  const toggleSection = (key: keyof typeof openSections) => {
+    setOpenSections((prev) => ({ ...prev, [key]: !prev[key] }));
+  };
   const [contextLost, setContextLost] = useState(false);
+  const [webglError, setWebglError] = useState<string | null>(null);
+  const [retryWebglNonce, setRetryWebglNonce] = useState(0);
 
   const [loadedAsset, setLoadedAsset] = useState<LoadedAssetInfo | null>(null);
   const [isLoadingModel, setIsLoadingModel] = useState(false);
@@ -348,8 +400,6 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
   const [loadError, setLoadError] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [showSkeleton, setShowSkeleton] = useState(false);
-  const [showUrlBar, setShowUrlBar] = useState(false);
-  const [urlInput, setUrlInput] = useState('');
   const [verificationReport, setVerificationReport] = useState<FileVerificationReport | null>(null);
 
   const [showMeshDrawer, setShowMeshDrawer] = useState(false);
@@ -396,6 +446,18 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
   >('map');
   const [activeProceduralLabel, setActiveProceduralLabel] = useState<string | null>(null);
 
+  const [playMode, setPlayMode] = useState(false);
+  const [physicsActive, setPhysicsActive] = useState(false);
+  const [bloomEnabled, setBloomEnabled] = useState(false);
+  const [bloomStrength, setBloomStrength] = useState(0.55);
+  const [hideDefaultBase, setHideDefaultBase] = useState(false);
+  const [primitiveCount, setPrimitiveCount] = useState(0);
+  const [selectedObjectInspector, setSelectedObjectInspector] =
+    useState<SelectedObjectInspector | null>(null);
+  const [codeExportModalOpen, setCodeExportModalOpen] = useState(false);
+  const [exportedThreeCode, setExportedThreeCode] = useState('');
+  const [exportedReactCode, setExportedReactCode] = useState('');
+
   const loadedAssetNameRef = useRef<string | null>(null);
   loadedAssetNameRef.current = loadedAsset?.name ?? null;
   const exportStatusTimerRef = useRef<number | null>(null);
@@ -427,6 +489,11 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
     customMatColor,
     brushColor,
     brushSize,
+    playMode,
+    physicsActive,
+    bloomEnabled,
+    bloomStrength,
+    hideDefaultBase,
     camTransitioning: false,
     camTarget: 'q34' as CameraPreset,
   });
@@ -456,6 +523,11 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
   stateRef.current.customMatColor = customMatColor;
   stateRef.current.brushColor = brushColor;
   stateRef.current.brushSize = brushSize;
+  stateRef.current.playMode = playMode;
+  stateRef.current.physicsActive = physicsActive;
+  stateRef.current.bloomEnabled = bloomEnabled;
+  stateRef.current.bloomStrength = bloomStrength;
+  stateRef.current.hideDefaultBase = hideDefaultBase;
 
   const requestRenderRef = useRef<(() => void) | null>(null);
   const applyMaterialsRef = useRef<(() => void) | null>(null);
@@ -463,6 +535,7 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
   const rebuildRigPreviewRef = useRef<((preset: RigPreset) => void) | null>(null);
   const applyMaterialToAllRef = useRef<(() => void) | null>(null);
   const applyProceduralBundleRef = useRef<((params: ProceduralPbrParams) => void) | null>(null);
+  const applySubstanceBundleRef = useRef<((req: SubstanceTextureSetRequest) => void) | null>(null);
   const loadPbrChannelTextureRef = useRef<
     ((channel: 'map' | 'roughnessMap' | 'metalnessMap' | 'normalMap' | 'aoMap', file: File) => void) | null
   >(null);
@@ -473,7 +546,6 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
   const generateAutoUvRef = useRef<(() => void) | null>(null);
   const exportZipRef = useRef<(() => void) | null>(null);
   const loadFilesRef = useRef<((files: FileList | File[]) => void) | null>(null);
-  const loadUrlRef = useRef<((rawUrl: string) => void) | null>(null);
   const loadSampleRef = useRef<(() => void) | null>(null);
   const exportModelRef = useRef<((format: 'glb' | 'gltf') => void) | null>(null);
   const verifyCurrentSceneRef = useRef<(() => void) | null>(null);
@@ -490,60 +562,127 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
   const syncRendererSettingsRef = useRef<(() => void) | null>(null);
   const renderStudioPngRef = useRef<(() => void) | null>(null);
 
+  const addPrimitiveRef = useRef<((kind: PrimitiveShapeKind) => void) | null>(null);
+  const applyTemplateRef = useRef<((templateId: SplineTemplateId) => void) | null>(null);
+  const runBooleanRef = useRef<((op: BooleanOperation) => void) | null>(null);
+  const updateObjectTransformRef = useRef<
+    ((group: 'position' | 'rotationDeg' | 'scale', idx: 0 | 1 | 2, val: number) => void) | null
+  >(null);
+  const updateObjectMaterialRef = useRef<
+    ((patch: {
+      materialStyle?: SplineMaterialStyle;
+      color?: string;
+      roughness?: number;
+      metalness?: number;
+      transmission?: number;
+      emissiveIntensity?: number;
+    }) => void) | null
+  >(null);
+  const updateObjectInteractionRef = useRef<((interaction: SplineInteractionType) => void) | null>(null);
+  const toggleObjectPhysicsRef = useRef<((enabled: boolean) => void) | null>(null);
+  const applyVideoTextureRef = useRef<((file: File) => void) | null>(null);
+  const duplicateSelectedRef = useRef<(() => void) | null>(null);
+  const deleteSelectedRef = useRef<(() => void) | null>(null);
+  const selectObjectByIdRef = useRef<((id: string | null) => void) | null>(null);
+  const openCodeExportRef = useRef<(() => void) | null>(null);
+  const syncSplineModeRef = useRef<(() => void) | null>(null);
+
   useEffect(() => {
     const container = mountRef.current;
     if (!container) return;
 
-    const isSoftwareGl = (() => {
-      const probe = document.createElement('canvas').getContext('webgl2');
-      if (!probe) return true;
-      const ext = probe.getExtension('WEBGL_debug_renderer_info');
-      const param = ext ? ext.UNMASKED_RENDERER_WEBGL : probe.RENDERER;
-      const gpu = String(probe.getParameter(param));
-      probe.getExtension('WEBGL_lose_context')?.loseContext();
-      return /SwiftShader|llvmpipe|softpipe|Software|Basic Render/i.test(gpu);
-    })();
+    setWebglError(null);
+    let cleanupFn: (() => void) | null = null;
+    let renderer: THREE.WebGLRenderer | null = null;
 
-    const width = container.clientWidth || 960;
-    const height = container.clientHeight || 600;
+    try {
+      const isSoftwareGl = (() => {
+        try {
+          const probe =
+            document.createElement('canvas').getContext('webgl2') ||
+            document.createElement('canvas').getContext('webgl');
+          if (!probe) return true;
+          const ext = probe.getExtension('WEBGL_debug_renderer_info');
+          const param = ext ? ext.UNMASKED_RENDERER_WEBGL : probe.RENDERER;
+          const gpu = String(probe.getParameter(param) || '');
+          probe.getExtension('WEBGL_lose_context')?.loseContext();
+          return /SwiftShader|llvmpipe|softpipe|Software|Basic Render/i.test(gpu);
+        } catch {
+          return false;
+        }
+      })();
 
-    const renderer = new THREE.WebGLRenderer({
-      antialias: !isSoftwareGl,
-      powerPreference: 'high-performance',
-    });
-    renderer.outputColorSpace = THREE.SRGBColorSpace;
-    renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.1;
-    renderer.setPixelRatio(isSoftwareGl ? 1 : Math.min(window.devicePixelRatio, 2));
-    renderer.setSize(width, height);
-    renderer.shadowMap.enabled = !isSoftwareGl;
-    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-    container.appendChild(renderer.domElement);
+      const width = container.clientWidth || 960;
+      const height = container.clientHeight || 600;
 
-    const onContextLost = (e: Event) => {
-      e.preventDefault();
-      setContextLost(true);
-    };
-    const onContextRestored = () => {
-      setContextLost(false);
-      requestRenderRef.current?.();
-    };
-    renderer.domElement.addEventListener('webglcontextlost', onContextLost);
-    renderer.domElement.addEventListener('webglcontextrestored', onContextRestored);
+      const rendererAttempts: THREE.WebGLRendererParameters[] = [
+        { antialias: !isSoftwareGl, powerPreference: 'high-performance' },
+        { antialias: false, powerPreference: 'default' },
+        { antialias: false },
+      ];
+      let lastRendererErr: unknown = null;
+      for (const opts of rendererAttempts) {
+        try {
+          renderer = new THREE.WebGLRenderer(opts);
+          break;
+        } catch (err) {
+          lastRendererErr = err;
+        }
+      }
+      if (!renderer) {
+        throw lastRendererErr instanceof Error
+          ? lastRendererErr
+          : new Error('Não foi possível criar o contexto WebGL 3D neste navegador.');
+      }
 
-    const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x0d1017);
-    scene.fog = new THREE.FogExp2(0x0d1017, 0.065);
+      const activeRenderer = renderer;
+      activeRenderer.outputColorSpace = THREE.SRGBColorSpace;
+      activeRenderer.toneMapping = THREE.ACESFilmicToneMapping;
+      activeRenderer.toneMappingExposure = 1.1;
+      activeRenderer.setPixelRatio(isSoftwareGl ? 1 : Math.min(window.devicePixelRatio || 1, 2));
+      activeRenderer.setSize(width, height, false);
+      activeRenderer.domElement.style.display = 'block';
+      activeRenderer.domElement.style.width = '100%';
+      activeRenderer.domElement.style.height = '100%';
+      activeRenderer.shadowMap.enabled = !isSoftwareGl;
+      activeRenderer.shadowMap.type = THREE.PCFSoftShadowMap;
+      container.replaceChildren(activeRenderer.domElement);
 
-    const pmremGenerator = new THREE.PMREMGenerator(renderer);
-    let envTexture: THREE.Texture | null = pmremGenerator.fromScene(new RoomEnvironment(), 0.04).texture;
-    scene.environment = envTexture;
+      const onContextLost = (e: Event) => {
+        e.preventDefault();
+        setContextLost(true);
+      };
+      const onContextRestored = () => {
+        setContextLost(false);
+        requestRenderRef.current?.();
+      };
+      activeRenderer.domElement.addEventListener('webglcontextlost', onContextLost);
+      activeRenderer.domElement.addEventListener('webglcontextrestored', onContextRestored);
 
-    const dracoLoader = new DRACOLoader();
-    dracoLoader.setDecoderPath('https://www.gstatic.com/draco/versioned/decoders/1.5.7/');
-    const ktx2Loader = new KTX2Loader();
-    ktx2Loader.setTranscoderPath('https://cdn.jsdelivr.net/npm/three@0.187.0/examples/jsm/libs/basis/');
-    ktx2Loader.detectSupport(renderer);
+      const scene = new THREE.Scene();
+      scene.background = new THREE.Color(0x0d1017);
+      scene.fog = new THREE.Fog(0x0d1017, 4.8, 13.5);
+
+      const pmremGenerator = new THREE.PMREMGenerator(activeRenderer);
+      let envTexture: THREE.Texture | null = null;
+      try {
+        const roomEnv = new RoomEnvironment();
+        envTexture = pmremGenerator.fromScene(roomEnv, 0.04).texture;
+        roomEnv.dispose();
+        scene.environment = envTexture;
+      } catch {
+        envTexture = null;
+      }
+
+      const dracoLoader = new DRACOLoader();
+      dracoLoader.setDecoderPath('./libs/draco/');
+      const ktx2Loader = new KTX2Loader();
+      ktx2Loader.setTranscoderPath('./libs/basis/');
+      try {
+        ktx2Loader.detectSupport(activeRenderer);
+      } catch {
+        // Ignore KTX2 capability detection fallback
+      }
 
     const buildConfiguredGltfLoader = (manager?: THREE.LoadingManager) => {
       const loader = new GLTFLoader(manager);
@@ -570,7 +709,7 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
     const camera = new THREE.PerspectiveCamera(40, width / height, 0.1, 100);
     camera.position.set(...CAMERA_PRESETS.q34.pos);
 
-    const controls = new OrbitControls(camera, renderer.domElement);
+    const controls = new OrbitControls(camera, activeRenderer.domElement);
     controls.target.set(...CAMERA_PRESETS.q34.target);
     controls.enableDamping = !isSoftwareGl;
     controls.dampingFactor = 0.07;
@@ -582,6 +721,32 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
     controls.addEventListener('start', () => {
       stateRef.current.camTransitioning = false;
     });
+
+    const studioObjectsGroup = new THREE.Group();
+    studioObjectsGroup.name = 'Objetos_Spline';
+    scene.add(studioObjectsGroup);
+
+    const transformControls = new TransformControls(camera, activeRenderer.domElement);
+    const transformHelper = transformControls.getHelper();
+    scene.add(transformHelper);
+    transformControls.addEventListener('dragging-changed', (ev) => {
+      controls.enabled = !Boolean((ev as { value?: unknown }).value);
+      requestRenderRef.current?.();
+    });
+
+    let composer: EffectComposer | null = null;
+    let bloomPass: UnrealBloomPass | null = null;
+    try {
+      composer = new EffectComposer(activeRenderer);
+      composer.setSize(width, height);
+      composer.addPass(new RenderPass(scene, camera));
+      bloomPass = new UnrealBloomPass(new THREE.Vector2(width, height), 0.55, 0.35, 0.85);
+      composer.addPass(bloomPass);
+      composer.addPass(new OutputPass());
+    } catch {
+      composer = null;
+      bloomPass = null;
+    }
 
     // Three-point studio rig + dedicated back fill for Costas view
     const keyLight = new THREE.DirectionalLight(0xfff1e0, 2.3);
@@ -607,18 +772,19 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
     backFillLight.position.set(1.8, 2.1, -2.8);
     scene.add(backFillLight);
 
-    // Studio floor & subtle grid
+    // Studio floor & subtle grid (smooth fog falloff eliminates hard circular edge)
     const floorMat = new THREE.MeshStandardMaterial({
-      color: 0x11151f,
-      roughness: 0.88,
-      metalness: 0.05,
+      color: 0x0e121b,
+      roughness: 0.95,
+      metalness: 0.0,
+      envMapIntensity: 0.2,
     });
-    const floor = new THREE.Mesh(new THREE.CircleGeometry(7, 48), floorMat);
+    const floor = new THREE.Mesh(new THREE.CircleGeometry(16, 64), floorMat);
     floor.rotation.x = -Math.PI / 2;
     floor.receiveShadow = true;
     scene.add(floor);
 
-    const grid = new THREE.GridHelper(6, 24, 0x334155, 0x1b2230);
+    const grid = new THREE.GridHelper(8, 32, 0x334155, 0x1b2230);
     grid.position.y = 0.003;
     scene.add(grid);
 
@@ -637,7 +803,7 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
     scene.add(contactPlane);
 
     // Procedural textures
-    const maxAniso = renderer.capabilities.getMaxAnisotropy();
+    const maxAniso = activeRenderer.capabilities.getMaxAnisotropy();
     const checkerTex = createUvCheckerTexture(maxAniso);
     const fabricNormalTex = createProceduralFabricNormalTexture(maxAniso);
     const toonGradTex = createToonGradient();
@@ -662,7 +828,7 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
       useNormal: boolean;
       outlineMesh: THREE.Mesh;
       customMap: THREE.Texture | null;
-      pbrMaps: Partial<Record<'roughnessMap' | 'metalnessMap' | 'normalMap' | 'aoMap', THREE.Texture | null>>;
+      pbrMaps: Partial<Record<'roughnessMap' | 'metalnessMap' | 'normalMap' | 'aoMap' | 'emissiveMap' | 'alphaMap', THREE.Texture | null>>;
       paintData: PaintCanvasState | null;
     }
     const parts: PartEntry[] = [];
@@ -775,7 +941,7 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
     const skirtMesh = registerPart(
       new THREE.LatheGeometry(skirtPts, 24),
       'Skirt',
-      0x1e293b,
+      0x273549,
       0.72,
       0.05,
       0,
@@ -940,8 +1106,8 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
     const bootL = registerPart(
       new THREE.CylinderGeometry(0.058, 0.066, 0.42, 16),
       'Boot_L',
-      0x141820,
-      0.32,
+      0x1f2735,
+      0.38,
       0.12,
       0.35,
       true
@@ -968,8 +1134,8 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
     const bootR = registerPart(
       new THREE.CylinderGeometry(0.058, 0.066, 0.42, 16),
       'Boot_R',
-      0x141820,
-      0.32,
+      0x1f2735,
+      0.38,
       0.12,
       0.35,
       true
@@ -1205,7 +1371,7 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
       origNormalMap: (THREE.Texture | null)[];
       origAoMap: (THREE.Texture | null)[];
       customMap: THREE.Texture | null;
-      pbrMaps: Partial<Record<'roughnessMap' | 'metalnessMap' | 'normalMap' | 'aoMap', THREE.Texture | null>>;
+      pbrMaps: Partial<Record<'roughnessMap' | 'metalnessMap' | 'normalMap' | 'aoMap' | 'emissiveMap' | 'alphaMap', THREE.Texture | null>>;
       paintData: PaintCanvasState | null;
       outlineMesh: THREE.Mesh | null;
       toonMat: THREE.MeshToonMaterial | null;
@@ -1373,7 +1539,7 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
       uvCheckerFallbackMat.side = sideMode;
       uvCheckerFallbackMat.wireframe = wireMode;
 
-      if (!uploadedGroup) {
+      if (!uploadedGroup && !stateRef.current.hideDefaultBase) {
         characterRoot.visible = !isQuad;
         quadrupedRoot.visible = isQuad;
       } else {
@@ -1451,6 +1617,10 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
           mat.clearcoat = p.clearcoat;
           mat.normalMap = p.pbrMaps.normalMap || (p.useNormal ? fabricNormalTex : null);
           mat.normalScale.set(nStrength, nStrength);
+          mat.emissiveMap = p.pbrMaps.emissiveMap || null;
+          mat.emissive.setHex(p.pbrMaps.emissiveMap ? 0xffffff : 0x000000);
+          mat.alphaMap = p.pbrMaps.alphaMap || null;
+          mat.transparent = Boolean(p.pbrMaps.alphaMap);
         }
         mat.needsUpdate = true;
       }
@@ -1521,6 +1691,14 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
                   rec.origNormalScale[idx].y * nStrength
                 );
               }
+              if (rec.pbrMaps.emissiveMap) {
+                m.emissiveMap = rec.pbrMaps.emissiveMap;
+                m.emissive.setHex(0xffffff);
+              }
+              if (rec.pbrMaps.alphaMap) {
+                m.alphaMap = rec.pbrMaps.alphaMap;
+                m.transparent = true;
+              }
               m.needsUpdate = true;
             }
           });
@@ -1531,7 +1709,7 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
       if (uploadedSkeletonHelper) {
         uploadedSkeletonHelper.visible = stateRef.current.showSkeleton;
       }
-      refSkeletonGroup.visible = !uploadedGroup && stateRef.current.showSkeleton;
+      refSkeletonGroup.visible = !uploadedGroup && !stateRef.current.hideDefaultBase && stateRef.current.showSkeleton;
     }
 
     function applyFramePose(frame: number) {
@@ -1585,56 +1763,170 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
       controls.update();
     }
 
+    interface StudioPrimitiveRecord {
+      mesh: THREE.Mesh;
+      kind: PrimitiveShapeKind | 'mesh';
+      materialStyle: SplineMaterialStyle;
+      interaction: SplineInteractionType;
+      physicsEnabled: boolean;
+      velocityY: number;
+      baseY: number;
+      baseScale: THREE.Vector3;
+      clickToggled: boolean;
+      videoEl?: HTMLVideoElement | null;
+      videoTex?: THREE.VideoTexture | null;
+    }
+
+    const studioPrimitives: StudioPrimitiveRecord[] = [];
+    let selectedSceneObject: THREE.Object3D | null = null;
+    let hoveredPlayMesh: THREE.Object3D | null = null;
+
+    const getPrimitiveRecord = (obj: THREE.Object3D | null): StudioPrimitiveRecord | undefined =>
+      obj ? studioPrimitives.find((r) => r.mesh === obj) : undefined;
+
+    const syncSelectedInspector = () => {
+      if (!selectedSceneObject) {
+        setSelectedObjectInspector(null);
+        return;
+      }
+      const rec = getPrimitiveRecord(selectedSceneObject);
+      const mesh = selectedSceneObject as THREE.Mesh;
+      const mat = Array.isArray(mesh.material) ? mesh.material[0] : mesh.material;
+      const phys = mat instanceof THREE.MeshStandardMaterial ? mat : null;
+      const colorHex = phys?.color ? `#${phys.color.getHexString()}` : '#38BDF8';
+      setSelectedObjectInspector({
+        id: selectedSceneObject.uuid,
+        name: selectedSceneObject.name || 'Objeto_3D',
+        isPrimitive: Boolean(rec),
+        position: [
+          selectedSceneObject.position.x,
+          selectedSceneObject.position.y,
+          selectedSceneObject.position.z,
+        ],
+        rotationDeg: [
+          THREE.MathUtils.radToDeg(selectedSceneObject.rotation.x),
+          THREE.MathUtils.radToDeg(selectedSceneObject.rotation.y),
+          THREE.MathUtils.radToDeg(selectedSceneObject.rotation.z),
+        ],
+        scale: [
+          selectedSceneObject.scale.x,
+          selectedSceneObject.scale.y,
+          selectedSceneObject.scale.z,
+        ],
+        materialStyle: rec?.materialStyle ?? 'physical',
+        color: colorHex,
+        roughness: phys?.roughness ?? 0.35,
+        metalness: phys?.metalness ?? 0.12,
+        transmission: phys instanceof THREE.MeshPhysicalMaterial ? phys.transmission : 0,
+        emissiveIntensity: phys ? phys.emissiveIntensity : 0,
+        interaction: rec?.interaction ?? 'none',
+        physicsEnabled: rec?.physicsEnabled ?? false,
+      });
+    };
+
+    const syncTransformAttachment = () => {
+      const mode = stateRef.current.toolMode;
+      const isTransform = mode === 'translate' || mode === 'rotate' || mode === 'scale';
+      if (!stateRef.current.playMode && isTransform && selectedSceneObject) {
+        transformControls.setMode(mode);
+        transformControls.attach(selectedSceneObject);
+      } else {
+        transformControls.detach();
+      }
+    };
+
+    transformControls.addEventListener('objectChange', () => {
+      const rec = getPrimitiveRecord(selectedSceneObject);
+      if (rec && selectedSceneObject) {
+        rec.baseY = selectedSceneObject.position.y;
+        rec.baseScale.copy(selectedSceneObject.scale);
+      }
+      syncSelectedInspector();
+    });
+
+    const selectThreeObject = (obj: THREE.Object3D | null) => {
+      selectedSceneObject = obj;
+      setSelectedMeshId(obj ? obj.uuid : null);
+      syncTransformAttachment();
+      syncSelectedInspector();
+    };
+
+    const disposePrimitiveRecord = (rec: StudioPrimitiveRecord) => {
+      if (rec.videoEl) {
+        rec.videoEl.pause();
+        if (rec.videoEl.src.startsWith('blob:')) URL.revokeObjectURL(rec.videoEl.src);
+        rec.videoEl = null;
+      }
+      if (rec.videoTex) {
+        rec.videoTex.dispose();
+        rec.videoTex = null;
+      }
+      studioObjectsGroup.remove(rec.mesh);
+      rec.mesh.geometry.dispose();
+      if (Array.isArray(rec.mesh.material)) {
+        rec.mesh.material.forEach((m) => m.dispose());
+      } else {
+        rec.mesh.material.dispose();
+      }
+    };
+
     function refreshHierarchyState() {
       const activeDefaultRoot = stateRef.current.rigPreset === 'QUADRUPEDE' ? quadrupedRoot : characterRoot;
-      const target = uploadedGroup || activeDefaultRoot;
-      target.updateMatrixWorld(true);
+      const activeMain = uploadedGroup || activeDefaultRoot;
+      const roots: THREE.Object3D[] = [];
+      if (uploadedGroup || !stateRef.current.hideDefaultBase) roots.push(activeMain);
+      if (studioObjectsGroup.children.length > 0) roots.push(studioObjectsGroup);
 
       const items: SceneMeshListItem[] = [];
       let totalVertices = 0;
       let totalTriangles = 0;
       const matSet = new Set<THREE.Material>();
       const texSet = new Set<THREE.Texture>();
+      const combinedBox = new THREE.Box3();
 
-      target.traverse((obj) => {
-        if ((obj as THREE.Mesh).isMesh) {
-          const m = obj as THREE.Mesh;
-          if (m.material instanceof THREE.MeshBasicMaterial && m.material.side === THREE.BackSide && !m.name) {
-            return;
-          }
-          const geo = m.geometry;
-          const vCount = geo?.attributes?.position?.count || 0;
-          const tCount = geo?.index ? Math.round(geo.index.count / 3) : Math.round(vCount / 3);
-          totalVertices += vCount;
-          totalTriangles += tCount;
-
-          const mats = Array.isArray(m.material) ? m.material : [m.material];
-          for (const mat of mats) {
-            if (!mat) continue;
-            matSet.add(mat);
-            const rec = mat as unknown as Record<string, unknown>;
-            for (const key of ['map', 'normalMap', 'roughnessMap', 'metalnessMap', 'aoMap', 'emissiveMap']) {
-              const t = rec[key];
-              if (t instanceof THREE.Texture) texSet.add(t);
+      for (const target of roots) {
+        target.updateMatrixWorld(true);
+        combinedBox.expandByObject(target);
+        target.traverse((obj) => {
+          if ((obj as THREE.Mesh).isMesh) {
+            const m = obj as THREE.Mesh;
+            if (m.material instanceof THREE.MeshBasicMaterial && m.material.side === THREE.BackSide && !m.name) {
+              return;
             }
+            const geo = m.geometry;
+            const vCount = geo?.attributes?.position?.count || 0;
+            const tCount = geo?.index ? Math.round(geo.index.count / 3) : Math.round(vCount / 3);
+            totalVertices += vCount;
+            totalTriangles += tCount;
+
+            const mats = Array.isArray(m.material) ? m.material : [m.material];
+            for (const mat of mats) {
+              if (!mat) continue;
+              matSet.add(mat);
+              const rec = mat as unknown as Record<string, unknown>;
+              for (const key of ['map', 'normalMap', 'roughnessMap', 'metalnessMap', 'aoMap', 'emissiveMap']) {
+                const t = rec[key];
+                if (t instanceof THREE.Texture) texSet.add(t);
+              }
+            }
+
+            items.push({
+              id: m.uuid,
+              name: m.name || `Malha_${items.length + 1}`,
+              triCount: tCount,
+              visible: m.visible,
+            });
           }
+        });
+      }
 
-          items.push({
-            id: m.uuid,
-            name: m.name || `Malha_${items.length + 1}`,
-            triCount: tCount,
-            visible: m.visible,
-          });
-        }
-      });
-
-      const box = new THREE.Box3().setFromObject(target);
       const sz = new THREE.Vector3();
-      box.getSize(sz);
-      const dimensions = box.isEmpty()
+      combinedBox.getSize(sz);
+      const dimensions = combinedBox.isEmpty()
         ? '—'
         : `${sz.x.toFixed(2)} × ${sz.y.toFixed(2)} × ${sz.z.toFixed(2)} m`;
 
+      setPrimitiveCount(studioPrimitives.length);
       setMeshList(items);
       setSceneMetrics({
         fileName: loadedAssetNameRef.current || `Ativo_${RIG_PRESET_DEFINITIONS[stateRef.current.rigPreset].shortLabel}`,
@@ -1649,32 +1941,491 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
     }
 
     frameSceneRef.current = () => {
-      const target = uploadedGroup || (stateRef.current.rigPreset === 'QUADRUPEDE' ? quadrupedRoot : characterRoot);
-      frameCameraOnObject(target);
+      const box = new THREE.Box3();
+      const activeDefaultRoot = stateRef.current.rigPreset === 'QUADRUPEDE' ? quadrupedRoot : characterRoot;
+      if (uploadedGroup) box.expandByObject(uploadedGroup);
+      else if (!stateRef.current.hideDefaultBase) box.expandByObject(activeDefaultRoot);
+      if (studioObjectsGroup.children.length > 0) box.expandByObject(studioObjectsGroup);
+      if (box.isEmpty()) return;
+      const size = new THREE.Vector3();
+      const center = new THREE.Vector3();
+      box.getSize(size);
+      box.getCenter(center);
+      const maxDim = Math.max(size.x, size.y, size.z) || 1;
+      const fovRad = THREE.MathUtils.degToRad(camera.fov);
+      const dist = Math.max(0.9, (maxDim / (2 * Math.tan(fovRad / 2))) * 1.45);
+      const dir = new THREE.Vector3().subVectors(camera.position, controls.target);
+      if (dir.lengthSq() < 0.0001) dir.set(1.85, 0.55, 2.35);
+      dir.normalize();
+      stateRef.current.camTransitioning = false;
+      camera.position.copy(center).addScaledVector(dir, dist);
+      controls.target.copy(center);
+      controls.update();
+    };
+
+    const findSceneObjectById = (id: string): THREE.Object3D | null => {
+      let found: THREE.Object3D | null = null;
+      const targets = [
+        studioObjectsGroup,
+        uploadedGroup || (stateRef.current.rigPreset === 'QUADRUPEDE' ? quadrupedRoot : characterRoot),
+      ];
+      for (const t of targets) {
+        t.traverse((o) => {
+          if (o.uuid === id) found = o;
+        });
+        if (found) break;
+      }
+      return found;
     };
 
     focusMeshByIdRef.current = (id: string) => {
-      const target = uploadedGroup || (stateRef.current.rigPreset === 'QUADRUPEDE' ? quadrupedRoot : characterRoot);
-      let found: THREE.Object3D | null = null;
-      target.traverse((o) => {
-        if (o.uuid === id) found = o;
-      });
+      const found = findSceneObjectById(id);
       if (found) frameCameraOnObject(found);
     };
 
     toggleMeshVisibilityRef.current = (id: string) => {
-      const target = uploadedGroup || (stateRef.current.rigPreset === 'QUADRUPEDE' ? quadrupedRoot : characterRoot);
-      target.traverse((o) => {
-        if (o.uuid === id) o.visible = !o.visible;
-      });
+      const found = findSceneObjectById(id);
+      if (found) found.visible = !found.visible;
       refreshHierarchyState();
     };
 
     showAllMeshesRef.current = () => {
-      const target = uploadedGroup || (stateRef.current.rigPreset === 'QUADRUPEDE' ? quadrupedRoot : characterRoot);
-      target.traverse((o) => {
-        if ((o as THREE.Mesh).isMesh) o.visible = true;
+      const targets = [
+        studioObjectsGroup,
+        uploadedGroup || (stateRef.current.rigPreset === 'QUADRUPEDE' ? quadrupedRoot : characterRoot),
+      ];
+      for (const t of targets) {
+        t.traverse((o) => {
+          if ((o as THREE.Mesh).isMesh) o.visible = true;
+        });
+      }
+      refreshHierarchyState();
+    };
+
+    selectObjectByIdRef.current = (id: string | null) => {
+      if (!id) {
+        selectThreeObject(null);
+        return;
+      }
+      selectThreeObject(findSceneObjectById(id));
+    };
+
+    const spawnPrimitiveMesh = (
+      kind: PrimitiveShapeKind,
+      opts?: {
+        name?: string;
+        position?: [number, number, number];
+        scale?: [number, number, number];
+        style?: SplineMaterialStyle;
+        color?: string;
+        interaction?: SplineInteractionType;
+        physicsEnabled?: boolean;
+      }
+    ) => {
+      const catalogItem = PRIMITIVE_CATALOG.find((c) => c.kind === kind);
+      const color = opts?.color || catalogItem?.defaultColor || '#38BDF8';
+      const style = opts?.style || 'physical';
+      const geo = createSplinePrimitiveGeometry(kind);
+      const mat = new THREE.MeshPhysicalMaterial({ color: new THREE.Color(color) });
+      applySplineStyleToPhysicalMaterial(mat, style, color);
+      const mesh = new THREE.Mesh(geo, mat);
+      const idx = studioPrimitives.length + 1;
+      mesh.name = opts?.name || `${catalogItem?.label || 'Forma'}_${idx}`;
+      mesh.castShadow = !isSoftwareGl;
+      mesh.receiveShadow = !isSoftwareGl;
+      const offsetX = opts?.position ? opts.position[0] : ((idx - 1) % 3 - 1) * 0.65;
+      const posY = opts?.position ? opts.position[1] : 0.85;
+      const posZ = opts?.position ? opts.position[2] : 0;
+      mesh.position.set(offsetX, posY, posZ);
+      if (opts?.scale) mesh.scale.set(...opts.scale);
+      studioObjectsGroup.add(mesh);
+
+      const rec: StudioPrimitiveRecord = {
+        mesh,
+        kind,
+        materialStyle: style,
+        interaction: opts?.interaction || 'none',
+        physicsEnabled: opts?.physicsEnabled ?? false,
+        velocityY: 0,
+        baseY: posY,
+        baseScale: mesh.scale.clone(),
+        clickToggled: false,
+      };
+      studioPrimitives.push(rec);
+      return rec;
+    };
+
+    addPrimitiveRef.current = (kind: PrimitiveShapeKind) => {
+      const rec = spawnPrimitiveMesh(kind);
+      if (stateRef.current.toolMode === 'orbit' || stateRef.current.toolMode === 'paint' || stateRef.current.toolMode === 'assign_mat') {
+        setToolMode('translate');
+        stateRef.current.toolMode = 'translate';
+      }
+      selectThreeObject(rec.mesh);
+      refreshHierarchyState();
+      showBriefStatus(`Forma adicionada: ${rec.mesh.name}`);
+    };
+
+    applyTemplateRef.current = (templateId: SplineTemplateId) => {
+      selectThreeObject(null);
+      while (studioPrimitives.length > 0) {
+        const r = studioPrimitives.pop()!;
+        disposePrimitiveRecord(r);
+      }
+
+      if (templateId === 'character_rig') {
+        setHideDefaultBase(false);
+        stateRef.current.hideDefaultBase = false;
+        setBloomEnabled(false);
+        stateRef.current.bloomEnabled = false;
+        setPlayMode(false);
+        stateRef.current.playMode = false;
+        applyMaterialSettings();
+        refreshHierarchyState();
+        frameSceneRef.current?.();
+        showBriefStatus('Template aplicado: Estúdio Personagem');
+        return;
+      }
+
+      setHideDefaultBase(true);
+      stateRef.current.hideDefaultBase = true;
+      applyMaterialSettings();
+
+      if (templateId === 'glass_neon') {
+        const knot = spawnPrimitiveMesh('torus_knot', {
+          name: 'Cristal_Central',
+          position: [0, 0.95, 0],
+          scale: [1.3, 1.3, 1.3],
+          style: 'glass',
+          color: '#7DD3FC',
+          interaction: 'spin',
+        });
+        spawnPrimitiveMesh('sphere', {
+          name: 'Orbe_Neon_1',
+          position: [-0.85, 0.72, 0.35],
+          scale: [0.6, 0.6, 0.6],
+          style: 'neon',
+          color: '#F97316',
+          interaction: 'float',
+        });
+        spawnPrimitiveMesh('sphere', {
+          name: 'Orbe_Neon_2',
+          position: [0.85, 1.25, -0.3],
+          scale: [0.5, 0.5, 0.5],
+          style: 'neon',
+          color: '#A855F7',
+          interaction: 'float',
+        });
+        setBloomEnabled(true);
+        stateRef.current.bloomEnabled = true;
+        setPlayMode(true);
+        stateRef.current.playMode = true;
+        selectThreeObject(knot.mesh);
+      } else if (templateId === 'product_showcase') {
+        spawnPrimitiveMesh('cylinder', {
+          name: 'Pedestal',
+          position: [0, 0.25, 0],
+          scale: [1.8, 0.6, 1.8],
+          style: 'clay',
+          color: '#1E293B',
+        });
+        const hero = spawnPrimitiveMesh('icosahedron', {
+          name: 'Produto_Cromado',
+          position: [0, 0.92, 0],
+          scale: [1.15, 1.15, 1.15],
+          style: 'chrome',
+          color: '#E2E8F0',
+          interaction: 'spin',
+        });
+        spawnPrimitiveMesh('torus', {
+          name: 'Anel_Orbita',
+          position: [0, 0.92, 0],
+          scale: [1.45, 1.45, 1.45],
+          style: 'ceramic',
+          color: '#F97316',
+          interaction: 'hover_pulse',
+        });
+        setBloomEnabled(false);
+        stateRef.current.bloomEnabled = false;
+        selectThreeObject(hero.mesh);
+      } else if (templateId === 'floating_shapes') {
+        const main = spawnPrimitiveMesh('capsule', {
+          name: 'Capsula_Principal',
+          position: [0, 1.0, 0],
+          scale: [1.1, 1.1, 1.1],
+          style: 'ceramic',
+          color: '#38BDF8',
+          interaction: 'float',
+        });
+        spawnPrimitiveMesh('star', {
+          name: 'Estrela_Vetor',
+          position: [-0.8, 1.15, 0.2],
+          scale: [0.9, 0.9, 0.9],
+          style: 'neon',
+          color: '#FACC15',
+          interaction: 'spin',
+        });
+        spawnPrimitiveMesh('heart', {
+          name: 'Coracao_3D',
+          position: [0.8, 0.95, 0.15],
+          scale: [0.9, 0.9, 0.9],
+          style: 'glass',
+          color: '#FB7185',
+          interaction: 'click_toggle',
+        });
+        setPlayMode(true);
+        stateRef.current.playMode = true;
+        selectThreeObject(main.mesh);
+      }
+
+      refreshHierarchyState();
+      frameSceneRef.current?.();
+      showBriefStatus('Template 3D carregado com sucesso');
+    };
+
+    runBooleanRef.current = (op: BooleanOperation) => {
+      if (studioPrimitives.length < 2) {
+        setLoadError('Adicione pelo menos 2 formas 3D para aplicar operação booleana CSG.');
+        return;
+      }
+      const bRec =
+        getPrimitiveRecord(selectedSceneObject) && studioPrimitives[studioPrimitives.length - 1] !== getPrimitiveRecord(selectedSceneObject)
+          ? studioPrimitives[studioPrimitives.length - 1]
+          : studioPrimitives[studioPrimitives.length - 1];
+      const aRec =
+        getPrimitiveRecord(selectedSceneObject) && getPrimitiveRecord(selectedSceneObject) !== bRec
+          ? getPrimitiveRecord(selectedSceneObject)!
+          : studioPrimitives[studioPrimitives.length - 2];
+
+      const result = performMeshBoolean(aRec.mesh, bRec.mesh, op);
+      if (!result) {
+        setLoadError('Não foi possível calcular a booleana CSG (malhas muito densas ou sem interseção).');
+        return;
+      }
+
+      const opNames: Record<BooleanOperation, string> = {
+        union: 'Uniao_CSG',
+        subtract: 'Subtracao_CSG',
+        intersect: 'Intersecao_CSG',
+      };
+      const baseMat = (aRec.mesh.material as THREE.MeshPhysicalMaterial).clone();
+      const newMesh = new THREE.Mesh(result.geometry, baseMat);
+      newMesh.name = `${opNames[op]}_${studioPrimitives.length + 1}`;
+      newMesh.position.copy(result.center);
+      newMesh.castShadow = !isSoftwareGl;
+      newMesh.receiveShadow = !isSoftwareGl;
+
+      selectThreeObject(null);
+      [aRec, bRec].forEach((r) => {
+        const idx = studioPrimitives.indexOf(r);
+        if (idx >= 0) studioPrimitives.splice(idx, 1);
+        disposePrimitiveRecord(r);
       });
+
+      studioObjectsGroup.add(newMesh);
+      const newRec: StudioPrimitiveRecord = {
+        mesh: newMesh,
+        kind: 'mesh',
+        materialStyle: aRec.materialStyle,
+        interaction: 'none',
+        physicsEnabled: false,
+        velocityY: 0,
+        baseY: newMesh.position.y,
+        baseScale: newMesh.scale.clone(),
+        clickToggled: false,
+      };
+      studioPrimitives.push(newRec);
+      selectThreeObject(newMesh);
+      refreshHierarchyState();
+      showBriefStatus(`Booleana CSG aplicada: ${newMesh.name}`);
+    };
+
+    updateObjectTransformRef.current = (group, idx, val) => {
+      if (!selectedSceneObject) return;
+      const arr: [number, number, number] =
+        group === 'position'
+          ? [selectedSceneObject.position.x, selectedSceneObject.position.y, selectedSceneObject.position.z]
+          : group === 'rotationDeg'
+          ? [
+              THREE.MathUtils.radToDeg(selectedSceneObject.rotation.x),
+              THREE.MathUtils.radToDeg(selectedSceneObject.rotation.y),
+              THREE.MathUtils.radToDeg(selectedSceneObject.rotation.z),
+            ]
+          : [selectedSceneObject.scale.x, selectedSceneObject.scale.y, selectedSceneObject.scale.z];
+      arr[idx] = val;
+      if (group === 'position') {
+        selectedSceneObject.position.set(arr[0], arr[1], arr[2]);
+        const rec = getPrimitiveRecord(selectedSceneObject);
+        if (rec) rec.baseY = arr[1];
+      } else if (group === 'rotationDeg') {
+        selectedSceneObject.rotation.set(
+          THREE.MathUtils.degToRad(arr[0]),
+          THREE.MathUtils.degToRad(arr[1]),
+          THREE.MathUtils.degToRad(arr[2])
+        );
+      } else {
+        const safeScale = arr.map((s) => Math.max(0.05, s)) as [number, number, number];
+        selectedSceneObject.scale.set(...safeScale);
+        const rec = getPrimitiveRecord(selectedSceneObject);
+        if (rec) rec.baseScale.copy(selectedSceneObject.scale);
+      }
+      syncSelectedInspector();
+      requestRenderRef.current?.();
+    };
+
+    updateObjectMaterialRef.current = (patch) => {
+      if (!selectedSceneObject) return;
+      const mesh = selectedSceneObject as THREE.Mesh;
+      const rec = getPrimitiveRecord(selectedSceneObject);
+      if (rec && patch.materialStyle) rec.materialStyle = patch.materialStyle;
+
+      if (!(mesh.material instanceof THREE.MeshPhysicalMaterial)) {
+        const old = mesh.material;
+        const std = Array.isArray(old) ? old[0] : old;
+        const c = std instanceof THREE.MeshStandardMaterial ? std.color.getHex() : 0x38bdf8;
+        mesh.material = new THREE.MeshPhysicalMaterial({ color: c });
+      }
+      const mat = mesh.material as THREE.MeshPhysicalMaterial;
+      const nextStyle = patch.materialStyle ?? rec?.materialStyle ?? 'physical';
+      const nextColor = patch.color ?? `#${mat.color.getHexString()}`;
+      applySplineStyleToPhysicalMaterial(mat, nextStyle, nextColor, {
+        roughness: patch.materialStyle ? undefined : patch.roughness ?? mat.roughness,
+        metalness: patch.materialStyle ? undefined : patch.metalness ?? mat.metalness,
+        transmission: patch.materialStyle ? undefined : patch.transmission ?? mat.transmission,
+        emissiveIntensity: patch.materialStyle ? undefined : patch.emissiveIntensity ?? mat.emissiveIntensity,
+      });
+      syncSelectedInspector();
+      requestRenderRef.current?.();
+    };
+
+    updateObjectInteractionRef.current = (interaction) => {
+      const rec = getPrimitiveRecord(selectedSceneObject);
+      if (rec) {
+        rec.interaction = interaction;
+        rec.baseY = rec.mesh.position.y;
+        rec.baseScale.copy(rec.mesh.scale);
+        syncSelectedInspector();
+      }
+    };
+
+    toggleObjectPhysicsRef.current = (enabled) => {
+      const rec = getPrimitiveRecord(selectedSceneObject);
+      if (rec) {
+        rec.physicsEnabled = enabled;
+        rec.velocityY = 0;
+        if (enabled && !stateRef.current.physicsActive) {
+          setPhysicsActive(true);
+          stateRef.current.physicsActive = true;
+        }
+        syncSelectedInspector();
+      }
+    };
+
+    applyVideoTextureRef.current = (file: File) => {
+      const targetMesh = (selectedSceneObject as THREE.Mesh | null) || studioPrimitives[0]?.mesh || null;
+      if (!targetMesh || !(targetMesh as THREE.Mesh).isMesh) {
+        setLoadError('Selecione ou crie uma forma 3D antes de aplicar uma textura de vídeo.');
+        return;
+      }
+      const url = URL.createObjectURL(file);
+      const video = document.createElement('video');
+      video.src = url;
+      video.loop = true;
+      video.muted = true;
+      video.playsInline = true;
+      video.crossOrigin = 'anonymous';
+      video.play().catch(() => undefined);
+
+      const vTex = new THREE.VideoTexture(video);
+      vTex.colorSpace = THREE.SRGBColorSpace;
+      const rec = getPrimitiveRecord(targetMesh);
+      if (rec) {
+        if (rec.videoEl) {
+          rec.videoEl.pause();
+          if (rec.videoEl.src.startsWith('blob:')) URL.revokeObjectURL(rec.videoEl.src);
+        }
+        if (rec.videoTex) rec.videoTex.dispose();
+        rec.videoEl = video;
+        rec.videoTex = vTex;
+      }
+      const mat = Array.isArray(targetMesh.material) ? targetMesh.material[0] : targetMesh.material;
+      if (mat instanceof THREE.MeshStandardMaterial) {
+        mat.map = vTex;
+        mat.color.setHex(0xffffff);
+        mat.needsUpdate = true;
+      }
+      refreshHierarchyState();
+      showBriefStatus(`Textura de vídeo aplicada: ${file.name}`);
+    };
+
+    duplicateSelectedRef.current = () => {
+      const rec = getPrimitiveRecord(selectedSceneObject);
+      if (!rec) return;
+      const dup = spawnPrimitiveMesh(rec.kind === 'mesh' ? 'cube' : rec.kind, {
+        name: `${rec.mesh.name}_Copia`,
+        position: [rec.mesh.position.x + 0.45, rec.mesh.position.y, rec.mesh.position.z],
+        scale: [rec.mesh.scale.x, rec.mesh.scale.y, rec.mesh.scale.z],
+        style: rec.materialStyle,
+        color: `#${(rec.mesh.material as THREE.MeshPhysicalMaterial).color.getHexString()}`,
+        interaction: rec.interaction,
+        physicsEnabled: rec.physicsEnabled,
+      });
+      if (rec.kind === 'mesh') {
+        dup.mesh.geometry.dispose();
+        dup.mesh.geometry = rec.mesh.geometry.clone();
+        dup.kind = 'mesh';
+      }
+      dup.mesh.rotation.copy(rec.mesh.rotation);
+      selectThreeObject(dup.mesh);
+      refreshHierarchyState();
+      showBriefStatus(`Duplicado: ${dup.mesh.name}`);
+    };
+
+    deleteSelectedRef.current = () => {
+      const rec = getPrimitiveRecord(selectedSceneObject);
+      if (!rec) return;
+      const removedName = rec.mesh.name;
+      selectThreeObject(null);
+      const idx = studioPrimitives.indexOf(rec);
+      if (idx >= 0) studioPrimitives.splice(idx, 1);
+      disposePrimitiveRecord(rec);
+      refreshHierarchyState();
+      showBriefStatus(`Removido: ${removedName}`);
+    };
+
+    openCodeExportRef.current = () => {
+      const specs = studioPrimitives.map((r) => {
+        const mat = r.mesh.material as THREE.MeshPhysicalMaterial;
+        return {
+          name: r.mesh.name,
+          kind: r.kind,
+          position: [r.mesh.position.x, r.mesh.position.y, r.mesh.position.z] as [number, number, number],
+          rotationDeg: [
+            THREE.MathUtils.radToDeg(r.mesh.rotation.x),
+            THREE.MathUtils.radToDeg(r.mesh.rotation.y),
+            THREE.MathUtils.radToDeg(r.mesh.rotation.z),
+          ] as [number, number, number],
+          scale: [r.mesh.scale.x, r.mesh.scale.y, r.mesh.scale.z] as [number, number, number],
+          color: `#${mat.color.getHexString()}`,
+          roughness: mat.roughness,
+          metalness: mat.metalness,
+          transmission: mat.transmission,
+          emissiveIntensity: mat.emissiveIntensity,
+          interaction: r.interaction,
+        };
+      });
+      setExportedThreeCode(generateThreeJsSceneCode(specs, loadedAssetNameRef.current, '#0D1017'));
+      setExportedReactCode(generateReactThreeFiberCode(specs, '#0D1017'));
+      setCodeExportModalOpen(true);
+    };
+
+    syncSplineModeRef.current = () => {
+      transformControls.enabled = !stateRef.current.playMode;
+      syncTransformAttachment();
+      if (bloomPass) {
+        bloomPass.strength = stateRef.current.bloomStrength;
+      }
+      applyMaterialSettings();
       refreshHierarchyState();
     };
 
@@ -1692,13 +2443,18 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
       meshTris: number,
       maxTrisCap = 40000
     ): Float32Array {
+      if (!uvAttr || uvAttr.count <= 0 || meshTris <= 0) {
+        return new Float32Array(0);
+      }
       const maxTris = Math.min(meshTris, maxTrisCap);
       const edges = new Float32Array(maxTris * 12);
       const idxAttr = geo.index;
+      const vertCount = uvAttr.count;
       for (let t = 0; t < maxTris; t++) {
         const i0 = idxAttr ? idxAttr.getX(t * 3) : t * 3;
         const i1 = idxAttr ? idxAttr.getX(t * 3 + 1) : t * 3 + 1;
         const i2 = idxAttr ? idxAttr.getX(t * 3 + 2) : t * 3 + 2;
+        if (i0 >= vertCount || i1 >= vertCount || i2 >= vertCount) continue;
         const u0 = uvAttr.getX(i0);
         const v0 = uvAttr.getY(i0);
         const u1 = uvAttr.getX(i1);
@@ -1732,24 +2488,29 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
       activeObjectUrls = batchUrls;
       lastContainerCheck = containerCheck;
 
-      const model = gltf.scene;
+      const model = gltf.scene || new THREE.Group();
       model.updateMatrixWorld(true);
 
       const box = new THREE.Box3().setFromObject(model);
-      const size = new THREE.Vector3();
-      const center = new THREE.Vector3();
-      box.getSize(size);
-      const maxDim = Math.max(size.x, size.y, size.z) || 1;
-      const targetScale = 1.75 / maxDim;
-      model.scale.multiplyScalar(targetScale);
-      model.updateMatrixWorld(true);
+      if (!box.isEmpty()) {
+        const size = new THREE.Vector3();
+        const center = new THREE.Vector3();
+        box.getSize(size);
+        const rawMax = Math.max(size.x, size.y, size.z);
+        const maxDim = Number.isFinite(rawMax) && rawMax > 0.0001 ? rawMax : 1;
+        const targetScale = 1.75 / maxDim;
+        model.scale.multiplyScalar(targetScale);
+        model.updateMatrixWorld(true);
 
-      const scaledBox = new THREE.Box3().setFromObject(model);
-      scaledBox.getCenter(center);
-      model.position.x -= center.x;
-      model.position.z -= center.z;
-      model.position.y -= scaledBox.min.y;
-      model.updateMatrixWorld(true);
+        const scaledBox = new THREE.Box3().setFromObject(model);
+        scaledBox.getCenter(center);
+        if (Number.isFinite(center.x) && Number.isFinite(center.z) && Number.isFinite(scaledBox.min.y)) {
+          model.position.x -= center.x;
+          model.position.z -= center.z;
+          model.position.y -= scaledBox.min.y;
+          model.updateMatrixWorld(true);
+        }
+      }
 
       let meshCount = 0;
       let triCount = 0;
@@ -1846,7 +2607,7 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
           });
 
           let outlineMesh: THREE.Mesh | null = null;
-          if (!(mesh as THREE.SkinnedMesh).isSkinnedMesh && geo) {
+          if (!(mesh as THREE.SkinnedMesh).isSkinnedMesh && !(mesh as THREE.InstancedMesh).isInstancedMesh && geo) {
             outlineMesh = new THREE.Mesh(geo, outlineBaseMat);
             outlineMesh.scale.setScalar(1.02);
             outlineMesh.visible = false;
@@ -1920,10 +2681,12 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
 
     loadFilesRef.current = async (fileList: FileList | File[]) => {
       const rawFiles = Array.from(fileList);
+      if (rawFiles.length === 0) return;
+
       setLoadError(null);
       setIsLoadingModel(true);
 
-      const expandedFiles: File[] = [];
+      const expandedEntries: { file: File; relPath: string }[] = [];
       for (const f of rawFiles) {
         if (/\.zip$/i.test(f.name)) {
           try {
@@ -1934,7 +2697,10 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
             for (const entry of entries) {
               const blob = await entry.async('blob');
               const cleanBase = entry.name.split('/').pop() || entry.name;
-              expandedFiles.push(new File([blob], cleanBase));
+              expandedEntries.push({
+                file: new File([blob], cleanBase),
+                relPath: entry.name.replace(/^\.\//, '').toLowerCase(),
+              });
             }
           } catch {
             setIsLoadingModel(false);
@@ -1942,113 +2708,115 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
             return;
           }
         } else {
-          expandedFiles.push(f);
+          expandedEntries.push({
+            file: f,
+            relPath: f.name.toLowerCase(),
+          });
         }
       }
 
-      const mainFile = expandedFiles.find((f) => /\.(glb|gltf)$/i.test(f.name));
-      if (!mainFile) {
+      const expandedFiles = expandedEntries.map((e) => e.file);
+      const mainEntry = expandedEntries.find((e) => /\.(glb|gltf)$/i.test(e.file.name));
+      if (!mainEntry) {
         setIsLoadingModel(false);
-        setLoadError('Selecione um arquivo .glb, .gltf ou .zip contendo modelo 3D válido.');
+        setLoadError('Selecione um arquivo .glb, .gltf ou .zip contendo um modelo 3D válido.');
         return;
       }
 
+      const mainFile = mainEntry.file;
       const containerCheck = await inspectGltfBinaryOrJson(mainFile, expandedFiles);
-      if (containerCheck.parseError) {
-        setIsLoadingModel(false);
-        setLoadError(`Arquivo inválido: ${containerCheck.parseError}`);
-        return;
-      }
 
       const urlMap = new Map<string, string>();
       const batchUrls: string[] = [];
-      for (const f of expandedFiles) {
-        const blobUrl = URL.createObjectURL(f);
+      for (const entry of expandedEntries) {
+        const blobUrl = URL.createObjectURL(entry.file);
         batchUrls.push(blobUrl);
-        urlMap.set(f.name.toLowerCase(), blobUrl);
+        urlMap.set(entry.relPath, blobUrl);
+        urlMap.set(entry.file.name.toLowerCase(), blobUrl);
       }
 
-      const mainUrl = urlMap.get(mainFile.name.toLowerCase())!;
       const manager = new THREE.LoadingManager();
       manager.setURLModifier((url) => {
         if (url.startsWith('blob:') || url.startsWith('data:')) return url;
-        const cleanName = decodeURIComponent(url.split('/').pop()?.split('?')[0] || '').toLowerCase();
-        return urlMap.get(cleanName) || url;
+        try {
+          const normalized = decodeURIComponent(url.split('?')[0]).replace(/^\.\//, '').toLowerCase();
+          if (urlMap.has(normalized)) return urlMap.get(normalized)!;
+          const cleanName = normalized.split('/').pop() || '';
+          return urlMap.get(cleanName) || url;
+        } catch {
+          return url;
+        }
       });
 
-      const loader = buildConfiguredGltfLoader(manager);
-      loader.load(
-        mainUrl,
-        (gltf) => {
-          mountLoadedGltf(gltf, mainFile.name, batchUrls, containerCheck);
-        },
-        undefined,
-        () => {
-          batchUrls.forEach((u) => URL.revokeObjectURL(u));
-          setIsLoadingModel(false);
-          setLoadError('Não foi possível ler o arquivo GLB/glTF. Verifique se o arquivo não está corrompido.');
+      try {
+        if (MeshoptDecoder?.ready) {
+          await MeshoptDecoder.ready.catch(() => undefined);
         }
-      );
-    };
-
-    loadUrlRef.current = (rawUrl: string) => {
-      const trimmed = rawUrl.trim();
-      if (!trimmed) return;
-
-      if (/actionforge\.app/i.test(trimmed)) {
+        const loader = buildConfiguredGltfLoader(manager);
+        const isGlb = /\.glb$/i.test(mainFile.name);
+        const payload = isGlb ? await mainFile.arrayBuffer() : await mainFile.text();
+        const gltf = await loader.parseAsync(payload, '');
+        mountLoadedGltf(gltf, mainFile.name, batchUrls, containerCheck);
+        showBriefStatus(`Modelo importado: ${mainFile.name}`);
+      } catch (err) {
+        batchUrls.forEach((u) => URL.revokeObjectURL(u));
+        setIsLoadingModel(false);
+        const reason = err instanceof Error && err.message ? ` (${err.message})` : '';
         setLoadError(
-          'Links de sessão do ActionForge (#clip=user.*) ficam salvos localmente no seu navegador no ActionForge. No ActionForge, clique em Export → GLB (.glb) e arraste o arquivo para cá para editar PBR, verificar e reexportar.'
+          `Não foi possível ler o arquivo GLB/glTF${reason}. Verifique se o arquivo é um glTF 2.0 válido.`
         );
-        return;
       }
-
-      if (!/^https?:\/\//i.test(trimmed)) {
-        setLoadError('Informe uma URL completa iniciando com https:// apontando para um arquivo .glb ou .gltf.');
-        return;
-      }
-
-      setLoadError(null);
-      setIsLoadingModel(true);
-      const fileName = decodeURIComponent(trimmed.split('/').pop()?.split('?')[0] || 'modelo_remoto.glb');
-      const loader = buildConfiguredGltfLoader();
-      loader.load(
-        trimmed,
-        (gltf) => {
-          setShowUrlBar(false);
-          mountLoadedGltf(gltf, fileName, [], null);
-        },
-        undefined,
-        () => {
-          setIsLoadingModel(false);
-          setLoadError(
-            'Não foi possível baixar o modelo desta URL (verifique se o link termina em .glb/.gltf e permite acesso CORS).'
-          );
-        }
-      );
     };
 
-    loadSampleRef.current = () => {
-      const sampleUrl =
-        'https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/main/2.0/DamagedHelmet/glTF-Binary/DamagedHelmet.glb';
+    loadSampleRef.current = async () => {
+      const sampleCandidates = [
+        './samples/DamagedHelmet.glb',
+        '/samples/DamagedHelmet.glb',
+        'https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/main/2.0/DamagedHelmet/glTF-Binary/DamagedHelmet.glb',
+      ];
       setLoadError(null);
       setIsLoadingModel(true);
-      const loader = buildConfiguredGltfLoader();
-      loader.load(
-        sampleUrl,
-        (gltf) => {
-          mountLoadedGltf(gltf, 'DamagedHelmet.glb', [], null);
-          showBriefStatus('Modelo de exemplo PBR carregado (DamagedHelmet.glb)');
-        },
-        undefined,
-        () => {
-          setIsLoadingModel(false);
-          setLoadError('Não foi possível baixar o modelo de exemplo (verifique a conexão com a internet).');
+      try {
+        if (MeshoptDecoder?.ready) {
+          await MeshoptDecoder.ready.catch(() => undefined);
         }
-      );
+        let buffer: ArrayBuffer | null = null;
+        let lastStatus = 'Falha de rede';
+        for (const candidateUrl of sampleCandidates) {
+          try {
+            const res = await fetch(candidateUrl);
+            if (!res.ok) {
+              lastStatus = `HTTP ${res.status}`;
+              continue;
+            }
+            const ab = await res.arrayBuffer();
+            if (ab.byteLength >= 12 && new DataView(ab).getUint32(0, true) === 0x46546c67) {
+              buffer = ab;
+              break;
+            }
+            lastStatus = 'Conteúdo não é um binário GLB válido';
+          } catch (fetchErr) {
+            lastStatus = fetchErr instanceof Error ? fetchErr.message : 'Erro de rede';
+          }
+        }
+        if (!buffer) {
+          throw new Error(lastStatus);
+        }
+        const loader = buildConfiguredGltfLoader();
+        const gltf = await loader.parseAsync(buffer, '');
+        mountLoadedGltf(gltf, 'DamagedHelmet.glb', [], null);
+        showBriefStatus('Modelo de exemplo PBR carregado (DamagedHelmet.glb)');
+      } catch (err) {
+        setIsLoadingModel(false);
+        const reason = err instanceof Error && err.message ? ` (${err.message})` : '';
+        setLoadError(`Não foi possível carregar o modelo de exemplo${reason}.`);
+      }
     };
 
     resetAssetRef.current = () => {
       disposeUploadedModel();
+      setHideDefaultBase(false);
+      stateRef.current.hideDefaultBase = false;
       characterRoot.visible = true;
       onImportedUvsRef.current?.(null);
       loadedAssetNameRef.current = null;
@@ -2088,10 +2856,16 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
 
     verifyCurrentSceneRef.current = () => {
       const activeDefaultRoot = stateRef.current.rigPreset === 'QUADRUPEDE' ? quadrupedRoot : characterRoot;
-      const target = uploadedGroup || activeDefaultRoot;
+      const target =
+        uploadedGroup ||
+        (stateRef.current.hideDefaultBase && studioObjectsGroup.children.length > 0
+          ? studioObjectsGroup
+          : activeDefaultRoot);
       const clips = uploadedGroup ? uploadedClips : [];
       const rigLabel = RIG_PRESET_DEFINITIONS[stateRef.current.rigPreset].label;
-      const name = loadedAssetNameRef.current || `Ativo Padrão · ${rigLabel}`;
+      const name =
+        loadedAssetNameRef.current ||
+        (target === studioObjectsGroup ? 'Cena_Objetos_3D' : `Ativo Padrão · ${rigLabel}`);
       const report = auditThreeScene(target, clips, name, lastContainerCheck);
       setVerificationReport(report);
     };
@@ -2305,6 +3079,111 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
       showBriefStatus(`Material Procedural + 5 mapas PBR aplicado: ${label}`);
     };
 
+    applySubstanceBundleRef.current = (req: SubstanceTextureSetRequest) => {
+      void (async () => {
+        try {
+          setLoadError(null);
+          const bundle = await loadSubstanceBundleToThree(req, !uploadedGroup, maxAniso);
+          if (activeProceduralBundle) {
+            activeProceduralBundle.dispose();
+            activeProceduralBundle = null;
+          }
+          activeProceduralBundle = bundle;
+
+          const hasSelectedPrim =
+            selectedSceneObject != null && studioPrimitives.some((r) => r.mesh === selectedSceneObject);
+          const applyToPrimitives =
+            !uploadedGroup && studioPrimitives.length > 0 && (stateRef.current.hideDefaultBase || hasSelectedPrim);
+
+          if (uploadedGroup) {
+            for (const rec of uploadedRecords) {
+              if (rec.paintData) {
+                rec.paintData.tex.dispose();
+                rec.paintData = null;
+              }
+              rec.customMap = req.slots.baseColor ? bundle.map : null;
+              rec.pbrMaps = {
+                roughnessMap: req.slots.roughness ? bundle.roughnessMap : null,
+                metalnessMap: req.slots.metallic ? bundle.metalnessMap : null,
+                normalMap: req.slots.normal ? bundle.normalMap : null,
+                aoMap: req.slots.ao ? bundle.aoMap : null,
+                emissiveMap: req.slots.emissive ? (bundle.emissiveMap ?? null) : null,
+                alphaMap: req.slots.opacity ? (bundle.alphaMap ?? null) : null,
+              };
+            }
+          } else if (applyToPrimitives) {
+            const targets = hasSelectedPrim
+              ? studioPrimitives.filter((r) => r.mesh === selectedSceneObject)
+              : studioPrimitives;
+            for (const r of targets) {
+              const mat = r.mesh.material;
+              if (mat instanceof THREE.MeshStandardMaterial) {
+                if (req.slots.baseColor) {
+                  mat.map = bundle.map;
+                  mat.color.setHex(0xffffff);
+                }
+                if (req.slots.roughness) {
+                  mat.roughnessMap = bundle.roughnessMap;
+                  mat.roughness = 1.0;
+                }
+                if (req.slots.metallic) {
+                  mat.metalnessMap = bundle.metalnessMap;
+                  mat.metalness = 1.0;
+                }
+                if (req.slots.normal) {
+                  mat.normalMap = bundle.normalMap;
+                }
+                if (req.slots.ao) {
+                  mat.aoMap = bundle.aoMap;
+                  mat.aoMapIntensity = 1.0;
+                }
+                if (req.slots.emissive && bundle.emissiveMap) {
+                  mat.emissiveMap = bundle.emissiveMap;
+                  mat.emissive.setHex(0xffffff);
+                }
+                if (req.slots.opacity && bundle.alphaMap) {
+                  mat.alphaMap = bundle.alphaMap;
+                  mat.transparent = true;
+                }
+                mat.needsUpdate = true;
+              }
+            }
+          } else {
+            const targetGroupType = stateRef.current.rigPreset === 'QUADRUPEDE' ? 'quadruped' : 'humanoid';
+            for (const p of parts) {
+              if (p.groupType !== targetGroupType) continue;
+              if (p.paintData) {
+                p.paintData.tex.dispose();
+                p.paintData = null;
+              }
+              p.customMap = req.slots.baseColor ? bundle.map : null;
+              p.pbrMaps = {
+                roughnessMap: req.slots.roughness ? bundle.roughnessMap : null,
+                metalnessMap: req.slots.metallic ? bundle.metalnessMap : null,
+                normalMap: req.slots.normal ? bundle.normalMap : null,
+                aoMap: req.slots.ao ? bundle.aoMap : null,
+                emissiveMap: req.slots.emissive ? (bundle.emissiveMap ?? null) : null,
+                alphaMap: req.slots.opacity ? (bundle.alphaMap ?? null) : null,
+              };
+            }
+          }
+
+          if (stateRef.current.shadingMode !== 'pbr') {
+            setShadingMode('pbr');
+            stateRef.current.shadingMode = 'pbr';
+          }
+          setActiveProceduralLabel(`Substance: ${req.materialName}`);
+          setCustomTextureName(null);
+          applyMaterialSettings();
+          syncInspectorUvs();
+          const count = Object.values(req.slots).filter(Boolean).length;
+          showBriefStatus(`Substance PBR aplicado (${count} canal(is)): ${req.materialName}`);
+        } catch (err) {
+          setLoadError(err instanceof Error ? err.message : 'Falha ao aplicar texturas Substance.');
+        }
+      })();
+    };
+
     loadPbrChannelTextureRef.current = (
       channel: 'map' | 'roughnessMap' | 'metalnessMap' | 'normalMap' | 'aoMap',
       file: File
@@ -2466,28 +3345,35 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
       showBriefStatus('Pintura, mapas e texturas customizadas removidas');
     };
 
-    // Raycaster for 3D Texture Paint & Part Material Assignment
     const raycaster = new THREE.Raycaster();
     const pointerNdc = new THREE.Vector2();
     let isPointerPainting = false;
     let lastPaintMesh: THREE.Mesh | null = null;
     let lastPaintUv: { u: number; v: number } | null = null;
+    let pointerDownClient: { x: number; y: number } | null = null;
 
     const getRaycastHit = (e: PointerEvent) => {
-      const rect = renderer.domElement.getBoundingClientRect();
+      const rect = activeRenderer.domElement.getBoundingClientRect();
       if (rect.width <= 0 || rect.height <= 0) return null;
       pointerNdc.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
       pointerNdc.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
       raycaster.setFromCamera(pointerNdc, camera);
 
-      const candidateMeshes: THREE.Object3D[] = uploadedGroup
+      const baseMeshes: THREE.Object3D[] = uploadedGroup
         ? uploadedRecords.map((r) => r.mesh)
+        : stateRef.current.hideDefaultBase
+        ? []
         : parts
             .filter(
               (p) =>
                 p.groupType === (stateRef.current.rigPreset === 'QUADRUPEDE' ? 'quadruped' : 'humanoid')
             )
             .map((p) => p.mesh);
+
+      const candidateMeshes: THREE.Object3D[] = [
+        ...studioPrimitives.map((r) => r.mesh),
+        ...baseMeshes,
+      ];
 
       const hits = raycaster.intersectObjects(candidateMeshes, false);
       return hits.length > 0 ? hits[0] : null;
@@ -2559,8 +3445,10 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
 
     const onPointerDown = (e: PointerEvent) => {
       if (e.button !== 0) return;
+      pointerDownClient = { x: e.clientX, y: e.clientY };
+
       const mode = stateRef.current.toolMode;
-      if (mode === 'orbit') return;
+      if (mode !== 'paint' && mode !== 'assign_mat') return;
 
       const hit = getRaycastHit(e);
       if (!hit) return;
@@ -2588,6 +3476,11 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
     };
 
     const onPointerMove = (e: PointerEvent) => {
+      if (stateRef.current.playMode && !isPointerPainting) {
+        const hit = getRaycastHit(e);
+        hoveredPlayMesh = hit ? hit.object : null;
+        return;
+      }
       if (!isPointerPainting || stateRef.current.toolMode !== 'paint') return;
       const hit = getRaycastHit(e);
       if (hit) {
@@ -2598,7 +3491,7 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
       }
     };
 
-    const onPointerUp = () => {
+    const onPointerUp = (e: PointerEvent) => {
       if (isPointerPainting) {
         isPointerPainting = false;
         lastPaintMesh = null;
@@ -2606,15 +3499,38 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
         syncInspectorUvs();
       }
       controls.enabled = true;
+
+      if (pointerDownClient) {
+        const dist = Math.hypot(e.clientX - pointerDownClient.x, e.clientY - pointerDownClient.y);
+        pointerDownClient = null;
+        const mode = stateRef.current.toolMode;
+        if (dist < 5 && !transformControls.dragging && mode !== 'paint' && mode !== 'assign_mat') {
+          const hit = getRaycastHit(e);
+          if (stateRef.current.playMode) {
+            if (hit) {
+              const rec = getPrimitiveRecord(hit.object);
+              if (rec && rec.interaction === 'click_toggle') {
+                rec.clickToggled = !rec.clickToggled;
+              }
+            }
+          } else if (hit) {
+            selectThreeObject(hit.object);
+          }
+        }
+      }
     };
 
-    renderer.domElement.addEventListener('pointerdown', onPointerDown);
+    activeRenderer.domElement.addEventListener('pointerdown', onPointerDown);
     window.addEventListener('pointermove', onPointerMove);
     window.addEventListener('pointerup', onPointerUp);
 
     exportModelRef.current = (format: 'glb' | 'gltf') => {
       const activeDefaultRoot = stateRef.current.rigPreset === 'QUADRUPEDE' ? quadrupedRoot : characterRoot;
-      const target = uploadedGroup || activeDefaultRoot;
+      const baseTarget = uploadedGroup || activeDefaultRoot;
+      const exportTargets: THREE.Object3D[] = [];
+      if (uploadedGroup || !stateRef.current.hideDefaultBase) exportTargets.push(baseTarget);
+      if (studioObjectsGroup.children.length > 0) exportTargets.push(studioObjectsGroup);
+      const exportInput = exportTargets.length === 1 ? exportTargets[0] : exportTargets.length > 1 ? exportTargets : baseTarget;
       const prevMode = stateRef.current.shadingMode;
 
       const restoreMode = () => {
@@ -2646,7 +3562,7 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
       const exporter = new GLTFExporter();
       try {
         exporter.parse(
-          target,
+          exportInput,
           (result) => {
             restoreMode();
             const blob =
@@ -2832,15 +3748,15 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
     };
 
     const syncRendererSettings = () => {
-      renderer.toneMapping = TONE_MAPPING_MAP[stateRef.current.toneMapping];
-      renderer.toneMappingExposure = stateRef.current.exposure;
+      activeRenderer.toneMapping = TONE_MAPPING_MAP[stateRef.current.toneMapping];
+      activeRenderer.toneMappingExposure = stateRef.current.exposure;
       scene.environmentIntensity = stateRef.current.envIntensity;
       const rotRad = THREE.MathUtils.degToRad(stateRef.current.envRotationDeg);
       scene.environmentRotation.set(0, rotRad, 0);
       scene.backgroundRotation.set(0, rotRad, 0);
       const showBg = stateRef.current.showHdriBg && Boolean(envTexture);
       scene.background = showBg && envTexture ? envTexture : new THREE.Color(0x0d1017);
-      scene.fog = showBg ? null : new THREE.FogExp2(0x0d1017, 0.065);
+      scene.fog = showBg ? null : new THREE.Fog(0x0d1017, 4.8, 13.5);
     };
     syncRendererSettingsRef.current = syncRendererSettings;
 
@@ -2915,10 +3831,10 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
     };
 
     renderStudioPngRef.current = async () => {
-      const hideHelpers: THREE.Object3D[] = [grid, contactPlane, refSkeletonGroup];
+      const hideHelpers: THREE.Object3D[] = [grid, contactPlane, refSkeletonGroup, transformHelper];
       if (uploadedSkeletonHelper) hideHelpers.push(uploadedSkeletonHelper);
       const blob = await renderSceneToPngBlob({
-        renderer,
+        renderer: activeRenderer,
         scene,
         camera,
         container,
@@ -2946,7 +3862,11 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
 
     exportZipRef.current = async () => {
       const activeDefaultRoot = stateRef.current.rigPreset === 'QUADRUPEDE' ? quadrupedRoot : characterRoot;
-      const target = uploadedGroup || activeDefaultRoot;
+      const target =
+        uploadedGroup ||
+        (stateRef.current.hideDefaultBase && studioObjectsGroup.children.length > 0
+          ? studioObjectsGroup
+          : activeDefaultRoot);
       const prevMode = stateRef.current.shadingMode;
 
       const restoreMode = () => {
@@ -2974,10 +3894,10 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
       };
 
       try {
-        const hideHelpers: THREE.Object3D[] = [grid, contactPlane, refSkeletonGroup];
+        const hideHelpers: THREE.Object3D[] = [grid, contactPlane, refSkeletonGroup, transformHelper];
         if (uploadedSkeletonHelper) hideHelpers.push(uploadedSkeletonHelper);
         const studioRenderBlob = await renderSceneToPngBlob({
-          renderer,
+          renderer: activeRenderer,
           scene,
           camera,
           container,
@@ -3019,116 +3939,222 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
     refreshHierarchyState();
 
     if (!isSoftwareGl) {
-      renderer.compile(scene, camera);
+      try {
+        activeRenderer.compile(scene, camera);
+      } catch {
+        // Proceed cleanly if pre-compile is skipped by driver
+      }
     }
 
     let frameId = 0;
     let disposed = false;
+    let lastReportedFrame = 1;
+    let lastWidth = width;
+    let lastHeight = height;
     const clock = new THREE.Clock();
 
     function afterDraw(cb: () => void) {
-      const gl = renderer.getContext() as WebGL2RenderingContext;
-      const sync = gl.fenceSync(gl.SYNC_GPU_COMMANDS_COMPLETE, 0);
-      gl.flush();
-      const poll = () => {
-        if (disposed) return;
-        const state = sync && gl.getSyncParameter(sync, gl.SYNC_STATUS);
-        if (state === gl.UNSIGNALED) {
-          frameId = window.setTimeout(poll, 5);
-        } else {
-          if (sync) gl.deleteSync(sync);
+      try {
+        const gl = activeRenderer.getContext() as WebGL2RenderingContext;
+        if (!gl || typeof gl.fenceSync !== 'function') {
           frameId = window.setTimeout(cb, 80);
+          return;
         }
-      };
-      frameId = window.setTimeout(poll, 5);
+        const sync = gl.fenceSync(gl.SYNC_GPU_COMMANDS_COMPLETE, 0);
+        gl.flush();
+        const poll = () => {
+          if (disposed) return;
+          const state = sync && gl.getSyncParameter(sync, gl.SYNC_STATUS);
+          if (state === gl.UNSIGNALED) {
+            frameId = window.setTimeout(poll, 5);
+          } else {
+            if (sync) gl.deleteSync(sync);
+            frameId = window.setTimeout(cb, 80);
+          }
+        };
+        frameId = window.setTimeout(poll, 5);
+      } catch {
+        frameId = window.setTimeout(cb, 80);
+      }
     }
+
+    const syncViewportSize = () => {
+      if (!container || disposed) return false;
+      const w = container.clientWidth;
+      const h = container.clientHeight;
+      if (w <= 0 || h <= 0) return false;
+      if (w !== lastWidth || h !== lastHeight) {
+        lastWidth = w;
+        lastHeight = h;
+        camera.aspect = w / h;
+        camera.updateProjectionMatrix();
+        activeRenderer.setSize(w, h, false);
+        if (composer) composer.setSize(w, h);
+        if (bloomPass) bloomPass.resolution.set(w, h);
+      }
+      return true;
+    };
+
+    let elapsedPlaySec = 0;
 
     function tick() {
       if (disposed) return;
-      const delta = Math.min(clock.getDelta(), 0.1);
-      const isVisible = Boolean(container && container.clientWidth > 0 && container.clientHeight > 0);
+      try {
+        const delta = Math.min(clock.getDelta(), 0.1);
+        const isVisible = syncViewportSize();
 
-      if (isVisible) {
-        if (stateRef.current.camTransitioning) {
-          const preset = CAMERA_PRESETS[stateRef.current.camTarget];
-          _camTargetPos.set(...preset.pos);
-          _camTargetLook.set(...preset.target);
-          const factor = 1 - Math.exp(-7 * delta);
-          camera.position.lerp(_camTargetPos, factor);
-          controls.target.lerp(_camTargetLook, factor);
-          if (camera.position.distanceTo(_camTargetPos) < 0.015) {
-            camera.position.copy(_camTargetPos);
-            controls.target.copy(_camTargetLook);
-            stateRef.current.camTransitioning = false;
-          }
-        }
-
-        if (uploadedGroup) {
-          if (uploadedMixer && uploadedClips.length > 0 && stateRef.current.isPlaying) {
-            uploadedMixer.update(delta);
-            const action = uploadedActions[activeUploadedClipIdx];
-            const dur = uploadedClips[activeUploadedClipIdx]?.duration || 1;
-            if (action && dur > 0) {
-              const norm = (action.time % dur) / dur;
-              setCurrentFrame(Math.max(1, Math.min(60, Math.round(norm * 59) + 1)));
+        if (isVisible) {
+          if (stateRef.current.camTransitioning) {
+            const preset = CAMERA_PRESETS[stateRef.current.camTarget];
+            _camTargetPos.set(...preset.pos);
+            _camTargetLook.set(...preset.target);
+            const factor = 1 - Math.exp(-7 * delta);
+            camera.position.lerp(_camTargetPos, factor);
+            controls.target.lerp(_camTargetLook, factor);
+            if (camera.position.distanceTo(_camTargetPos) < 0.015) {
+              camera.position.copy(_camTargetPos);
+              controls.target.copy(_camTargetLook);
+              stateRef.current.camTransitioning = false;
             }
           }
-        } else if (stateRef.current.isPlaying) {
-          stateRef.current.frame += delta * 24;
-          if (stateRef.current.frame > 60) stateRef.current.frame = 1;
-          const rounded = Math.round(stateRef.current.frame);
-          applyFramePose(stateRef.current.frame);
-          setCurrentFrame(rounded);
+
+          if (uploadedGroup) {
+            if (uploadedMixer && uploadedClips.length > 0 && stateRef.current.isPlaying) {
+              uploadedMixer.update(delta);
+              const action = uploadedActions[activeUploadedClipIdx];
+              const dur = uploadedClips[activeUploadedClipIdx]?.duration || 1;
+              if (action && dur > 0) {
+                const norm = (action.time % dur) / dur;
+                const nextFrame = Math.max(1, Math.min(60, Math.round(norm * 59) + 1));
+                if (nextFrame !== lastReportedFrame) {
+                  lastReportedFrame = nextFrame;
+                  setCurrentFrame(nextFrame);
+                }
+              }
+            }
+          } else if (stateRef.current.isPlaying && !stateRef.current.hideDefaultBase) {
+            stateRef.current.frame += delta * 24;
+            if (stateRef.current.frame > 60) stateRef.current.frame = 1;
+            const rounded = Math.round(stateRef.current.frame);
+            applyFramePose(stateRef.current.frame);
+            if (rounded !== lastReportedFrame) {
+              lastReportedFrame = rounded;
+              setCurrentFrame(rounded);
+            }
+          }
+
+          if (stateRef.current.playMode || stateRef.current.physicsActive) {
+            elapsedPlaySec += delta;
+            for (const rec of studioPrimitives) {
+              if (stateRef.current.playMode) {
+                if (rec.interaction === 'spin') {
+                  rec.mesh.rotation.y += delta * 1.15;
+                } else if (rec.interaction === 'float' && !rec.physicsEnabled) {
+                  rec.mesh.position.y = rec.baseY + Math.sin(elapsedPlaySec * 2.2) * 0.14;
+                } else if (rec.interaction === 'hover_pulse') {
+                  const targetFactor = hoveredPlayMesh === rec.mesh ? 1.22 : 1.0;
+                  const targetScale = rec.baseScale.clone().multiplyScalar(targetFactor);
+                  rec.mesh.scale.lerp(targetScale, 1 - Math.exp(-10 * delta));
+                } else if (rec.interaction === 'click_toggle') {
+                  const targetFactor = rec.clickToggled ? 1.32 : 1.0;
+                  const targetScale = rec.baseScale.clone().multiplyScalar(targetFactor);
+                  rec.mesh.scale.lerp(targetScale, 1 - Math.exp(-10 * delta));
+                  if (rec.clickToggled) rec.mesh.rotation.y += delta * 1.6;
+                }
+              }
+
+              if (stateRef.current.physicsActive && rec.physicsEnabled) {
+                rec.velocityY -= 9.81 * delta;
+                rec.mesh.position.y += rec.velocityY * delta;
+                const box = new THREE.Box3().setFromObject(rec.mesh);
+                const minY = box.min.y;
+                if (minY < 0) {
+                  rec.mesh.position.y += -minY;
+                  if (Math.abs(rec.velocityY) > 0.25) {
+                    rec.velocityY = -rec.velocityY * 0.62;
+                  } else {
+                    rec.velocityY = 0;
+                  }
+                }
+              }
+            }
+          }
+
+          controls.update();
+          if (stateRef.current.bloomEnabled && composer) {
+            if (bloomPass) bloomPass.strength = stateRef.current.bloomStrength;
+            composer.render();
+          } else {
+            activeRenderer.render(scene, camera);
+          }
         }
 
-        controls.update();
-        renderer.render(scene, camera);
-      }
-
-      if (isSoftwareGl) {
-        if (isVisible) afterDraw(tick);
-        else frameId = window.setTimeout(tick, 180);
-      } else {
-        frameId = requestAnimationFrame(tick);
+        if (isSoftwareGl) {
+          if (isVisible) afterDraw(tick);
+          else frameId = window.setTimeout(tick, 180);
+        } else {
+          frameId = requestAnimationFrame(tick);
+        }
+      } catch (tickErr) {
+        disposed = true;
+        setWebglError(
+          tickErr instanceof Error
+            ? `Erro no loop de renderização 3D: ${tickErr.message}`
+            : 'Erro ao renderizar a cena WebGL.'
+        );
       }
     }
 
     requestRenderRef.current = () => {
       if (!disposed) {
-        renderer.render(scene, camera);
+        syncViewportSize();
+        if (stateRef.current.bloomEnabled && composer) {
+          composer.render();
+        } else {
+          activeRenderer.render(scene, camera);
+        }
       }
     };
 
-    tick();
-
     const handleResize = () => {
-      if (!container || disposed) return;
-      const w = container.clientWidth;
-      const h = container.clientHeight;
-      if (w <= 0 || h <= 0) return;
-      camera.aspect = w / h;
-      camera.updateProjectionMatrix();
-      renderer.setSize(w, h);
+      if (syncViewportSize()) {
+        if (stateRef.current.bloomEnabled && composer) {
+          composer.render();
+        } else {
+          activeRenderer.render(scene, camera);
+        }
+      }
     };
 
+    const initResizeRaf = requestAnimationFrame(handleResize);
+    window.addEventListener('resize', handleResize);
     const ro = new ResizeObserver(handleResize);
     ro.observe(container);
 
-    return () => {
+    tick();
+
+    cleanupFn = () => {
       disposed = true;
+      cancelAnimationFrame(initResizeRaf);
       cancelAnimationFrame(frameId);
       clearTimeout(frameId);
       if (exportStatusTimerRef.current !== null) {
         window.clearTimeout(exportStatusTimerRef.current);
       }
+      window.removeEventListener('resize', handleResize);
       ro.disconnect();
+      transformControls.dispose();
+      if (composer) composer.dispose();
       controls.dispose();
-      renderer.domElement.removeEventListener('webglcontextlost', onContextLost);
-      renderer.domElement.removeEventListener('webglcontextrestored', onContextRestored);
-      renderer.domElement.removeEventListener('pointerdown', onPointerDown);
+      activeRenderer.domElement.removeEventListener('webglcontextlost', onContextLost);
+      activeRenderer.domElement.removeEventListener('webglcontextrestored', onContextRestored);
+      activeRenderer.domElement.removeEventListener('pointerdown', onPointerDown);
       window.removeEventListener('pointermove', onPointerMove);
       window.removeEventListener('pointerup', onPointerUp);
 
+      while (studioPrimitives.length > 0) {
+        disposePrimitiveRecord(studioPrimitives.pop()!);
+      }
       disposeUploadedModel();
       if (activeProceduralBundle) {
         activeProceduralBundle.dispose();
@@ -3180,12 +4206,33 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
         userLightsGroup.remove(c);
         if ((c as THREE.Light).dispose) (c as THREE.Light).dispose();
       }
-      renderer.dispose();
-      if (renderer.domElement.parentNode === container) {
-        container.removeChild(renderer.domElement);
+      activeRenderer.dispose();
+      if (activeRenderer.domElement.parentNode === container) {
+        container.removeChild(activeRenderer.domElement);
       }
     };
-  }, []);
+    } catch (initErr) {
+      if (renderer) {
+        try {
+          renderer.dispose();
+          if (renderer.domElement.parentNode === container) {
+            container.removeChild(renderer.domElement);
+          }
+        } catch {
+          // Ignore secondary cleanup errors
+        }
+      }
+      const msg =
+        initErr instanceof Error && initErr.message
+          ? initErr.message
+          : 'Não foi possível inicializar a Viewport 3D WebGL.';
+      setWebglError(msg);
+    }
+
+    return () => {
+      cleanupFn?.();
+    };
+  }, [retryWebglNonce]);
 
   useEffect(() => {
     applyMaterialsRef.current?.();
@@ -3221,6 +4268,12 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
   }, [proceduralMaterialRequest]);
 
   useEffect(() => {
+    if (substanceTextureRequest) {
+      applySubstanceBundleRef.current?.(substanceTextureRequest);
+    }
+  }, [substanceTextureRequest]);
+
+  useEffect(() => {
     if (pendingImportFiles && pendingImportFiles.length > 0) {
       loadFilesRef.current?.(pendingImportFiles);
       onConsumedPendingImport?.();
@@ -3234,6 +4287,10 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
   }, [exportZipNonce]);
 
   useEffect(() => {
+    syncSplineModeRef.current?.();
+  }, [toolMode, playMode, physicsActive, bloomEnabled, bloomStrength, hideDefaultBase]);
+
+  useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
       const tag = (e.target as HTMLElement | null)?.tagName;
       if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || verificationReport) return;
@@ -3244,6 +4301,18 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
       } else if (e.code === 'KeyF') {
         e.preventDefault();
         frameSceneRef.current?.();
+      } else if (e.code === 'KeyV') {
+        setToolMode('orbit');
+      } else if (e.code === 'KeyG' || e.code === 'KeyW') {
+        setToolMode('translate');
+      } else if (e.code === 'KeyE') {
+        setToolMode('rotate');
+      } else if (e.code === 'KeyS' || e.code === 'KeyR') {
+        setToolMode('scale');
+      } else if (e.code === 'KeyP') {
+        setPlayMode((p) => !p);
+      } else if (e.code === 'Delete' || e.code === 'Backspace' || e.code === 'KeyX') {
+        deleteSelectedRef.current?.();
       } else if ((e.ctrlKey || e.metaKey) && e.code === 'KeyZ') {
         e.preventDefault();
         undoPaintRef.current?.();
@@ -3270,9 +4339,26 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
     }
   };
 
+  const triggerImportFiles = (files: File[]) => {
+    if (files.length === 0) return;
+    if (!loadFilesRef.current) {
+      setLoadError('A Viewport 3D não foi inicializada (WebGL indisponível). Recarregue a janela ou tente novamente.');
+      return;
+    }
+    loadFilesRef.current(files);
+  };
+
+  const triggerLoadSample = () => {
+    if (!loadSampleRef.current) {
+      setLoadError('A Viewport 3D não foi inicializada (WebGL indisponível). Recarregue a janela ou tente novamente.');
+      return;
+    }
+    loadSampleRef.current();
+  };
+
   return (
     <div
-      className="relative flex-1 w-full h-[calc(100vh-4rem)] min-h-[600px] bg-[#0D1017] overflow-hidden select-none"
+      className="relative flex-1 w-full h-full min-h-[520px] bg-[#0D1017] flex overflow-hidden select-none"
       onDragOver={(e) => {
         e.preventDefault();
         setIsDragging(true);
@@ -3285,9 +4371,8 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
       onDrop={(e) => {
         e.preventDefault();
         setIsDragging(false);
-        if (e.dataTransfer.files?.length) {
-          loadFilesRef.current?.(e.dataTransfer.files);
-        }
+        const files = e.dataTransfer.files ? Array.from(e.dataTransfer.files) : [];
+        triggerImportFiles(files);
       }}
     >
       {/* Hidden GLB/glTF/ZIP Multi-File Input */}
@@ -3298,10 +4383,9 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
         multiple
         className="hidden"
         onChange={(e) => {
-          if (e.target.files?.length) {
-            loadFilesRef.current?.(e.target.files);
-          }
+          const files = e.target.files ? Array.from(e.target.files) : [];
           e.target.value = '';
+          triggerImportFiles(files);
         }}
       />
 
@@ -3313,10 +4397,10 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
         className="hidden"
         onChange={(e) => {
           const f = e.target.files?.[0];
+          e.target.value = '';
           if (f) {
             loadCustomTextureFileRef.current?.(f);
           }
-          e.target.value = '';
         }}
       />
 
@@ -3328,10 +4412,10 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
         className="hidden"
         onChange={(e) => {
           const f = e.target.files?.[0];
+          e.target.value = '';
           if (f) {
             loadPbrChannelTextureRef.current?.(activePbrChannelUpload, f);
           }
-          e.target.value = '';
         }}
       />
 
@@ -3343,853 +4427,1103 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
         className="hidden"
         onChange={(e) => {
           const f = e.target.files?.[0];
+          e.target.value = '';
           if (f) {
             loadCustomHdriRef.current?.(f);
           }
-          e.target.value = '';
         }}
       />
 
-      {/* Dedicated WebGL Mount Container */}
-      <div
-        ref={mountRef}
-        className={`absolute inset-0 ${toolMode === 'paint' ? 'cursor-crosshair' : toolMode === 'assign_mat' ? 'cursor-cell' : ''}`}
+      {/* Hidden Video Texture Input (.mp4 / .webm) */}
+      <input
+        ref={videoFileInputRef}
+        type="file"
+        accept="video/mp4,video/webm,.mp4,.webm"
+        className="hidden"
+        onChange={(e) => {
+          const f = e.target.files?.[0];
+          e.target.value = '';
+          if (f) {
+            applyVideoTextureRef.current?.(f);
+          }
+        }}
       />
 
-      {contextLost && (
-        <div className="absolute inset-0 flex items-center justify-center bg-[#0D1017] text-slate-300 text-sm">
-          Contexto WebGL pausado. Recarregue a janela para restaurar a visualização 3D.
-        </div>
-      )}
-
-      {/* Drag Overlay */}
-      {isDragging && (
-        <div className="pointer-events-none absolute inset-4 z-20 rounded-2xl border-2 border-dashed border-orange-500 bg-[#0D1017]/80 flex flex-col items-center justify-center gap-2">
-          <Upload className="w-8 h-8 text-orange-400" />
-          <div className="text-base font-semibold text-white">Solte seu arquivo .glb, .gltf ou .zip aqui</div>
-          <div className="text-xs text-slate-400">
-            Suporte a pacotes .zip, compressão Draco, KTX2 e Meshopt
-          </div>
-        </div>
-      )}
-
-      {/* Minimal Top-Left Viewport Readout */}
-      <div className="absolute top-4 left-5 z-10 flex flex-col gap-1.5">
-        <div className="pointer-events-none text-xs font-medium text-slate-400">
-          {loadedAsset
-            ? `${loadedAsset.meshCount} malha(s) · ${loadedAsset.triCount.toLocaleString('pt-BR')} triângulos · ${loadedAsset.matCount} material(is) · Rig: ${RIG_PRESET_DEFINITIONS[config.rigPreset].label}${activeProceduralLabel ? ` · Procedural: ${activeProceduralLabel}` : ''}`
-            : `Ativo de Referência · Rig ${RIG_PRESET_DEFINITIONS[config.rigPreset].label}${activeProceduralLabel ? ` · Procedural: ${activeProceduralLabel}` : ''}`}
-        </div>
-        <div className="flex items-center gap-3">
-          <div className="pointer-events-none text-sm font-semibold text-slate-100 tabular-nums">
-            {loadedAsset ? (
-              <span>{loadedAsset.name}</span>
-            ) : (
-              <span>
-                Frame {String(currentFrame).padStart(2, '0')} / {config.animEndFrame} · Atlas {config.textureResolution}px
-              </span>
-            )}
-          </div>
-          {loadedAsset && (
-            <button
-              type="button"
-              onClick={() => resetAssetRef.current?.()}
-              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-[#161B26] border border-slate-700 text-xs font-medium text-slate-300 hover:text-white hover:border-slate-500 transition-colors cursor-pointer"
-            >
-              <X className="w-3 h-3" />
-              <span>Voltar ao Padrão</span>
-            </button>
-          )}
-        </div>
-        {showUrlBar && (
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              loadUrlRef.current?.(urlInput);
-            }}
-            className="flex items-center gap-1.5 bg-[#141923] border border-slate-700 rounded-lg p-1.5 max-w-lg"
-          >
-            <input
-              type="url"
-              value={urlInput}
-              onChange={(e) => setUrlInput(e.target.value)}
-              placeholder="Cole URL .glb/.gltf ou link ActionForge..."
-              className="flex-1 min-w-[260px] bg-[#0D1017] border border-slate-800 rounded-md px-2.5 py-1 text-xs text-slate-100 placeholder:text-slate-500 focus:outline-none focus:border-orange-500"
-            />
-            <button
-              type="submit"
-              disabled={isLoadingModel}
-              className="px-2.5 py-1 rounded-md bg-orange-600 hover:bg-orange-500 text-xs font-semibold text-white cursor-pointer whitespace-nowrap"
-            >
-              Carregar
-            </button>
-            <button
-              type="button"
-              onClick={() => setShowUrlBar(false)}
-              className="p-1 text-slate-400 hover:text-white cursor-pointer"
-              aria-label="Fechar barra de URL"
-            >
-              <X className="w-3.5 h-3.5" />
-            </button>
-          </form>
-        )}
-        {isLoadingModel && (
-          <div className="text-xs text-orange-400 font-medium">Carregando modelo GLB/glTF...</div>
-        )}
-        {exportStatus && (
-          <div className="text-xs text-emerald-400 font-medium">{exportStatus}</div>
-        )}
-        {loadError && (
-          <div className="max-w-md rounded-lg bg-red-950/90 border border-red-700/70 px-3 py-2 text-xs text-red-200 leading-relaxed">
-            {loadError}
-          </div>
-        )}
-      </div>
-
-      {/* Collapsible Bottom Control Dock (Zero Viewport Occlusion) */}
-      <div className="absolute bottom-5 left-1/2 -translate-x-1/2 w-[min(1180px,96vw)] z-10 flex flex-col items-center">
-        <button
-          type="button"
-          onClick={() => setDockExpanded((v) => !v)}
-          className="mb-1.5 inline-flex items-center gap-1.5 px-3 py-1 rounded-md bg-[#161B26] border border-slate-700/80 text-xs font-medium text-slate-300 hover:text-white hover:border-slate-500 transition-colors cursor-pointer whitespace-nowrap"
+      {/* Collapsible Left Studio Sidebar (Keeps 3D Viewport 100% Free) */}
+      {dockExpanded && (
+        <aside
+          aria-label="Comandos do Estúdio"
+          className="max-sm:absolute max-sm:inset-y-0 max-sm:left-0 max-sm:z-20 max-sm:shadow-2xl sm:relative w-[260px] md:w-[280px] lg:w-[296px] shrink-0 h-full border-r border-slate-800/90 bg-[#10141D] flex flex-col z-10"
         >
-          {dockExpanded ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronUp className="w-3.5 h-3.5" />}
-          <span>{dockExpanded ? 'Ocultar Controles' : 'Mostrar Controles'}</span>
-        </button>
+          <div className="p-2.5 border-b border-slate-800/80 shrink-0">
+            <button
+              type="button"
+              onClick={() => setDockExpanded(false)}
+              className="w-full inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#141923] border border-slate-700/80 hover:border-slate-500 text-xs font-medium text-slate-200 hover:text-white transition-colors cursor-pointer"
+            >
+              <ChevronLeft className="w-3.5 h-3.5 text-slate-400" />
+              <span>Ocultar Controles</span>
+            </button>
+          </div>
 
-        {dockExpanded && (
-          <div className="w-full rounded-xl bg-[#141923]/95 border border-slate-700/80 px-4 py-3 shadow-2xl flex flex-col gap-2.5">
-            {/* Row 1: Load & Export GLB/glTF + Verify + Shading modes + Camera presets + Playback */}
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              {/* Upload, URL, Verify & Export GLB/glTF */}
-              <div className="flex flex-wrap items-center gap-1.5 shrink-0">
-                <button
-                  type="button"
-                  disabled={isLoadingModel || isExporting}
-                  onClick={() => fileInputRef.current?.click()}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-orange-600 hover:bg-orange-500 disabled:opacity-50 text-xs font-semibold text-white transition-colors cursor-pointer whitespace-nowrap shrink-0"
-                >
-                  <Upload className="w-3.5 h-3.5" />
-                  <span>Importar GLB/ZIP</span>
-                </button>
-
-                <button
-                  type="button"
-                  disabled={isLoadingModel}
-                  onClick={() => loadSampleRef.current?.()}
-                  title="Carregar modelo de exemplo PBR (DamagedHelmet.glb)"
-                  className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-[#0D1017] border border-slate-800 hover:border-slate-600 text-xs font-medium text-slate-200 hover:text-white transition-colors cursor-pointer whitespace-nowrap shrink-0"
-                >
-                  <Box className="w-3.5 h-3.5 text-sky-400" />
-                  <span>Exemplo</span>
-                </button>
-
-                <button
-                  type="button"
-                  disabled={isLoadingModel}
-                  onClick={() => setShowUrlBar((v) => !v)}
-                  title="Carregar .glb/.gltf por URL ou colar referência ActionForge"
-                  className={`inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg border text-xs font-medium transition-colors cursor-pointer whitespace-nowrap shrink-0 ${
-                    showUrlBar
-                      ? 'bg-slate-700 border-slate-500 text-white'
-                      : 'bg-[#0D1017] border-slate-800 text-slate-300 hover:text-white hover:border-slate-600'
-                  }`}
-                >
-                  <Link2 className="w-3.5 h-3.5" />
-                  <span>URL</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setShowMeshDrawer((v) => !v)}
-                  title="Abrir hierarquia de malhas e dimensões técnicas"
-                  className={`inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg border text-xs font-medium transition-colors cursor-pointer whitespace-nowrap shrink-0 ${
-                    showMeshDrawer
-                      ? 'bg-slate-700 border-slate-500 text-white'
-                      : 'bg-[#0D1017] border-slate-800 text-slate-200 hover:text-white hover:border-slate-600'
-                  }`}
-                >
-                  <Layers className="w-3.5 h-3.5 text-orange-400" />
-                  <span>Malhas</span>
-                </button>
-
-                <button
-                  type="button"
-                  disabled={isLoadingModel}
-                  onClick={() => verifyCurrentSceneRef.current?.()}
-                  title="Verificar integridade GLB/glTF, UVs, normais, materiais PBR e rig"
-                  className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-[#0D1017] border border-slate-800 hover:border-slate-600 text-xs font-medium text-slate-200 hover:text-white transition-colors cursor-pointer whitespace-nowrap shrink-0"
-                >
-                  <ShieldCheck className="w-3.5 h-3.5 text-amber-400" />
-                  <span>Verificar</span>
-                </button>
-
-                <div className="flex items-center gap-1 p-1 rounded-lg bg-[#0D1017] border border-slate-800">
-                  <button
-                    type="button"
-                    disabled={isLoadingModel || isExporting}
-                    onClick={() => exportZipRef.current?.()}
-                    title="Exportar pacote ZIP completo com GLB, glTF, 5 mapas PBR, UV Layout e relatório técnico"
-                    className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-semibold bg-emerald-600/20 text-emerald-300 hover:bg-emerald-600 hover:text-white disabled:opacity-50 transition-colors cursor-pointer whitespace-nowrap shrink-0"
-                  >
-                    <Archive className="w-3.5 h-3.5" />
-                    <span>ZIP Completo</span>
-                  </button>
-                  <button
-                    type="button"
-                    disabled={isLoadingModel || isExporting}
-                    onClick={() => exportModelRef.current?.('glb')}
-                    title="Exportar cena atual com edições PBR e pinturas como arquivo binário .glb"
-                    className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium text-slate-200 hover:bg-slate-800 hover:text-white disabled:opacity-50 transition-colors cursor-pointer whitespace-nowrap shrink-0"
-                  >
-                    <Download className="w-3.5 h-3.5 text-emerald-400" />
-                    <span>.glb</span>
-                  </button>
-                  <button
-                    type="button"
-                    disabled={isLoadingModel || isExporting}
-                    onClick={() => exportModelRef.current?.('gltf')}
-                    title="Exportar cena atual com edições PBR e pinturas como JSON .gltf"
-                    className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium text-slate-200 hover:bg-slate-800 hover:text-white disabled:opacity-50 transition-colors cursor-pointer whitespace-nowrap shrink-0"
-                  >
-                    <Download className="w-3.5 h-3.5 text-sky-400" />
-                    <span>.gltf</span>
-                  </button>
+          <div className="flex-1 overflow-y-auto p-2.5 flex flex-col gap-1.5 text-xs">
+            {/* 0. CENA, MODELAGEM, GIZMO BLENDER/SPLINE, FÍSICA & INTERAÇÕES */}
+            <SplineDesignPanel
+              playMode={playMode}
+              onTogglePlayMode={setPlayMode}
+              physicsActive={physicsActive}
+              onTogglePhysicsActive={() => setPhysicsActive((v) => !v)}
+              bloomEnabled={bloomEnabled}
+              onToggleBloom={() => setBloomEnabled((v) => !v)}
+              bloomStrength={bloomStrength}
+              onBloomStrengthChange={setBloomStrength}
+              toolMode={toolMode}
+              onSelectToolMode={setToolMode}
+              onAddPrimitive={(kind) => addPrimitiveRef.current?.(kind)}
+              onApplyTemplate={(tpl) => applyTemplateRef.current?.(tpl)}
+              onRunBoolean={(op) => runBooleanRef.current?.(op)}
+              selectedObject={selectedObjectInspector}
+              onUpdateTransform={(g, i, v) => updateObjectTransformRef.current?.(g, i, v)}
+              onUpdateObjectMaterial={(patch) => updateObjectMaterialRef.current?.(patch)}
+              onUpdateInteraction={(interaction) => updateObjectInteractionRef.current?.(interaction)}
+              onToggleObjectPhysics={(en) => toggleObjectPhysicsRef.current?.(en)}
+              onUploadVideoTexture={() => videoFileInputRef.current?.click()}
+              onDuplicateSelected={() => duplicateSelectedRef.current?.()}
+              onDeleteSelected={() => deleteSelectedRef.current?.()}
+              onFocusSelected={() => {
+                if (selectedObjectInspector) {
+                  focusMeshByIdRef.current?.(selectedObjectInspector.id);
+                } else {
+                  frameSceneRef.current?.();
+                }
+              }}
+              hideDefaultBase={hideDefaultBase}
+              onToggleHideDefaultBase={() => setHideDefaultBase((v) => !v)}
+              primitiveCount={primitiveCount}
+            />
+            {/* 1. ARQUIVO & EXPORTAÇÃO */}
+            <section className="rounded-lg bg-[#141923] border border-slate-800/90 overflow-hidden">
+              <button
+                type="button"
+                aria-expanded={openSections.file}
+                onClick={() => toggleSection('file')}
+                className="w-full px-3 py-2.5 flex items-center justify-between gap-2 hover:bg-slate-800/60 transition-colors cursor-pointer"
+              >
+                <div className="flex items-center gap-2 min-w-0">
+                  <Archive className="w-3.5 h-3.5 text-orange-400 shrink-0" />
+                  <div className="text-left min-w-0">
+                    <div className="text-[11px] font-semibold tracking-wider uppercase text-slate-200 leading-tight">
+                      Arquivo &amp; Exportação
+                    </div>
+                    <div className="text-[11px] text-slate-400 truncate leading-tight">
+                      {loadedAsset ? loadedAsset.name : 'Ativo padrão · GLB / glTF / ZIP'}
+                    </div>
+                  </div>
                 </div>
-              </div>
-
-              {/* Shading Switcher */}
-              <div className="flex items-center gap-1 p-1 rounded-lg bg-[#0D1017] border border-slate-800">
-                {(
-                  [
-                    { id: 'pbr', label: 'PBR Físico' },
-                    { id: 'uv_checker', label: 'UV Checker' },
-                    { id: 'normals', label: 'Normais' },
-                    { id: 'cel_borde', label: 'Cel + Borde' },
-                  ] as const
-                ).map((item) => (
-                  <button
-                    key={item.id}
-                    type="button"
-                    onClick={() => setShadingMode(item.id)}
-                    className={`px-2.5 py-1 text-xs font-medium rounded-md transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
-                      shadingMode === item.id
-                        ? 'bg-slate-700 text-white'
-                        : 'text-slate-400 hover:text-slate-100'
+                <span className="inline-flex items-center justify-center w-5 h-5 rounded bg-[#0D1017] border border-slate-800 text-slate-400 shrink-0">
+                  <ChevronDown
+                    className={`w-3.5 h-3.5 transition-transform duration-150 ${
+                      openSections.file ? 'rotate-180 text-orange-400' : ''
                     }`}
-                  >
-                    {item.label}
-                  </button>
-                ))}
-              </div>
-
-              {/* Camera Presets */}
-              <div className="flex items-center gap-1 p-1 rounded-lg bg-[#0D1017] border border-slate-800">
-                {(Object.keys(CAMERA_PRESETS) as CameraPreset[]).map((key) => (
-                  <button
-                    key={key}
-                    type="button"
-                    onClick={() => handleSelectPreset(key)}
-                    className={`px-2 py-1 text-xs font-medium rounded-md transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
-                      activePreset === key
-                        ? 'bg-slate-700 text-white'
-                        : 'text-slate-400 hover:text-slate-100'
-                    }`}
-                  >
-                    {CAMERA_PRESETS[key].label}
-                  </button>
-                ))}
-                <button
-                  type="button"
-                  onClick={() => frameSceneRef.current?.()}
-                  title="Enquadrar modelo (Tecla F)"
-                  className="p-1 text-slate-400 hover:text-white rounded-md cursor-pointer"
-                >
-                  <Maximize2 className="w-3.5 h-3.5" />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleSelectPreset('q34')}
-                  title="Resetar Câmera"
-                  className="p-1 text-slate-400 hover:text-white rounded-md cursor-pointer"
-                >
-                  <RotateCcw className="w-3.5 h-3.5" />
-                </button>
-              </div>
-
-              {/* Animation Scrubber (works for default rig OR GLTF AnimationMixer clips) */}
-              {(!loadedAsset || loadedAsset.animClips.length > 0) && (
-                <div className="flex items-center gap-2">
-                  {loadedAsset && loadedAsset.animClips.length > 1 && (
-                    <select
-                      value={loadedAsset.activeClipIdx}
-                      onChange={(e) => selectClipRef.current?.(Number(e.target.value))}
-                      className="px-2 py-1 rounded-md bg-[#0D1017] border border-slate-700 text-xs text-slate-200 max-w-[120px]"
-                    >
-                      {loadedAsset.animClips.map((name, idx) => (
-                        <option key={`${name}-${idx}`} value={idx}>
-                          {name}
-                        </option>
-                      ))}
-                    </select>
-                  )}
-                  <button
-                    type="button"
-                    onClick={() => setIsPlaying((p) => !p)}
-                    className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-slate-800 hover:bg-slate-700 text-xs font-medium text-slate-100 transition-colors cursor-pointer whitespace-nowrap shrink-0"
-                  >
-                    {isPlaying ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5" />}
-                    <span>{isPlaying ? 'Pausar' : 'Animar'}</span>
-                  </button>
-                  <input
-                    type="range"
-                    min={1}
-                    max={60}
-                    value={currentFrame}
-                    onChange={(e) => handleScrubFrame(Number(e.target.value))}
-                    aria-label="Frame da animação"
-                    className="w-24 cursor-pointer"
                   />
-                  <span className="text-xs font-mono text-slate-300 tabular-nums w-9 text-right">
-                    {currentFrame}f
-                  </span>
+                </span>
+              </button>
+              {openSections.file && (
+                <div className="px-2.5 pb-2.5 pt-2 border-t border-slate-800/80 flex flex-col gap-2">
+                  <button
+                    type="button"
+                    disabled={isLoadingModel || isExporting}
+                    onClick={() => fileInputRef.current?.click()}
+                    className="w-full inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-orange-600 hover:bg-orange-500 disabled:opacity-50 font-semibold text-white transition-colors cursor-pointer"
+                  >
+                    <Upload className="w-3.5 h-3.5" />
+                    <span>{isLoadingModel ? 'Carregando...' : 'Importar GLB/glTF'}</span>
+                  </button>
+
+                  <div className="grid grid-cols-3 gap-1.5">
+                    <button
+                      type="button"
+                      disabled={isLoadingModel}
+                      onClick={triggerLoadSample}
+                      title="Carregar modelo de exemplo PBR (DamagedHelmet.glb)"
+                      className="inline-flex items-center justify-center gap-1 px-2 py-1.5 rounded-md bg-[#0D1017] border border-slate-800 hover:border-slate-600 font-medium text-slate-200 cursor-pointer"
+                    >
+                      <Box className="w-3.5 h-3.5 text-sky-400" />
+                      <span>Exemplo</span>
+                    </button>
+                    <button
+                      type="button"
+                      aria-expanded={showMeshDrawer}
+                      onClick={() => setShowMeshDrawer((v) => !v)}
+                      title="Abrir hierarquia de malhas e dimensões técnicas"
+                      className={`inline-flex items-center justify-between gap-1 px-2 py-1.5 rounded-md border font-medium cursor-pointer ${
+                        showMeshDrawer
+                          ? 'bg-slate-700 border-slate-500 text-white'
+                          : 'bg-[#0D1017] border-slate-800 text-slate-200 hover:text-white hover:border-slate-600'
+                      }`}
+                    >
+                      <span className="inline-flex items-center gap-1">
+                        <Layers className="w-3.5 h-3.5 text-orange-400" />
+                        <span>Malhas</span>
+                      </span>
+                      <ChevronDown
+                        className={`w-3 h-3 text-slate-400 transition-transform duration-150 ${
+                          showMeshDrawer ? 'rotate-180 text-white' : ''
+                        }`}
+                      />
+                    </button>
+                    <button
+                      type="button"
+                      disabled={isLoadingModel}
+                      onClick={() => verifyCurrentSceneRef.current?.()}
+                      title="Verificar integridade GLB/glTF, UVs, normais, materiais PBR e rig"
+                      className="inline-flex items-center justify-center gap-1 px-2 py-1.5 rounded-md bg-[#0D1017] border border-slate-800 hover:border-slate-600 font-medium text-slate-200 cursor-pointer"
+                    >
+                      <ShieldCheck className="w-3.5 h-3.5 text-amber-400" />
+                      <span>Verificar</span>
+                    </button>
+                  </div>
+
+                  {loadError && (
+                    <div className="rounded-md bg-red-950/90 border border-red-700/70 px-2 py-1.5 text-[11px] text-red-200 leading-snug">
+                      {loadError}
+                    </div>
+                  )}
+
+                  <div className="pt-1.5 border-t border-slate-800/70 flex flex-col gap-1.5">
+                    <button
+                      type="button"
+                      disabled={isLoadingModel || isExporting}
+                      onClick={() => exportZipRef.current?.()}
+                      title="Exportar pacote ZIP completo com GLB, glTF, 5 mapas PBR, UV Layout e relatório técnico"
+                      className="w-full inline-flex items-center justify-center gap-1.5 px-2.5 py-1.5 rounded-md font-semibold bg-emerald-600/20 border border-emerald-500/40 text-emerald-300 hover:bg-emerald-600 hover:text-white disabled:opacity-50 transition-colors cursor-pointer"
+                    >
+                      <Archive className="w-3.5 h-3.5" />
+                      <span>Exportar ZIP Completo</span>
+                    </button>
+                    <div className="grid grid-cols-2 gap-1.5">
+                      <button
+                        type="button"
+                        disabled={isLoadingModel || isExporting}
+                        onClick={() => exportModelRef.current?.('glb')}
+                        className="inline-flex items-center justify-center gap-1 px-2 py-1.5 rounded-md bg-[#0D1017] border border-slate-800 hover:border-slate-600 font-medium text-slate-200 cursor-pointer"
+                      >
+                        <Download className="w-3.5 h-3.5 text-emerald-400" />
+                        <span>.glb</span>
+                      </button>
+                      <button
+                        type="button"
+                        disabled={isLoadingModel || isExporting}
+                        onClick={() => exportModelRef.current?.('gltf')}
+                        className="inline-flex items-center justify-center gap-1 px-2 py-1.5 rounded-md bg-[#0D1017] border border-slate-800 hover:border-slate-600 font-medium text-slate-200 cursor-pointer"
+                      >
+                        <Download className="w-3.5 h-3.5 text-sky-400" />
+                        <span>.gltf</span>
+                      </button>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => openCodeExportRef.current?.()}
+                      className="w-full inline-flex items-center justify-center gap-1.5 px-2.5 py-1.5 rounded-md bg-[#0D1017] border border-slate-800 hover:border-sky-500 text-slate-200 hover:text-white font-medium transition-colors cursor-pointer"
+                    >
+                      <Code2 className="w-3.5 h-3.5 text-sky-400" />
+                      <span>Exportar Código (React / Three.js)</span>
+                    </button>
+                  </div>
                 </div>
               )}
-            </div>
+            </section>
 
-            {/* Row 2: Rig Automático Preset Selector + Ossos + Materiais & Pintura Toggle */}
-            <div className="flex flex-wrap items-center justify-between gap-2.5 pt-2 border-t border-slate-800/80 text-xs">
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="text-slate-400 font-medium whitespace-nowrap">Rig Automático:</span>
-                <div className="flex items-center gap-1 p-1 rounded-lg bg-[#0D1017] border border-slate-800">
-                  {(Object.keys(RIG_PRESET_DEFINITIONS) as RigPreset[]).map((presetKey) => {
-                    const def = RIG_PRESET_DEFINITIONS[presetKey];
-                    const active = config.rigPreset === presetKey;
-                    return (
-                      <button
-                        key={presetKey}
-                        type="button"
-                        title={def.description}
-                        onClick={() => {
-                          onConfigChange({ rigPreset: presetKey });
+            {/* 2. VISUALIZAÇÃO */}
+            <section className="rounded-lg bg-[#141923] border border-slate-800/90 overflow-hidden">
+              <button
+                type="button"
+                aria-expanded={openSections.view}
+                onClick={() => toggleSection('view')}
+                className="w-full px-3 py-2.5 flex items-center justify-between gap-2 hover:bg-slate-800/60 transition-colors cursor-pointer"
+              >
+                <div className="flex items-center gap-2 min-w-0">
+                  <Eye className="w-3.5 h-3.5 text-sky-400 shrink-0" />
+                  <div className="text-left min-w-0">
+                    <div className="text-[11px] font-semibold tracking-wider uppercase text-slate-200 leading-tight">
+                      Visualização
+                    </div>
+                    <div className="text-[11px] text-slate-400 truncate leading-tight">
+                      {shadingMode === 'pbr'
+                        ? 'PBR Físico'
+                        : shadingMode === 'uv_checker'
+                        ? 'UV Checker'
+                        : shadingMode === 'normals'
+                        ? 'Normais'
+                        : 'Cel + Borde'}{' '}
+                      · Câmera {CAMERA_PRESETS[activePreset].label}
+                    </div>
+                  </div>
+                </div>
+                <span className="inline-flex items-center justify-center w-5 h-5 rounded bg-[#0D1017] border border-slate-800 text-slate-400 shrink-0">
+                  <ChevronDown
+                    className={`w-3.5 h-3.5 transition-transform duration-150 ${
+                      openSections.view ? 'rotate-180 text-orange-400' : ''
+                    }`}
+                  />
+                </span>
+              </button>
+              {openSections.view && (
+                <div className="px-2.5 pb-2.5 pt-2 border-t border-slate-800/80 flex flex-col gap-2">
+                  <label className="flex flex-col gap-1">
+                    <span className="text-[11px] text-slate-400">Shading</span>
+                    <div className="relative">
+                      <select
+                        value={shadingMode}
+                        onChange={(e) => setShadingMode(e.target.value as ShadingMode)}
+                        className="w-full appearance-none pl-2.5 pr-7 py-1.5 rounded-md bg-[#0D1017] border border-slate-700 hover:border-slate-500 text-[11px] font-medium text-slate-100 cursor-pointer focus:outline-none focus:border-orange-500"
+                      >
+                        <option value="pbr">PBR Físico</option>
+                        <option value="uv_checker">UV Checker</option>
+                        <option value="normals">Normais</option>
+                        <option value="cel_borde">Cel + Borde</option>
+                      </select>
+                      <ChevronDown className="pointer-events-none w-3.5 h-3.5 text-slate-400 absolute right-2 top-1/2 -translate-y-1/2" />
+                    </div>
+                  </label>
+
+                  <label className="flex flex-col gap-1 pt-0.5">
+                    <span className="text-[11px] text-slate-400">Ângulo de Câmera</span>
+                    <div className="relative">
+                      <select
+                        value={activePreset}
+                        onChange={(e) => handleSelectPreset(e.target.value as CameraPreset)}
+                        className="w-full appearance-none pl-7 pr-7 py-1.5 rounded-md bg-[#0D1017] border border-slate-700 hover:border-slate-500 text-[11px] font-medium text-slate-100 cursor-pointer focus:outline-none focus:border-orange-500"
+                      >
+                        {(Object.keys(CAMERA_PRESETS) as CameraPreset[]).map((key) => (
+                          <option key={key} value={key}>
+                            {CAMERA_PRESETS[key].label}
+                          </option>
+                        ))}
+                      </select>
+                      <Camera className="pointer-events-none w-3.5 h-3.5 text-sky-400 absolute left-2 top-1/2 -translate-y-1/2" />
+                      <ChevronDown className="pointer-events-none w-3.5 h-3.5 text-slate-400 absolute right-2 top-1/2 -translate-y-1/2" />
+                    </div>
+                  </label>
+
+                  <div className="grid grid-cols-2 gap-1 pt-0.5">
+                    <button
+                      type="button"
+                      onClick={() => frameSceneRef.current?.()}
+                      title="Enquadrar modelo (Tecla F)"
+                      className="inline-flex items-center justify-center gap-1 px-2 py-1.5 text-[11px] rounded-md bg-[#0D1017] border border-slate-800 text-slate-300 hover:text-white hover:border-slate-600 cursor-pointer"
+                    >
+                      <Maximize2 className="w-3 h-3" />
+                      <span>Enquadrar</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleSelectPreset('q34')}
+                      title="Resetar Câmera"
+                      className="inline-flex items-center justify-center gap-1 px-2 py-1.5 text-[11px] rounded-md bg-[#0D1017] border border-slate-800 text-slate-300 hover:text-white hover:border-slate-600 cursor-pointer"
+                    >
+                      <RotateCcw className="w-3 h-3" />
+                      <span>Resetar</span>
+                    </button>
+                  </div>
+                </div>
+              )}
+            </section>
+
+            {/* 3. ANIMAÇÃO */}
+            <section className="rounded-lg bg-[#141923] border border-slate-800/90 overflow-hidden">
+              <button
+                type="button"
+                aria-expanded={openSections.anim}
+                onClick={() => toggleSection('anim')}
+                className="w-full px-3 py-2.5 flex items-center justify-between gap-2 hover:bg-slate-800/60 transition-colors cursor-pointer"
+              >
+                <div className="flex items-center gap-2 min-w-0">
+                  <Play className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                  <div className="text-left min-w-0">
+                    <div className="text-[11px] font-semibold tracking-wider uppercase text-slate-200 leading-tight">
+                      Animação
+                    </div>
+                    <div className="text-[11px] text-slate-400 truncate leading-tight tabular-nums">
+                      {isPlaying ? 'Reproduzindo' : 'Pausada'} · Frame {currentFrame}f
+                    </div>
+                  </div>
+                </div>
+                <span className="inline-flex items-center justify-center w-5 h-5 rounded bg-[#0D1017] border border-slate-800 text-slate-400 shrink-0">
+                  <ChevronDown
+                    className={`w-3.5 h-3.5 transition-transform duration-150 ${
+                      openSections.anim ? 'rotate-180 text-orange-400' : ''
+                    }`}
+                  />
+                </span>
+              </button>
+              {openSections.anim && (
+                <div className="px-2.5 pb-2.5 pt-2 border-t border-slate-800/80 flex flex-col gap-2">
+                  {!loadedAsset || loadedAsset.animClips.length > 0 ? (
+                    <>
+                      {loadedAsset && loadedAsset.animClips.length > 1 && (
+                        <div className="relative">
+                          <select
+                            aria-label="Selecionar clipe de animação"
+                            value={loadedAsset.activeClipIdx}
+                            onChange={(e) => selectClipRef.current?.(Number(e.target.value))}
+                            className="w-full appearance-none pl-2.5 pr-7 py-1.5 rounded-md bg-[#0D1017] border border-slate-700 text-xs text-slate-200 cursor-pointer focus:outline-none focus:border-orange-500"
+                          >
+                            {loadedAsset.animClips.map((name, idx) => (
+                              <option key={`${name}-${idx}`} value={idx}>
+                                {name}
+                              </option>
+                            ))}
+                          </select>
+                          <ChevronDown className="pointer-events-none w-3.5 h-3.5 text-slate-400 absolute right-2 top-1/2 -translate-y-1/2" />
+                        </div>
+                      )}
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setIsPlaying((p) => !p)}
+                          className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-slate-800 hover:bg-slate-700 font-medium text-slate-100 cursor-pointer shrink-0"
+                        >
+                          {isPlaying ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5" />}
+                          <span>{isPlaying ? 'Pausar' : 'Animar'}</span>
+                        </button>
+                        <input
+                          type="range"
+                          min={1}
+                          max={60}
+                          value={currentFrame}
+                          onChange={(e) => handleScrubFrame(Number(e.target.value))}
+                          aria-label="Frame da animação"
+                          className="flex-1 min-w-0 cursor-pointer"
+                        />
+                        <span className="font-mono text-slate-300 tabular-nums w-8 text-right shrink-0">
+                          {currentFrame}f
+                        </span>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="text-[11px] text-slate-500">
+                      Este modelo não contém clipes de animação. Use <strong>Gerar Rig &amp; Animação</strong> abaixo.
+                    </div>
+                  )}
+                </div>
+              )}
+            </section>
+
+            {/* 4. RIG & UV */}
+            <section className="rounded-lg bg-[#141923] border border-slate-800/90 overflow-hidden">
+              <button
+                type="button"
+                aria-expanded={openSections.rig}
+                onClick={() => toggleSection('rig')}
+                className="w-full px-3 py-2.5 flex items-center justify-between gap-2 hover:bg-slate-800/60 transition-colors cursor-pointer"
+              >
+                <div className="flex items-center gap-2 min-w-0">
+                  <Bone className="w-3.5 h-3.5 text-orange-400 shrink-0" />
+                  <div className="text-left min-w-0">
+                    <div className="text-[11px] font-semibold tracking-wider uppercase text-slate-200 leading-tight">
+                      Rig &amp; UV
+                    </div>
+                    <div className="text-[11px] text-slate-400 truncate leading-tight">
+                      {RIG_PRESET_DEFINITIONS[config.rigPreset].shortLabel} ·{' '}
+                      {RIG_PRESET_DEFINITIONS[config.rigPreset].boneCount} ossos
+                    </div>
+                  </div>
+                </div>
+                <span className="inline-flex items-center justify-center w-5 h-5 rounded bg-[#0D1017] border border-slate-800 text-slate-400 shrink-0">
+                  <ChevronDown
+                    className={`w-3.5 h-3.5 transition-transform duration-150 ${
+                      openSections.rig ? 'rotate-180 text-orange-400' : ''
+                    }`}
+                  />
+                </span>
+              </button>
+              {openSections.rig && (
+                <div className="px-2.5 pb-2.5 pt-2 border-t border-slate-800/80 flex flex-col gap-2">
+                  <label className="flex flex-col gap-1">
+                    <span className="text-[11px] text-slate-400">Preset de Armadura (Rig)</span>
+                    <div className="relative">
+                      <select
+                        value={config.rigPreset}
+                        onChange={(e) => {
+                          onConfigChange({ rigPreset: e.target.value as RigPreset });
                           setShowSkeleton(true);
                         }}
-                        className={`px-2.5 py-1 rounded-md font-medium transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
-                          active
-                            ? 'bg-orange-600 text-white'
-                            : 'text-slate-400 hover:text-slate-100'
-                        }`}
+                        className="w-full appearance-none pl-2.5 pr-7 py-1.5 rounded-md bg-[#0D1017] border border-slate-700 hover:border-slate-500 text-[11px] font-medium text-slate-100 cursor-pointer focus:outline-none focus:border-orange-500"
                       >
-                        {def.shortLabel}{' '}
-                        <span className="opacity-75 font-mono tabular-nums">({def.boneCount})</span>
-                      </button>
-                    );
-                  })}
-                </div>
-
-                <button
-                  type="button"
-                  onClick={() => setShowSkeleton((s) => !s)}
-                  title="Mostrar ou ocultar ossos da Armature na viewport"
-                  className={`inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg border font-medium transition-colors cursor-pointer whitespace-nowrap shrink-0 ${
-                    showSkeleton
-                      ? 'bg-slate-700 border-slate-500 text-white'
-                      : 'bg-[#0D1017] border-slate-800 text-slate-300 hover:text-white'
-                  }`}
-                >
-                  <Bone className="w-3.5 h-3.5 text-orange-400" />
-                  <span>{showSkeleton ? 'Ocultar Ossos' : 'Ossos'}</span>
-                </button>
-
-                <button
-                  type="button"
-                  disabled={isLoadingModel}
-                  onClick={() => generateRigAndAnimRef.current?.()}
-                  title="Gerar esqueleto Skeleton, pesos de pele e 3 animações no modelo atual para exportação"
-                  className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-[#0D1017] border border-slate-700 hover:border-orange-500 text-slate-100 hover:text-white font-medium transition-colors cursor-pointer whitespace-nowrap shrink-0"
-                >
-                  <Wand2 className="w-3.5 h-3.5 text-orange-400" />
-                  <span>Gerar Rig &amp; Animação</span>
-                </button>
-
-                <button
-                  type="button"
-                  disabled={isLoadingModel}
-                  onClick={() => generateAutoUvRef.current?.()}
-                  title="Gerar mapeamento UV automático sem sobreposição em [0, 1] e atualizar Atlas & UVs"
-                  className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-[#0D1017] border border-slate-700 hover:border-sky-500 text-slate-100 hover:text-white font-medium transition-colors cursor-pointer whitespace-nowrap shrink-0"
-                >
-                  <Grid className="w-3.5 h-3.5 text-sky-400" />
-                  <span>Gerar UV Auto</span>
-                </button>
-              </div>
-
-              <div className="flex flex-wrap items-center gap-1.5">
-                <button
-                  type="button"
-                  onClick={() => setDoubleSided((v) => !v)}
-                  title="Renderizar frente e verso das faces (útil para capas, cabelos e faces simples)"
-                  className={`px-2 py-1.5 rounded-lg border font-medium transition-colors cursor-pointer whitespace-nowrap shrink-0 ${
-                    doubleSided
-                      ? 'bg-slate-700 border-slate-500 text-white'
-                      : 'bg-[#0D1017] border-slate-800 text-slate-300 hover:text-white'
-                  }`}
-                >
-                  Dois Lados
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setWireframeMode((v) => !v)}
-                  title="Alternar visualização em arame (wireframe)"
-                  className={`px-2 py-1.5 rounded-lg border font-medium transition-colors cursor-pointer whitespace-nowrap shrink-0 ${
-                    wireframeMode
-                      ? 'bg-slate-700 border-slate-500 text-white'
-                      : 'bg-[#0D1017] border-slate-800 text-slate-300 hover:text-white'
-                  }`}
-                >
-                  Wire
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setShowGrid((v) => !v)}
-                  title="Mostrar ou ocultar grade do piso"
-                  className={`px-2 py-1.5 rounded-lg border font-medium transition-colors cursor-pointer whitespace-nowrap shrink-0 ${
-                    showGrid
-                      ? 'bg-slate-700 border-slate-500 text-white'
-                      : 'bg-[#0D1017] border-slate-800 text-slate-300 hover:text-white'
-                  }`}
-                >
-                  Grade
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setShowLightingPanel((v) => !v)}
-                  className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border font-semibold transition-colors cursor-pointer whitespace-nowrap shrink-0 ${
-                    showLightingPanel
-                      ? 'bg-amber-600/20 border-amber-500 text-amber-300'
-                      : 'bg-[#0D1017] border-slate-700 text-slate-200 hover:text-white hover:border-slate-500'
-                  }`}
-                >
-                  <Sun className="w-3.5 h-3.5 text-amber-400" />
-                  <span>Luz &amp; Render</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowPaintStudio((v) => {
-                      const next = !v;
-                      if (!next) setToolMode('orbit');
-                      return next;
-                    });
-                  }}
-                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border font-semibold transition-colors cursor-pointer whitespace-nowrap shrink-0 ${
-                    showPaintStudio || toolMode !== 'orbit'
-                      ? 'bg-orange-600/20 border-orange-500 text-orange-300'
-                      : 'bg-[#0D1017] border-slate-700 text-slate-200 hover:text-white hover:border-slate-500'
-                  }`}
-                >
-                  <Palette className="w-3.5 h-3.5" />
-                  <span>Materiais &amp; Pintura</span>
-                </button>
-              </div>
-            </div>
-
-            {/* Optional Row 2B: Material Insertion & 3D Texture Paint Studio */}
-            {showPaintStudio && (
-              <div className="rounded-lg bg-[#0D1017] border border-slate-800 px-3 py-2.5 flex flex-col gap-2.5 text-xs">
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  {/* Interaction Mode */}
-                  <div className="flex items-center gap-1 p-1 rounded-md bg-[#141923] border border-slate-800">
-                    <button
-                      type="button"
-                      onClick={() => setToolMode('orbit')}
-                      className={`inline-flex items-center gap-1 px-2.5 py-1 rounded font-medium cursor-pointer whitespace-nowrap ${
-                        toolMode === 'orbit' ? 'bg-slate-700 text-white' : 'text-slate-400 hover:text-white'
-                      }`}
-                    >
-                      <MousePointer2 className="w-3.5 h-3.5" />
-                      <span>Câmera</span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setToolMode('assign_mat')}
-                      className={`inline-flex items-center gap-1 px-2.5 py-1 rounded font-medium cursor-pointer whitespace-nowrap ${
-                        toolMode === 'assign_mat'
-                          ? 'bg-orange-600 text-white'
-                          : 'text-slate-400 hover:text-white'
-                      }`}
-                    >
-                      <Sparkles className="w-3.5 h-3.5" />
-                      <span>Aplicar Material (Clique na peça)</span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setToolMode('paint')}
-                      className={`inline-flex items-center gap-1 px-2.5 py-1 rounded font-medium cursor-pointer whitespace-nowrap ${
-                        toolMode === 'paint'
-                          ? 'bg-orange-600 text-white'
-                          : 'text-slate-400 hover:text-white'
-                      }`}
-                    >
-                      <Paintbrush className="w-3.5 h-3.5" />
-                      <span>Pintar 3D</span>
-                    </button>
-                  </div>
-
-                  {/* Custom Image Texture Upload, Undo & Clear */}
-                  <div className="flex flex-wrap items-center gap-1.5">
-                    <button
-                      type="button"
-                      disabled={!canUndoPaint}
-                      onClick={() => undoPaintRef.current?.()}
-                      title="Desfazer última pincelada (Ctrl+Z)"
-                      className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-[#141923] border border-slate-700 hover:border-slate-500 disabled:opacity-40 text-slate-200 cursor-pointer whitespace-nowrap"
-                    >
-                      <Undo2 className="w-3.5 h-3.5 text-amber-400" />
-                      <span>Desfazer</span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => textureFileInputRef.current?.click()}
-                      className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-[#141923] border border-slate-700 hover:border-slate-500 text-slate-200 cursor-pointer whitespace-nowrap"
-                    >
-                      <ImagePlus className="w-3.5 h-3.5 text-sky-400" />
-                      <span>{customTextureName ? `Textura: ${customTextureName}` : 'Inserir Textura'}</span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => clearPaintTexturesRef.current?.()}
-                      className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-[#141923] border border-slate-700 hover:border-slate-500 text-slate-300 hover:text-white cursor-pointer whitespace-nowrap"
-                    >
-                      <Eraser className="w-3.5 h-3.5 text-rose-400" />
-                      <span>Limpar Pintura</span>
-                    </button>
-                  </div>
-                </div>
-
-                {/* Material Presets + Brush Controls */}
-                <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-slate-800/70">
-                  <div className="flex flex-wrap items-center gap-1.5">
-                    <span className="text-slate-400 mr-1">Material PBR:</span>
-                    {PBR_MATERIAL_LIBRARY.map((mat) => {
-                      const active = selectedMatId === mat.id;
-                      return (
-                        <button
-                          key={mat.id}
-                          type="button"
-                          onClick={() => {
-                            setSelectedMatId(mat.id);
-                            setCustomMatColor(mat.color);
-                            if (toolMode === 'orbit') setToolMode('assign_mat');
-                          }}
-                          className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-md border transition-colors cursor-pointer whitespace-nowrap ${
-                            active
-                              ? 'bg-slate-800 border-orange-500 text-white'
-                              : 'bg-[#141923] border-slate-800 text-slate-300 hover:border-slate-600'
-                          }`}
-                        >
-                          <span
-                            className="w-3 h-3 rounded-sm border border-white/20 shrink-0"
-                            style={{ backgroundColor: mat.color }}
-                          />
-                          <span>{mat.label}</span>
-                        </button>
-                      );
-                    })}
-                    <input
-                      type="color"
-                      value={customMatColor}
-                      aria-label="Cor base do material"
-                      onChange={(e) => setCustomMatColor(e.target.value)}
-                      className="w-6 h-6 rounded bg-transparent border border-slate-700 cursor-pointer"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => applyMaterialToAllRef.current?.()}
-                      className="px-2.5 py-1 rounded-md bg-slate-800 hover:bg-slate-700 text-slate-100 font-medium cursor-pointer whitespace-nowrap"
-                    >
-                      Aplicar em Tudo
-                    </button>
-                  </div>
-
-                  {/* Brush Color & Size */}
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className="text-slate-400">Pincel:</span>
-                    <div className="flex items-center gap-1">
-                      {BRUSH_SWATCHES.map((swatch) => (
-                        <button
-                          key={swatch}
-                          type="button"
-                          aria-label={`Cor ${swatch}`}
-                          onClick={() => {
-                            setBrushColor(swatch);
-                            setToolMode('paint');
-                          }}
-                          className={`w-4 h-4 rounded-sm border cursor-pointer ${
-                            brushColor.toLowerCase() === swatch.toLowerCase()
-                              ? 'border-white scale-110'
-                              : 'border-slate-700'
-                          }`}
-                          style={{ backgroundColor: swatch }}
-                        />
-                      ))}
-                      <input
-                        type="color"
-                        value={brushColor}
-                        aria-label="Cor personalizada do pincel"
-                        onChange={(e) => {
-                          setBrushColor(e.target.value);
-                          setToolMode('paint');
-                        }}
-                        className="w-6 h-5 rounded bg-transparent border border-slate-700 cursor-pointer"
-                      />
+                        {(Object.keys(RIG_PRESET_DEFINITIONS) as RigPreset[]).map((presetKey) => {
+                          const def = RIG_PRESET_DEFINITIONS[presetKey];
+                          return (
+                            <option key={presetKey} value={presetKey}>
+                              {def.shortLabel} ({def.boneCount} ossos)
+                            </option>
+                          );
+                        })}
+                      </select>
+                      <ChevronDown className="pointer-events-none w-3.5 h-3.5 text-slate-400 absolute right-2 top-1/2 -translate-y-1/2" />
                     </div>
-                    <label className="flex items-center gap-1.5 text-slate-400">
-                      <span>Tam.</span>
-                      <input
-                        type="range"
-                        min={6}
-                        max={64}
-                        step={2}
-                        value={brushSize}
-                        onChange={(e) => setBrushSize(Number(e.target.value))}
-                        className="w-20 cursor-pointer"
-                      />
-                      <span className="font-mono text-slate-200 tabular-nums w-8">{brushSize}px</span>
-                    </label>
+                  </label>
+
+                  <button
+                    type="button"
+                    onClick={() => setShowSkeleton((s) => !s)}
+                    className={`w-full inline-flex items-center justify-center gap-1.5 px-2.5 py-1.5 rounded-md border font-medium cursor-pointer ${
+                      showSkeleton
+                        ? 'bg-slate-700 border-slate-500 text-white'
+                        : 'bg-[#0D1017] border-slate-800 text-slate-300 hover:text-white'
+                    }`}
+                  >
+                    <Bone className="w-3.5 h-3.5 text-orange-400" />
+                    <span>{showSkeleton ? 'Ocultar Ossos' : 'Mostrar Ossos'}</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    disabled={isLoadingModel}
+                    onClick={() => generateRigAndAnimRef.current?.()}
+                    className="w-full inline-flex items-center justify-center gap-1.5 px-2.5 py-1.5 rounded-md bg-[#0D1017] border border-slate-700 hover:border-orange-500 text-slate-100 font-medium cursor-pointer"
+                  >
+                    <Wand2 className="w-3.5 h-3.5 text-orange-400" />
+                    <span>Gerar Rig &amp; Animação</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    disabled={isLoadingModel}
+                    onClick={() => generateAutoUvRef.current?.()}
+                    className="w-full inline-flex items-center justify-center gap-1.5 px-2.5 py-1.5 rounded-md bg-[#0D1017] border border-slate-700 hover:border-sky-500 text-slate-100 font-medium cursor-pointer"
+                  >
+                    <Grid className="w-3.5 h-3.5 text-sky-400" />
+                    <span>Gerar UV Auto</span>
+                  </button>
+                </div>
+              )}
+            </section>
+
+            {/* 5. EXIBIÇÃO & FERRAMENTAS */}
+            <section className="rounded-lg bg-[#141923] border border-slate-800/90 overflow-hidden">
+              <button
+                type="button"
+                aria-expanded={openSections.tools}
+                onClick={() => toggleSection('tools')}
+                className="w-full px-3 py-2.5 flex items-center justify-between gap-2 hover:bg-slate-800/60 transition-colors cursor-pointer"
+              >
+                <div className="flex items-center gap-2 min-w-0">
+                  <Palette className="w-3.5 h-3.5 text-violet-400 shrink-0" />
+                  <div className="text-left min-w-0">
+                    <div className="text-[11px] font-semibold tracking-wider uppercase text-slate-200 leading-tight">
+                      Exibição &amp; Ferramentas
+                    </div>
+                    <div className="text-[11px] text-slate-400 truncate leading-tight">
+                      Luzes, Render PNG &amp; Pintura 3D
+                    </div>
                   </div>
                 </div>
+                <span className="inline-flex items-center justify-center w-5 h-5 rounded bg-[#0D1017] border border-slate-800 text-slate-400 shrink-0">
+                  <ChevronDown
+                    className={`w-3.5 h-3.5 transition-transform duration-150 ${
+                      openSections.tools ? 'rotate-180 text-orange-400' : ''
+                    }`}
+                  />
+                </span>
+              </button>
+              {openSections.tools && (
+                <div className="px-2.5 pb-2.5 pt-2 border-t border-slate-800/80 flex flex-col gap-2">
+                  <div className="grid grid-cols-3 gap-1">
+                    <button
+                      type="button"
+                      onClick={() => setDoubleSided((v) => !v)}
+                      className={`px-2 py-1.5 rounded-md border text-[11px] font-medium cursor-pointer ${
+                        doubleSided
+                          ? 'bg-slate-700 border-slate-500 text-white'
+                          : 'bg-[#0D1017] border-slate-800 text-slate-300 hover:text-white'
+                      }`}
+                    >
+                      Dois Lados
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setWireframeMode((v) => !v)}
+                      className={`px-2 py-1.5 rounded-md border text-[11px] font-medium cursor-pointer ${
+                        wireframeMode
+                          ? 'bg-slate-700 border-slate-500 text-white'
+                          : 'bg-[#0D1017] border-slate-800 text-slate-300 hover:text-white'
+                      }`}
+                    >
+                      Wire
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setShowGrid((v) => !v)}
+                      className={`px-2 py-1.5 rounded-md border text-[11px] font-medium cursor-pointer ${
+                        showGrid
+                          ? 'bg-slate-700 border-slate-500 text-white'
+                          : 'bg-[#0D1017] border-slate-800 text-slate-300 hover:text-white'
+                      }`}
+                    >
+                      Grade
+                    </button>
+                  </div>
 
-                {/* Procedural SBSAR / Smart Presets + Individual PBR Channel Maps */}
-                <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-800/70">
-                  <div className="flex flex-wrap items-center gap-1.5">
-                    <span className="text-slate-400 mr-1">Procedural / Smart:</span>
-                    {PROCEDURAL_PBR_PRESETS.map((pr) => (
-                      <button
-                        key={pr.id}
-                        type="button"
-                        onClick={() => applyProceduralBundleRef.current?.(pr.defaultParams)}
-                        className={`px-2 py-1 rounded-md border transition-colors cursor-pointer whitespace-nowrap ${
-                          activeProceduralLabel === pr.label
-                            ? 'bg-orange-600/20 border-orange-500 text-orange-200'
-                            : 'bg-[#141923] border-slate-800 text-slate-300 hover:border-slate-600'
+                  <div className="flex flex-col gap-1.5">
+                    <button
+                      type="button"
+                      aria-expanded={showLightingPanel}
+                      onClick={() => setShowLightingPanel((v) => !v)}
+                      className={`w-full inline-flex items-center justify-between gap-2 px-2.5 py-1.5 rounded-md border font-semibold cursor-pointer ${
+                        showLightingPanel
+                          ? 'bg-amber-600/20 border-amber-500 text-amber-300'
+                          : 'bg-[#0D1017] border-slate-700 text-slate-200 hover:text-white'
+                      }`}
+                    >
+                      <span className="inline-flex items-center gap-1.5">
+                        <Sun className="w-3.5 h-3.5 text-amber-400" />
+                        <span>Luzes &amp; Render PNG</span>
+                      </span>
+                      <ChevronDown
+                        className={`w-3.5 h-3.5 transition-transform duration-150 ${
+                          showLightingPanel ? 'rotate-180 text-amber-300' : 'text-slate-400'
                         }`}
-                      >
-                        {pr.label}
-                      </button>
-                    ))}
-                  </div>
+                      />
+                    </button>
 
-                  <div className="flex flex-wrap items-center gap-1.5">
-                    <span className="text-slate-400">Mapas PBR:</span>
-                    {(
-                      [
-                        { id: 'map', label: 'Base Color' },
-                        { id: 'roughnessMap', label: 'Roughness' },
-                        { id: 'metalnessMap', label: 'Metallic' },
-                        { id: 'normalMap', label: 'Normal' },
-                        { id: 'aoMap', label: 'AO' },
-                      ] as const
-                    ).map((ch) => (
-                      <button
-                        key={ch.id}
-                        type="button"
-                        onClick={() => {
-                          setActivePbrChannelUpload(ch.id);
-                          pbrChannelInputRef.current?.click();
+                    {showLightingPanel && (
+                      <LightingRenderPanel
+                        lights={studioLights}
+                        newLightType={newLightType}
+                        onNewLightTypeChange={setNewLightType}
+                        onAddLight={() => {
+                          const labels: Record<StudioLightType, string> = {
+                            dir: 'Direcional',
+                            point: 'Pontual',
+                            spot: 'Spot',
+                            amb: 'Ambiente',
+                          };
+                          const count = studioLights.length + 1;
+                          setStudioLights((prev) => [
+                            ...prev,
+                            {
+                              id: `light_${Date.now()}_${count}`,
+                              name: `${labels[newLightType]} ${count}`,
+                              type: newLightType,
+                              color: '#ffffff',
+                              intensity: newLightType === 'point' || newLightType === 'spot' ? 18 : 1.8,
+                              position: [2.2, 2.8, 2.2],
+                            },
+                          ]);
                         }}
-                        className="px-2 py-1 rounded-md bg-[#141923] border border-slate-800 hover:border-slate-600 text-slate-300 hover:text-white transition-colors cursor-pointer whitespace-nowrap"
-                      >
-                        + {ch.label}
-                      </button>
-                    ))}
+                        onApplyThreePointPreset={() =>
+                          setStudioLights([
+                            {
+                              id: 'key_3pt',
+                              name: 'Key',
+                              type: 'dir',
+                              color: '#fff3e0',
+                              intensity: 2.2,
+                              position: [2.6, 3.8, 2.8],
+                            },
+                            {
+                              id: 'fill_3pt',
+                              name: 'Fill',
+                              type: 'dir',
+                              color: '#bae6fd',
+                              intensity: 1.0,
+                              position: [-2.8, 1.8, 2.0],
+                            },
+                            {
+                              id: 'rim_3pt',
+                              name: 'Rim',
+                              type: 'dir',
+                              color: '#fdba74',
+                              intensity: 1.6,
+                              position: [-1.4, 2.6, -2.8],
+                            },
+                          ])
+                        }
+                        onUpdateLight={(id, patch) =>
+                          setStudioLights((prev) => prev.map((l) => (l.id === id ? { ...l, ...patch } : l)))
+                        }
+                        onRemoveLight={(id) => setStudioLights((prev) => prev.filter((l) => l.id !== id))}
+                        renderResolution={renderResolution}
+                        toneMapping={toneMapping}
+                        exposure={exposure}
+                        transparentBg={transparentBg}
+                        onRenderResolutionChange={setRenderResolution}
+                        onToneMappingChange={setToneMapping}
+                        onExposureChange={setExposure}
+                        onTransparentBgChange={setTransparentBg}
+                        onRenderPng={() => renderStudioPngRef.current?.()}
+                      />
+                    )}
+
+                    <button
+                      type="button"
+                      aria-expanded={showPaintStudio}
+                      onClick={() => {
+                        setShowPaintStudio((v) => {
+                          const next = !v;
+                          if (!next) setToolMode('orbit');
+                          return next;
+                        });
+                      }}
+                      className={`w-full inline-flex items-center justify-between gap-2 px-2.5 py-1.5 rounded-md border font-semibold cursor-pointer ${
+                        showPaintStudio || toolMode !== 'orbit'
+                          ? 'bg-orange-600/20 border-orange-500 text-orange-300'
+                          : 'bg-[#0D1017] border-slate-700 text-slate-200 hover:text-white'
+                      }`}
+                    >
+                      <span className="inline-flex items-center gap-1.5">
+                        <Palette className="w-3.5 h-3.5 text-orange-400" />
+                        <span>Pintura &amp; Materiais 3D</span>
+                      </span>
+                      <ChevronDown
+                        className={`w-3.5 h-3.5 transition-transform duration-150 ${
+                          showPaintStudio ? 'rotate-180 text-orange-300' : 'text-slate-400'
+                        }`}
+                      />
+                    </button>
+
+                    {showPaintStudio && (
+                      <div className="rounded-lg bg-[#0D1017] border border-slate-800 p-2.5 flex flex-col gap-2.5 text-[11px]">
+                        <div className="grid grid-cols-3 gap-1">
+                          <button
+                            type="button"
+                            onClick={() => setToolMode('orbit')}
+                            className={`inline-flex items-center justify-center gap-1 px-1.5 py-1 rounded font-medium cursor-pointer ${
+                              toolMode === 'orbit' ? 'bg-slate-700 text-white' : 'bg-[#141923] text-slate-400 hover:text-white'
+                            }`}
+                          >
+                            <MousePointer2 className="w-3 h-3" />
+                            <span>Câmera</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setToolMode('assign_mat')}
+                            className={`inline-flex items-center justify-center gap-1 px-1.5 py-1 rounded font-medium cursor-pointer ${
+                              toolMode === 'assign_mat'
+                                ? 'bg-orange-600 text-white'
+                                : 'bg-[#141923] text-slate-400 hover:text-white'
+                            }`}
+                          >
+                            <Sparkles className="w-3 h-3" />
+                            <span>Peça</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setToolMode('paint')}
+                            className={`inline-flex items-center justify-center gap-1 px-1.5 py-1 rounded font-medium cursor-pointer ${
+                              toolMode === 'paint'
+                                ? 'bg-orange-600 text-white'
+                                : 'bg-[#141923] text-slate-400 hover:text-white'
+                            }`}
+                          >
+                            <Paintbrush className="w-3 h-3" />
+                            <span>Pintar</span>
+                          </button>
+                        </div>
+
+                        <div className="flex items-center gap-1">
+                          <button
+                            type="button"
+                            disabled={!canUndoPaint}
+                            onClick={() => undoPaintRef.current?.()}
+                            title="Desfazer última pincelada (Ctrl+Z)"
+                            className="flex-1 inline-flex items-center justify-center gap-1 px-2 py-1 rounded bg-[#141923] border border-slate-700 disabled:opacity-40 text-slate-200 cursor-pointer"
+                          >
+                            <Undo2 className="w-3 h-3 text-amber-400" />
+                            <span>Desfazer</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => clearPaintTexturesRef.current?.()}
+                            className="flex-1 inline-flex items-center justify-center gap-1 px-2 py-1 rounded bg-[#141923] border border-slate-700 text-slate-300 hover:text-white cursor-pointer"
+                          >
+                            <Eraser className="w-3 h-3 text-rose-400" />
+                            <span>Limpar</span>
+                          </button>
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={() => textureFileInputRef.current?.click()}
+                          className="w-full inline-flex items-center justify-center gap-1.5 px-2 py-1 rounded bg-[#141923] border border-slate-700 text-slate-200 cursor-pointer truncate"
+                        >
+                          <ImagePlus className="w-3 h-3 text-sky-400 shrink-0" />
+                          <span className="truncate">{customTextureName ? customTextureName : 'Inserir Textura'}</span>
+                        </button>
+
+                        <div className="flex flex-col gap-1.5 pt-1.5 border-t border-slate-800/70">
+                          <div className="flex items-center justify-between text-slate-400">
+                            <span>Material PBR</span>
+                            <input
+                              type="color"
+                              value={customMatColor}
+                              aria-label="Cor base do material"
+                              onChange={(e) => setCustomMatColor(e.target.value)}
+                              className="w-6 h-5 rounded bg-transparent border border-slate-700 cursor-pointer"
+                            />
+                          </div>
+                          <div className="grid grid-cols-2 gap-1">
+                            {PBR_MATERIAL_LIBRARY.map((mat) => {
+                              const active = selectedMatId === mat.id;
+                              return (
+                                <button
+                                  key={mat.id}
+                                  type="button"
+                                  onClick={() => {
+                                    setSelectedMatId(mat.id);
+                                    setCustomMatColor(mat.color);
+                                    if (toolMode === 'orbit') setToolMode('assign_mat');
+                                  }}
+                                  className={`inline-flex items-center gap-1.5 px-2 py-1 rounded border cursor-pointer ${
+                                    active
+                                      ? 'bg-slate-800 border-orange-500 text-white'
+                                      : 'bg-[#141923] border-slate-800 text-slate-300 hover:border-slate-600'
+                                  }`}
+                                >
+                                  <span
+                                    className="w-2.5 h-2.5 rounded-sm border border-white/20 shrink-0"
+                                    style={{ backgroundColor: mat.color }}
+                                  />
+                                  <span className="truncate">{mat.label}</span>
+                                </button>
+                              );
+                            })}
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => applyMaterialToAllRef.current?.()}
+                            className="w-full px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-100 font-medium cursor-pointer"
+                          >
+                            Aplicar em Tudo
+                          </button>
+                        </div>
+
+                        <div className="flex flex-col gap-1.5 pt-1.5 border-t border-slate-800/70">
+                          <div className="flex items-center justify-between gap-1">
+                            <span className="text-slate-400">Pincel</span>
+                            <div className="flex items-center gap-1">
+                              {BRUSH_SWATCHES.map((swatch) => (
+                                <button
+                                  key={swatch}
+                                  type="button"
+                                  aria-label={`Cor ${swatch}`}
+                                  onClick={() => {
+                                    setBrushColor(swatch);
+                                    setToolMode('paint');
+                                  }}
+                                  className={`w-3.5 h-3.5 rounded-sm border cursor-pointer ${
+                                    brushColor.toLowerCase() === swatch.toLowerCase()
+                                      ? 'border-white scale-110'
+                                      : 'border-slate-700'
+                                  }`}
+                                  style={{ backgroundColor: swatch }}
+                                />
+                              ))}
+                              <input
+                                type="color"
+                                value={brushColor}
+                                aria-label="Cor personalizada do pincel"
+                                onChange={(e) => {
+                                  setBrushColor(e.target.value);
+                                  setToolMode('paint');
+                                }}
+                                className="w-5 h-4 rounded bg-transparent border border-slate-700 cursor-pointer"
+                              />
+                            </div>
+                          </div>
+                          <label className="flex items-center gap-2 text-slate-400">
+                            <span>Tam.</span>
+                            <input
+                              type="range"
+                              min={6}
+                              max={64}
+                              step={2}
+                              value={brushSize}
+                              onChange={(e) => setBrushSize(Number(e.target.value))}
+                              className="flex-1 min-w-0 cursor-pointer"
+                            />
+                            <span className="font-mono text-slate-200 tabular-nums w-8 text-right">{brushSize}px</span>
+                          </label>
+                        </div>
+
+                        <div className="flex flex-col gap-1.5 pt-1.5 border-t border-slate-800/70">
+                          <span className="text-slate-400">Procedural / Smart</span>
+                          <div className="flex flex-wrap gap-1">
+                            {PROCEDURAL_PBR_PRESETS.map((pr) => (
+                              <button
+                                key={pr.id}
+                                type="button"
+                                onClick={() => applyProceduralBundleRef.current?.(pr.defaultParams)}
+                                className={`px-2 py-1 rounded border cursor-pointer ${
+                                  activeProceduralLabel === pr.label
+                                    ? 'bg-orange-600/20 border-orange-500 text-orange-200'
+                                    : 'bg-[#141923] border-slate-800 text-slate-300 hover:border-slate-600'
+                                }`}
+                              >
+                                {pr.label}
+                              </button>
+                            ))}
+                          </div>
+
+                          <span className="text-slate-400 pt-1">Mapas PBR</span>
+                          <div className="flex flex-wrap gap-1">
+                            {(
+                              [
+                                { id: 'map', label: 'Base Color' },
+                                { id: 'roughnessMap', label: 'Roughness' },
+                                { id: 'metalnessMap', label: 'Metallic' },
+                                { id: 'normalMap', label: 'Normal' },
+                                { id: 'aoMap', label: 'AO' },
+                              ] as const
+                            ).map((ch) => (
+                              <button
+                                key={ch.id}
+                                type="button"
+                                onClick={() => {
+                                  setActivePbrChannelUpload(ch.id);
+                                  pbrChannelInputRef.current?.click();
+                                }}
+                                className="px-1.5 py-1 rounded bg-[#141923] border border-slate-800 hover:border-slate-600 text-slate-300 hover:text-white cursor-pointer"
+                              >
+                                + {ch.label}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
-              </div>
-            )}
+              )}
+            </section>
 
-            {/* Optional Row 2C: HDRI Lighting, Punctual Lights & Studio PNG Render */}
-            {showLightingPanel && (
-              <LightingRenderPanel
-                hdriId={hdriId}
-                customHdriName={customHdriName}
-                envIntensity={envIntensity}
-                showHdriBg={showHdriBg}
-                onSelectHdri={(id) => {
-                  setHdriId(id);
-                  if (id !== 'custom') setCustomHdriName(null);
-                  selectHdriRef.current?.(id);
-                }}
-                onUploadHdriClick={() => hdriFileInputRef.current?.click()}
-                onEnvIntensityChange={(val) => setEnvIntensity(val)}
-                onShowHdriBgChange={(show) => setShowHdriBg(show)}
-                lights={studioLights}
-                newLightType={newLightType}
-                onNewLightTypeChange={setNewLightType}
-                onAddLight={() => {
-                  const labels: Record<StudioLightType, string> = {
-                    dir: 'Direcional',
-                    point: 'Pontual',
-                    spot: 'Spot',
-                    amb: 'Ambiente',
-                  };
-                  const count = studioLights.length + 1;
-                  setStudioLights((prev) => [
-                    ...prev,
-                    {
-                      id: `light_${Date.now()}_${count}`,
-                      name: `${labels[newLightType]} ${count}`,
-                      type: newLightType,
-                      color: '#ffffff',
-                      intensity: newLightType === 'point' || newLightType === 'spot' ? 18 : 1.8,
-                      position: [2.2, 2.8, 2.2],
-                    },
-                  ]);
-                }}
-                onApplyThreePointPreset={() =>
-                  setStudioLights([
-                    {
-                      id: 'key_3pt',
-                      name: 'Key',
-                      type: 'dir',
-                      color: '#fff3e0',
-                      intensity: 2.2,
-                      position: [2.6, 3.8, 2.8],
-                    },
-                    {
-                      id: 'fill_3pt',
-                      name: 'Fill',
-                      type: 'dir',
-                      color: '#bae6fd',
-                      intensity: 1.0,
-                      position: [-2.8, 1.8, 2.0],
-                    },
-                    {
-                      id: 'rim_3pt',
-                      name: 'Rim',
-                      type: 'dir',
-                      color: '#fdba74',
-                      intensity: 1.6,
-                      position: [-1.4, 2.6, -2.8],
-                    },
-                  ])
-                }
-                onUpdateLight={(id, patch) =>
-                  setStudioLights((prev) => prev.map((l) => (l.id === id ? { ...l, ...patch } : l)))
-                }
-                onRemoveLight={(id) => setStudioLights((prev) => prev.filter((l) => l.id !== id))}
-                renderResolution={renderResolution}
-                toneMapping={toneMapping}
-                exposure={exposure}
-                transparentBg={transparentBg}
-                onRenderResolutionChange={setRenderResolution}
-                onToneMappingChange={setToneMapping}
-                onExposureChange={setExposure}
-                onTransparentBgChange={setTransparentBg}
-                onRenderPng={() => renderStudioPngRef.current?.()}
-              />
-            )}
-
-            {/* Row 3: Live PBR Channel Controls */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-2 border-t border-slate-800/80 text-xs">
-              <label className="flex flex-col gap-1">
-                <span className="flex justify-between text-slate-400">
-                  <span>Rugosidade (Roughness)</span>
-                  <span className="font-mono text-slate-200 tabular-nums">{roughnessOverride.toFixed(2)}</span>
+            {/* 6. PBR AO VIVO */}
+            <section className="rounded-lg bg-[#141923] border border-slate-800/90 overflow-hidden">
+              <button
+                type="button"
+                aria-expanded={openSections.pbr}
+                onClick={() => toggleSection('pbr')}
+                className="w-full px-3 py-2.5 flex items-center justify-between gap-2 hover:bg-slate-800/60 transition-colors cursor-pointer"
+              >
+                <div className="flex items-center gap-2 min-w-0">
+                  <SlidersHorizontal className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                  <div className="text-left min-w-0">
+                    <div className="text-[11px] font-semibold tracking-wider uppercase text-slate-200 leading-tight">
+                      PBR ao Vivo
+                    </div>
+                    <div className="text-[11px] text-slate-400 truncate leading-tight tabular-nums">
+                      Rug {roughnessOverride.toFixed(2)} · Met {metalnessOverride.toFixed(2)}
+                    </div>
+                  </div>
+                </div>
+                <span className="inline-flex items-center justify-center w-5 h-5 rounded bg-[#0D1017] border border-slate-800 text-slate-400 shrink-0">
+                  <ChevronDown
+                    className={`w-3.5 h-3.5 transition-transform duration-150 ${
+                      openSections.pbr ? 'rotate-180 text-orange-400' : ''
+                    }`}
+                  />
                 </span>
-                <input
-                  type="range"
-                  min={0.05}
-                  max={1}
-                  step={0.01}
-                  value={roughnessOverride}
-                  onChange={(e) => setRoughnessOverride(Number(e.target.value))}
-                />
-              </label>
+              </button>
+              {openSections.pbr && (
+                <div className="px-3 pb-3 pt-2 border-t border-slate-800/80 flex flex-col gap-2.5 text-[11px]">
+                  <label className="flex flex-col gap-1">
+                    <span className="flex justify-between text-slate-400">
+                      <span>Rugosidade (Roughness)</span>
+                      <span className="font-mono text-slate-200 tabular-nums">{roughnessOverride.toFixed(2)}</span>
+                    </span>
+                    <input
+                      type="range"
+                      min={0.05}
+                      max={1}
+                      step={0.01}
+                      value={roughnessOverride}
+                      onChange={(e) => setRoughnessOverride(Number(e.target.value))}
+                    />
+                  </label>
 
-              <label className="flex flex-col gap-1">
-                <span className="flex justify-between text-slate-400">
-                  <span>Metálico (Metallic)</span>
-                  <span className="font-mono text-slate-200 tabular-nums">{metalnessOverride.toFixed(2)}</span>
-                </span>
-                <input
-                  type="range"
-                  min={0}
-                  max={1}
-                  step={0.01}
-                  value={metalnessOverride}
-                  onChange={(e) => setMetalnessOverride(Number(e.target.value))}
-                />
-              </label>
+                  <label className="flex flex-col gap-1">
+                    <span className="flex justify-between text-slate-400">
+                      <span>Metálico (Metallic)</span>
+                      <span className="font-mono text-slate-200 tabular-nums">{metalnessOverride.toFixed(2)}</span>
+                    </span>
+                    <input
+                      type="range"
+                      min={0}
+                      max={1}
+                      step={0.01}
+                      value={metalnessOverride}
+                      onChange={(e) => setMetalnessOverride(Number(e.target.value))}
+                    />
+                  </label>
 
-              <label className="flex flex-col gap-1">
-                <span className="flex justify-between text-slate-400">
-                  <span>Força Normal Map</span>
-                  <span className="font-mono text-slate-200 tabular-nums">{config.normalStrength.toFixed(2)}</span>
-                </span>
-                <input
-                  type="range"
-                  min={0}
-                  max={3}
-                  step={0.05}
-                  value={config.normalStrength}
-                  onChange={(e) => onConfigChange({ normalStrength: Number(e.target.value) })}
-                />
-              </label>
+                  <label className="flex flex-col gap-1">
+                    <span className="flex justify-between text-slate-400">
+                      <span>Força Normal Map</span>
+                      <span className="font-mono text-slate-200 tabular-nums">{config.normalStrength.toFixed(2)}</span>
+                    </span>
+                    <input
+                      type="range"
+                      min={0}
+                      max={3}
+                      step={0.05}
+                      value={config.normalStrength}
+                      onChange={(e) => onConfigChange({ normalStrength: Number(e.target.value) })}
+                    />
+                  </label>
 
-              <label className="flex flex-col gap-1">
-                <span className="flex justify-between text-slate-400">
-                  <span>Contorno Borde</span>
-                  <span className="font-mono text-slate-200 tabular-nums">{config.outlineThickness.toFixed(3)}</span>
-                </span>
-                <input
-                  type="range"
-                  min={0.002}
-                  max={0.025}
-                  step={0.001}
-                  value={config.outlineThickness}
-                  onChange={(e) => onConfigChange({ outlineThickness: Number(e.target.value) })}
-                />
-              </label>
+                  <label className="flex flex-col gap-1">
+                    <span className="flex justify-between text-slate-400">
+                      <span>Contorno Borde</span>
+                      <span className="font-mono text-slate-200 tabular-nums">{config.outlineThickness.toFixed(3)}</span>
+                    </span>
+                    <input
+                      type="range"
+                      min={0.002}
+                      max={0.025}
+                      step={0.001}
+                      value={config.outlineThickness}
+                      onChange={(e) => onConfigChange({ outlineThickness: Number(e.target.value) })}
+                    />
+                  </label>
+                </div>
+              )}
+            </section>
+
+            {/* 7. AMBIENTE HDRI (Acoplado na barra lateral esquerda) */}
+            <HdriEnvironmentPanel
+              hdriId={hdriId}
+              customHdriName={customHdriName}
+              envIntensity={envIntensity}
+              envRotationDeg={envRotationDeg}
+              exposure={exposure}
+              showHdriBg={showHdriBg}
+              onSelectHdri={(id) => {
+                setHdriId(id);
+                if (id !== 'custom') setCustomHdriName(null);
+                selectHdriRef.current?.(id);
+              }}
+              onUploadHdriClick={() => hdriFileInputRef.current?.click()}
+              onEnvIntensityChange={setEnvIntensity}
+              onEnvRotationChange={setEnvRotationDeg}
+              onExposureChange={setExposure}
+              onShowHdriBgChange={setShowHdriBg}
+            />
+          </div>
+        </aside>
+      )}
+
+      {/* Unobstructed 3D Viewport Area */}
+      <div className="relative flex-1 min-w-0 h-full min-h-[480px] overflow-hidden">
+        {/* Dedicated WebGL Mount Container */}
+        <div
+          ref={mountRef}
+          className={`w-full h-full min-h-[480px] ${toolMode === 'paint' ? 'cursor-crosshair' : toolMode === 'assign_mat' ? 'cursor-cell' : ''}`}
+        />
+
+        {webglError && (
+          <div className="absolute inset-0 z-30 flex flex-col items-center justify-center gap-3 bg-[#0D1017]/95 p-6 text-center">
+            <div className="text-sm font-semibold text-red-300">
+              Não foi possível iniciar a Viewport 3D (WebGL)
+            </div>
+            <div className="max-w-md text-xs text-slate-400 leading-relaxed">{webglError}</div>
+            <button
+              type="button"
+              onClick={() => setRetryWebglNonce((n) => n + 1)}
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-orange-600 hover:bg-orange-500 text-xs font-semibold text-white cursor-pointer"
+            >
+              <RotateCcw className="w-3.5 h-3.5" />
+              <span>Tentar Novamente</span>
+            </button>
+          </div>
+        )}
+
+        {contextLost && !webglError && (
+          <div className="absolute inset-0 z-20 flex items-center justify-center bg-[#0D1017] text-slate-300 text-sm">
+            Contexto WebGL pausado. Recarregue a janela para restaurar a visualização 3D.
+          </div>
+        )}
+
+        {/* Drag Overlay */}
+        {isDragging && (
+          <div className="pointer-events-none absolute inset-4 z-20 rounded-2xl border-2 border-dashed border-orange-500 bg-[#0D1017]/80 flex flex-col items-center justify-center gap-2">
+            <Upload className="w-8 h-8 text-orange-400" />
+            <div className="text-base font-semibold text-white">Solte seu arquivo .glb, .gltf ou .zip aqui</div>
+            <div className="text-xs text-slate-400">
+              Suporte a pacotes .zip, compressão Draco, KTX2 e Meshopt
             </div>
           </div>
         )}
+
+        {/* Minimal Top-Left Viewport Readout + Expand Toggle (when sidebar is hidden) */}
+        <div className="absolute top-4 left-5 z-10 flex flex-col gap-1.5 max-w-[calc(100%-2.5rem)]">
+          {!dockExpanded && (
+            <div>
+              <button
+                type="button"
+                onClick={() => setDockExpanded(true)}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#141923]/92 border border-slate-700/80 hover:border-slate-500 text-xs font-medium text-slate-200 hover:text-white transition-colors cursor-pointer"
+              >
+                <ChevronRight className="w-3.5 h-3.5 text-orange-400" />
+                <span>Mostrar Controles</span>
+              </button>
+            </div>
+          )}
+
+          <div className="pointer-events-none text-xs font-medium text-slate-400">
+            {loadedAsset
+              ? `${loadedAsset.meshCount} malha(s) · ${loadedAsset.triCount.toLocaleString('pt-BR')} triângulos · ${loadedAsset.matCount} material(is) · Rig: ${RIG_PRESET_DEFINITIONS[config.rigPreset].label}${activeProceduralLabel ? ` · Procedural: ${activeProceduralLabel}` : ''}`
+              : `Ativo de Referência · Rig ${RIG_PRESET_DEFINITIONS[config.rigPreset].label}${activeProceduralLabel ? ` · Procedural: ${activeProceduralLabel}` : ''}`}
+          </div>
+          <div className="flex items-center gap-3">
+            <div className="pointer-events-none text-sm font-semibold text-slate-100 tabular-nums">
+              {loadedAsset ? (
+                <span>{loadedAsset.name}</span>
+              ) : (
+                <span>
+                  Frame {String(currentFrame).padStart(2, '0')} / {config.animEndFrame} · Atlas {config.textureResolution}px
+                </span>
+              )}
+            </div>
+            {loadedAsset && (
+              <button
+                type="button"
+                onClick={() => resetAssetRef.current?.()}
+                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-[#161B26] border border-slate-700 text-xs font-medium text-slate-300 hover:text-white hover:border-slate-500 transition-colors cursor-pointer"
+              >
+                <X className="w-3 h-3" />
+                <span>Voltar ao Padrão</span>
+              </button>
+            )}
+          </div>
+          {isLoadingModel && (
+            <div className="text-xs text-orange-400 font-medium">Carregando modelo GLB/glTF...</div>
+          )}
+          {exportStatus && (
+            <div className="text-xs text-emerald-400 font-medium">{exportStatus}</div>
+          )}
+          {loadError && (
+            <div className="max-w-md rounded-lg bg-red-950/90 border border-red-700/70 px-3 py-2 text-xs text-red-200 leading-relaxed">
+              {loadError}
+            </div>
+          )}
+        </div>
+
+        <MeshHierarchyDrawer
+          open={showMeshDrawer}
+          onClose={() => setShowMeshDrawer(false)}
+          meshes={meshList}
+          selectedMeshId={selectedMeshId}
+          metrics={sceneMetrics}
+          onSelectMesh={(id) => {
+            setSelectedMeshId(id);
+            selectObjectByIdRef.current?.(id);
+          }}
+          onFocusMesh={(id) => focusMeshByIdRef.current?.(id)}
+          onToggleMeshVisibility={(id) => toggleMeshVisibilityRef.current?.(id)}
+          onShowAllMeshes={() => showAllMeshesRef.current?.()}
+        />
       </div>
-
-      <HdriEnvironmentPanel
-        hdriId={hdriId}
-        customHdriName={customHdriName}
-        envIntensity={envIntensity}
-        envRotationDeg={envRotationDeg}
-        exposure={exposure}
-        showHdriBg={showHdriBg}
-        onSelectHdri={(id) => {
-          setHdriId(id);
-          if (id !== 'custom') setCustomHdriName(null);
-          selectHdriRef.current?.(id);
-        }}
-        onUploadHdriClick={() => hdriFileInputRef.current?.click()}
-        onEnvIntensityChange={setEnvIntensity}
-        onEnvRotationChange={setEnvRotationDeg}
-        onExposureChange={setExposure}
-        onShowHdriBgChange={setShowHdriBg}
-      />
-
-      <MeshHierarchyDrawer
-        open={showMeshDrawer}
-        onClose={() => setShowMeshDrawer(false)}
-        meshes={meshList}
-        selectedMeshId={selectedMeshId}
-        metrics={sceneMetrics}
-        onSelectMesh={setSelectedMeshId}
-        onFocusMesh={(id) => focusMeshByIdRef.current?.(id)}
-        onToggleMeshVisibility={(id) => toggleMeshVisibilityRef.current?.(id)}
-        onShowAllMeshes={() => showAllMeshesRef.current?.()}
-      />
 
       {verificationReport && (
         <FileVerificationModal
@@ -4199,6 +5533,13 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
           onVerifyCurrentScene={() => verifyCurrentSceneRef.current?.()}
         />
       )}
+
+      <SplineCodeExportModal
+        open={codeExportModalOpen}
+        threeCode={exportedThreeCode}
+        reactCode={exportedReactCode}
+        onClose={() => setCodeExportModalOpen(false)}
+      />
     </div>
   );
 };

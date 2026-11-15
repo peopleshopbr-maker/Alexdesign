@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Download, Eye, EyeOff, Upload, X } from 'lucide-react';
-import { AddonConfig } from '../addon/blenderAddonTemplates';
+import { Download, Upload, X } from 'lucide-react';
+import { StudioConfig } from '../types/studioConfig';
 import { ImportedUvMesh } from './Viewport3D';
 
 type UvLayerId =
@@ -13,8 +13,6 @@ type UvLayerId =
   | 'UV_Skirt'
   | 'UV_Zipper';
 
-type AtlasChannel = 'uv_layout' | 'base_color' | 'roughness' | 'metallic' | 'normal' | 'ao';
-
 interface UvIsland {
   part: UvLayerId;
   label: string;
@@ -22,20 +20,16 @@ interface UvIsland {
   y: number;
   w: number;
   h: number;
-  color: string;
-  roughnessGray: number;
-  metallicGray: number;
-  aoGray: number;
   tris: number;
 }
 
 const UV_ISLANDS: UvIsland[] = [
-  { part: 'UV_Head', label: 'Head', x: 0.04, y: 0.04, w: 0.28, h: 0.28, color: '#f2cbb8', roughnessGray: 135, metallicGray: 0, aoGray: 235, tris: 1840 },
-  { part: 'UV_Hair', label: 'Hair', x: 0.35, y: 0.04, w: 0.32, h: 0.28, color: '#3b2a4a', roughnessGray: 108, metallicGray: 14, aoGray: 175, tris: 2420 },
-  { part: 'UV_Jacket', label: 'Jacket', x: 0.04, y: 0.35, w: 0.44, h: 0.32, color: '#273549', roughnessGray: 210, metallicGray: 10, aoGray: 192, tris: 3120 },
-  { part: 'UV_Body', label: 'Body', x: 0.51, y: 0.35, w: 0.26, h: 0.32, color: '#eac1ae', roughnessGray: 140, metallicGray: 0, aoGray: 220, tris: 2160 },
-  { part: 'UV_Skirt', label: 'Skirt', x: 0.04, y: 0.7, w: 0.52, h: 0.26, color: '#1e293b', roughnessGray: 185, metallicGray: 12, aoGray: 162, tris: 1960 },
-  { part: 'UV_Zipper', label: 'Zipper', x: 0.7, y: 0.04, w: 0.26, h: 0.28, color: '#cbd5e1', roughnessGray: 42, metallicGray: 242, aoGray: 210, tris: 680 },
+  { part: 'UV_Head', label: 'Head', x: 0.04, y: 0.04, w: 0.28, h: 0.28, tris: 1840 },
+  { part: 'UV_Hair', label: 'Hair', x: 0.35, y: 0.04, w: 0.32, h: 0.28, tris: 2420 },
+  { part: 'UV_Jacket', label: 'Jacket', x: 0.04, y: 0.35, w: 0.44, h: 0.32, tris: 3120 },
+  { part: 'UV_Body', label: 'Body', x: 0.51, y: 0.35, w: 0.26, h: 0.32, tris: 2160 },
+  { part: 'UV_Skirt', label: 'Skirt', x: 0.04, y: 0.7, w: 0.52, h: 0.26, tris: 1960 },
+  { part: 'UV_Zipper', label: 'Zipper', x: 0.7, y: 0.04, w: 0.26, h: 0.28, tris: 680 },
 ];
 
 const UV_LAYERS: { id: UvLayerId; label: string }[] = [
@@ -50,8 +44,8 @@ const UV_LAYERS: { id: UvLayerId; label: string }[] = [
 ];
 
 interface AtlasUvInspectorProps {
-  config: AddonConfig;
-  onConfigChange: (patch: Partial<AddonConfig>) => void;
+  config: StudioConfig;
+  onConfigChange: (patch: Partial<StudioConfig>) => void;
   importedUvs: ImportedUvMesh[] | null;
 }
 
@@ -87,9 +81,7 @@ export const AtlasUvInspector: React.FC<AtlasUvInspectorProps> = ({
 
   const [selectedLayer, setSelectedLayer] = useState<UvLayerId>('UV_all_parts_dark');
   const [selectedImportedIdx, setSelectedImportedIdx] = useState<number | 'all'>('all');
-  const [channel, setChannel] = useState<AtlasChannel>('uv_layout');
   const [uvChannel, setUvChannel] = useState<'uv' | 'uv1'>('uv');
-  const [overlayUvOnAtlas, setOverlayUvOnAtlas] = useState(true);
   const [wrapOutOfBoundsUv, setWrapOutOfBoundsUv] = useState(true);
   const [showUvChecker, setShowUvChecker] = useState(false);
   const [uvStats, setUvStats] = useState<{ edges: number; outOfBounds: number }>({ edges: 0, outOfBounds: 0 });
@@ -110,14 +102,11 @@ export const AtlasUvInspector: React.FC<AtlasUvInspectorProps> = ({
     canvas.width = S;
     canvas.height = S;
 
-    const isDarkUv = selectedLayer === 'UV_all_parts_dark' || channel !== 'uv_layout';
+    const isDarkUv = selectedLayer === 'UV_all_parts_dark';
 
-    if (customTexture && channel === 'uv_layout') {
+    if (customTexture) {
       ctx.drawImage(customTexture.img, 0, 0, S, S);
       ctx.fillStyle = 'rgba(11, 14, 20, 0.35)';
-      ctx.fillRect(0, 0, S, S);
-    } else if (channel === 'normal') {
-      ctx.fillStyle = '#8080ff';
       ctx.fillRect(0, 0, S, S);
     } else if (showUvChecker || (selectedLayer === 'UV_all_parts' && !importedUvs)) {
       const cSize = 32;
@@ -147,30 +136,18 @@ export const AtlasUvInspector: React.FC<AtlasUvInspectorProps> = ({
       ctx.stroke();
     }
 
-    // Imported Character / GLB Atlas & UV Rendering
+    // Imported Character / GLB UV Rendering
     if (importedUvs && importedUvs.length > 0) {
       const meshesToDraw =
         selectedImportedIdx === 'all' ? importedUvs : [importedUvs[selectedImportedIdx]].filter(Boolean);
 
-      // Draw actual character texture atlas for selected channel (or baseColor dimmed under uv_layout)
       const activeMesh = meshesToDraw[0];
-      const texKeyMap: Record<AtlasChannel, keyof NonNullable<ImportedUvMesh['textures']>> = {
-        uv_layout: 'baseColor',
-        base_color: 'baseColor',
-        roughness: 'roughness',
-        metallic: 'metallic',
-        normal: 'normal',
-        ao: 'ao',
-      };
-      const texKey = texKeyMap[channel];
-
-      // Pick first mesh in selection that has a texture for this channel
-      const meshWithTex = meshesToDraw.find((m) => m.textures?.[texKey]) || activeMesh;
-      const texUrl = customTexture ? null : meshWithTex?.textures?.[texKey] || null;
+      const meshWithTex = meshesToDraw.find((m) => m.textures?.baseColor) || activeMesh;
+      const texUrl = customTexture ? null : meshWithTex?.textures?.baseColor || null;
 
       if (customTexture) {
         ctx.save();
-        ctx.globalAlpha = channel === 'uv_layout' ? 0.55 : 1.0;
+        ctx.globalAlpha = 0.55;
         ctx.drawImage(customTexture.img, 0, 0, S, S);
         ctx.restore();
       } else if (texUrl) {
@@ -179,39 +156,18 @@ export const AtlasUvInspector: React.FC<AtlasUvInspectorProps> = ({
         );
         if (loadedImg) {
           ctx.save();
-          ctx.globalAlpha = channel === 'uv_layout' ? 0.45 : 1.0;
+          ctx.globalAlpha = 0.4;
           ctx.drawImage(loadedImg, 0, 0, S, S);
           ctx.restore();
         }
-      } else if (channel !== 'uv_layout') {
-        // Fallback fill swatch if imported model uses solid color instead of image texture for this channel
-        if (channel === 'base_color' && meshWithTex?.materialColor) {
-          ctx.fillStyle = meshWithTex.materialColor;
-          ctx.fillRect(0, 0, S, S);
-        } else if (channel === 'roughness' || channel === 'metallic' || channel === 'ao') {
-          ctx.fillStyle = channel === 'ao' ? '#e2e8f0' : channel === 'metallic' ? '#1e293b' : '#808080';
-          ctx.fillRect(0, 0, S, S);
-        }
-        ctx.fillStyle = 'rgba(248, 250, 252, 0.72)';
-        ctx.font = '500 13px "Plus Jakarta Sans", sans-serif';
-        ctx.fillText(
-          `Canal "${texKey}" sem mapa de textura bitmap conectado neste material (usando valor uniforme).`,
-          20,
-          36
-        );
       }
 
-      // Compute UV stats & draw UV wireframe overlay
       let totalEdgesDrawn = 0;
       let outOfBoundsEdges = 0;
-      const shouldDrawWire = channel === 'uv_layout' || overlayUvOnAtlas;
 
-      if (shouldDrawWire) {
-        ctx.strokeStyle =
-          channel === 'uv_layout' ? 'rgba(249, 115, 22, 0.8)' : 'rgba(249, 115, 22, 0.45)';
-        ctx.lineWidth = 1;
-        ctx.beginPath();
-      }
+      ctx.strokeStyle = 'rgba(249, 115, 22, 0.82)';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
 
       for (const m of meshesToDraw) {
         const edges = uvChannel === 'uv1' && m.uv1Edges?.length ? m.uv1Edges : m.uvEdges;
@@ -228,42 +184,38 @@ export const AtlasUvInspector: React.FC<AtlasUvInspectorProps> = ({
             outOfBoundsEdges++;
           }
 
-          if (shouldDrawWire) {
-            const u1 = wrapOutOfBoundsUv && (rawU1 < 0 || rawU1 > 1) ? wrapUnit(rawU1) : rawU1;
-            const v1 = wrapOutOfBoundsUv && (rawV1 < 0 || rawV1 > 1) ? wrapUnit(rawV1) : rawV1;
-            const u2 = wrapOutOfBoundsUv && (rawU2 < 0 || rawU2 > 1) ? wrapUnit(rawU2) : rawU2;
-            const v2 = wrapOutOfBoundsUv && (rawV2 < 0 || rawV2 > 1) ? wrapUnit(rawV2) : rawV2;
+          const u1 = wrapOutOfBoundsUv && (rawU1 < 0 || rawU1 > 1) ? wrapUnit(rawU1) : rawU1;
+          const v1 = wrapOutOfBoundsUv && (rawV1 < 0 || rawV1 > 1) ? wrapUnit(rawV1) : rawV1;
+          const u2 = wrapOutOfBoundsUv && (rawU2 < 0 || rawU2 > 1) ? wrapUnit(rawU2) : rawU2;
+          const v2 = wrapOutOfBoundsUv && (rawV2 < 0 || rawV2 > 1) ? wrapUnit(rawV2) : rawV2;
 
-            if (wrapOutOfBoundsUv && (Math.abs(u1 - u2) > 0.65 || Math.abs(v1 - v2) > 0.65)) {
-              continue;
-            }
-
-            ctx.moveTo(u1 * S, (1 - v1) * S);
-            ctx.lineTo(u2 * S, (1 - v2) * S);
-            totalEdgesDrawn++;
+          if (wrapOutOfBoundsUv && (Math.abs(u1 - u2) > 0.65 || Math.abs(v1 - v2) > 0.65)) {
+            continue;
           }
+
+          ctx.moveTo(u1 * S, (1 - v1) * S);
+          ctx.lineTo(u2 * S, (1 - v2) * S);
+          totalEdgesDrawn++;
         }
       }
 
-      if (shouldDrawWire) {
-        ctx.stroke();
-        if (totalEdgesDrawn === 0 && channel === 'uv_layout') {
-          ctx.fillStyle = '#f8fafc';
-          ctx.font = '600 15px "Plus Jakarta Sans", sans-serif';
-          ctx.textAlign = 'center';
-          ctx.fillText('Nenhuma coordenada UV encontrada nesta malha.', S / 2, S / 2 - 10);
-          ctx.fillStyle = '#94a3b8';
-          ctx.font = '400 13px "Plus Jakarta Sans", sans-serif';
-          ctx.fillText('Volte para Viewport 3D e clique em "Gerar UV Auto" para criar o mapa UV.', S / 2, S / 2 + 16);
-          ctx.textAlign = 'left';
-        }
+      ctx.stroke();
+      if (totalEdgesDrawn === 0) {
+        ctx.fillStyle = '#f8fafc';
+        ctx.font = '600 15px "Plus Jakarta Sans", sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('Nenhuma coordenada UV encontrada nesta malha.', S / 2, S / 2 - 10);
+        ctx.fillStyle = '#94a3b8';
+        ctx.font = '400 13px "Plus Jakarta Sans", sans-serif';
+        ctx.fillText('Volte para Viewport 3D e clique em "Gerar UV Auto" para criar o mapa UV.', S / 2, S / 2 + 16);
+        ctx.textAlign = 'left';
       }
 
       setUvStats({ edges: totalEdgesDrawn, outOfBounds: outOfBoundsEdges });
       return;
     }
 
-    // Default procedural reference atlas islands
+    // Default procedural reference UV islands
     const marginPx = config.uvMargin * S * 0.45;
 
     for (const isl of UV_ISLANDS) {
@@ -284,31 +236,14 @@ export const AtlasUvInspector: React.FC<AtlasUvInspectorProps> = ({
         ctx.setLineDash([]);
       }
 
-      let fill = isl.color;
-      if (channel === 'roughness') {
-        fill = `rgb(${isl.roughnessGray}, ${isl.roughnessGray}, ${isl.roughnessGray})`;
-      } else if (channel === 'metallic') {
-        fill = `rgb(${isl.metallicGray}, ${isl.metallicGray}, ${isl.metallicGray})`;
-      } else if (channel === 'ao') {
-        fill = `rgb(${isl.aoGray}, ${isl.aoGray}, ${isl.aoGray})`;
-      } else if (channel === 'normal') {
-        fill = '#8488ff';
-      } else if (channel === 'uv_layout') {
-        fill = isFocused ? 'rgba(56, 189, 248, 0.14)' : 'rgba(100, 116, 139, 0.05)';
-      }
-
-      if (!(customTexture && channel === 'uv_layout')) {
-        ctx.fillStyle = fill;
+      if (!customTexture) {
+        ctx.fillStyle = isFocused ? 'rgba(56, 189, 248, 0.14)' : 'rgba(100, 116, 139, 0.05)';
         ctx.fillRect(x, y, w, h);
       }
 
       const cols = 6;
       const rows = 5;
-      ctx.strokeStyle = isFocused
-        ? channel === 'uv_layout'
-          ? 'rgba(226, 232, 240, 0.72)'
-          : 'rgba(15, 23, 42, 0.38)'
-        : 'rgba(148, 163, 184, 0.15)';
+      ctx.strokeStyle = isFocused ? 'rgba(226, 232, 240, 0.72)' : 'rgba(148, 163, 184, 0.15)';
       ctx.lineWidth = isFocused ? 1 : 0.5;
 
       for (let c = 0; c <= cols; c++) {
@@ -331,21 +266,19 @@ export const AtlasUvInspector: React.FC<AtlasUvInspectorProps> = ({
         ctx.lineWidth = config.seamAngleDeg < 60 ? 2.5 : 1.75;
         ctx.strokeRect(x, y, w, h);
 
-        ctx.fillStyle = channel === 'roughness' || channel === 'metallic' || channel === 'ao' ? '#f97316' : '#f8fafc';
+        ctx.fillStyle = '#f8fafc';
         ctx.font = '600 13px "JetBrains Mono", monospace';
         ctx.fillText(isl.label, x + 8, y + 20);
       }
     }
   }, [
     selectedLayer,
-    channel,
     uvChannel,
     config.uvMargin,
     config.seamAngleDeg,
     importedUvs,
     selectedImportedIdx,
     customTexture,
-    overlayUvOnAtlas,
     wrapOutOfBoundsUv,
     showUvChecker,
     imgTick,
@@ -357,7 +290,6 @@ export const AtlasUvInspector: React.FC<AtlasUvInspectorProps> = ({
       const img = new Image();
       img.onload = () => {
         setCustomTexture({ name: file.name, img });
-        setChannel('uv_layout');
       };
       img.src = String(reader.result);
     };
@@ -370,11 +302,7 @@ export const AtlasUvInspector: React.FC<AtlasUvInspectorProps> = ({
     const url = canvas.toDataURL('image/png');
     const a = document.createElement('a');
     a.href = url;
-    a.download = importedUvs
-      ? `Imported_${channel}_UV.png`
-      : channel === 'uv_layout'
-      ? `${selectedLayer}.png`
-      : `Atlas_${channel}.png`;
+    a.download = importedUvs ? 'Imported_UV_Layout.png' : `${selectedLayer}.png`;
     a.click();
   };
 
@@ -397,12 +325,12 @@ export const AtlasUvInspector: React.FC<AtlasUvInspectorProps> = ({
         }}
       />
 
-      {/* Left Column: UV & Channel Controls */}
+      {/* Left Column: UV Controls */}
       <div className="lg:col-span-4 flex flex-col gap-6">
         <div>
-          <h2 className="text-xl font-semibold text-white">Atlas PBR &amp; Estrutura de UVs</h2>
+          <h2 className="text-xl font-semibold text-white">Estrutura de UVs</h2>
           <p className="mt-1 text-sm text-slate-400">
-            Inspecione o empacotamento de ilhas, texturas extraídas e a malha UV real do personagem GLB/glTF inserido.
+            Inspecione o empacotamento de ilhas, coordenadas UV0/UV1 e a malha UV real do modelo GLB/glTF inserido.
           </p>
         </div>
 
@@ -541,12 +469,9 @@ export const AtlasUvInspector: React.FC<AtlasUvInspectorProps> = ({
                 <button
                   key={layer.id}
                   type="button"
-                  onClick={() => {
-                    setSelectedLayer(layer.id);
-                    setChannel('uv_layout');
-                  }}
+                  onClick={() => setSelectedLayer(layer.id)}
                   className={`px-2.5 py-2 rounded-lg text-left text-xs font-mono transition-colors truncate cursor-pointer ${
-                    selectedLayer === layer.id && channel === 'uv_layout'
+                    selectedLayer === layer.id
                       ? 'bg-orange-600/20 text-orange-300 border border-orange-500/40'
                       : 'bg-[#0D1017] text-slate-400 hover:text-slate-200 border border-slate-800/80'
                   }`}
@@ -559,48 +484,14 @@ export const AtlasUvInspector: React.FC<AtlasUvInspectorProps> = ({
         )}
       </div>
 
-      {/* Right Column: Interactive 2D Atlas Canvas */}
+      {/* Right Column: Interactive 2D UV Canvas */}
       <div className="lg:col-span-8 rounded-xl bg-[#141923] border border-slate-800 p-5 flex flex-col gap-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="flex items-center gap-1 p-1 rounded-lg bg-[#0D1017] border border-slate-800 overflow-x-auto overflow-y-hidden no-scrollbar">
-            {(
-              [
-                { id: 'uv_layout', label: 'Malha UV' },
-                { id: 'base_color', label: 'Base Color' },
-                { id: 'roughness', label: 'Roughness' },
-                { id: 'metallic', label: 'Metallic' },
-                { id: 'normal', label: 'Normal Map' },
-                { id: 'ao', label: 'Ambient Occlusion' },
-              ] as const
-            ).map((tab) => (
-              <button
-                key={tab.id}
-                type="button"
-                onClick={() => setChannel(tab.id)}
-                className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
-                  channel === tab.id ? 'bg-orange-600 text-white' : 'text-slate-400 hover:text-white'
-                }`}
-              >
-                {tab.label}
-              </button>
-            ))}
+          <div className="text-sm font-semibold text-slate-200">
+            Malha UV ({uvChannel.toUpperCase()})
           </div>
 
           <div className="flex items-center gap-2">
-            {importedUvs && channel !== 'uv_layout' && (
-              <button
-                type="button"
-                onClick={() => setOverlayUvOnAtlas((v) => !v)}
-                className={`inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border text-xs font-medium transition-colors cursor-pointer whitespace-nowrap shrink-0 ${
-                  overlayUvOnAtlas
-                    ? 'bg-orange-600/20 border-orange-500 text-orange-200'
-                    : 'bg-slate-800 border-slate-700 text-slate-300'
-                }`}
-              >
-                {overlayUvOnAtlas ? <Eye className="w-3.5 h-3.5" /> : <EyeOff className="w-3.5 h-3.5" />}
-                <span>Sobrepor UV</span>
-              </button>
-            )}
             <button
               type="button"
               onClick={() => textureInputRef.current?.click()}

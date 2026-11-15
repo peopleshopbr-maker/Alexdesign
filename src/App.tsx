@@ -1,45 +1,65 @@
-import { useState } from 'react';
-import { Archive } from 'lucide-react';
-import { AddonConfig, DEFAULT_ADDON_CONFIG } from './addon/blenderAddonTemplates';
+import { Component, ReactNode, useState } from 'react';
+import { Archive, RotateCcw } from 'lucide-react';
+import { DEFAULT_STUDIO_CONFIG, StudioConfig } from './types/studioConfig';
 import { ImportedUvMesh, Viewport3D, ViewportSceneConfig } from './components/Viewport3D';
 import { AtlasUvInspector } from './components/AtlasUvInspector';
 import { MaterialEcosystemView } from './components/MaterialEcosystemView';
-import { PipelineGuide } from './components/PipelineGuide';
-import { PROCEDURAL_PBR_PRESETS, ProceduralPbrParams } from './utils/pbrTextureGenerator';
+import { SubstanceTextureSetRequest } from './utils/substanceImporter';
 
-type WorkspaceTab = 'viewport' | 'atlas' | 'ecosystem' | 'guide';
+type WorkspaceTab = 'viewport' | 'atlas' | 'ecosystem';
 
 const NAV_TABS: { id: WorkspaceTab; label: string }[] = [
   { id: 'viewport', label: 'Viewport 3D' },
-  { id: 'atlas', label: 'Atlas & UVs' },
+  { id: 'atlas', label: 'UVs' },
   { id: 'ecosystem', label: 'Ecossistema & Materiais' },
-  { id: 'guide', label: 'Guia PBR' },
 ];
+
+interface ErrorBoundaryState {
+  errorMessage: string | null;
+}
+
+class ViewportErrorBoundary extends Component<{ children: ReactNode }, ErrorBoundaryState> {
+  state: ErrorBoundaryState = { errorMessage: null };
+
+  static getDerivedStateFromError(error: Error): ErrorBoundaryState {
+    return { errorMessage: error?.message || 'Erro inesperado no estúdio 3D.' };
+  }
+
+  render() {
+    if (this.state.errorMessage) {
+      return (
+        <div className="flex-1 min-h-[520px] flex flex-col items-center justify-center gap-3 bg-[#0D1017] p-6 text-center">
+          <div className="text-sm font-semibold text-red-300">Falha ao inicializar o Estúdio 3D</div>
+          <div className="max-w-md text-xs text-slate-400">{this.state.errorMessage}</div>
+          <button
+            type="button"
+            onClick={() => this.setState({ errorMessage: null })}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-orange-600 hover:bg-orange-500 text-xs font-semibold text-white cursor-pointer"
+          >
+            <RotateCcw className="w-3.5 h-3.5" />
+            <span>Recarregar Viewport</span>
+          </button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<WorkspaceTab>('viewport');
-  const [config, setConfig] = useState<AddonConfig>(DEFAULT_ADDON_CONFIG);
+  const [config, setConfig] = useState<StudioConfig>(DEFAULT_STUDIO_CONFIG);
   const [importedUvs, setImportedUvs] = useState<ImportedUvMesh[] | null>(null);
-  const [proceduralParams, setProceduralParams] = useState<ProceduralPbrParams>(
-    PROCEDURAL_PBR_PRESETS[0].defaultParams
-  );
-  const [proceduralRequest, setProceduralRequest] = useState<{
-    params: ProceduralPbrParams;
-    nonce: number;
-  } | null>(null);
+  const [substanceRequest, setSubstanceRequest] = useState<SubstanceTextureSetRequest | null>(null);
   const [exportZipNonce, setExportZipNonce] = useState(0);
   const [isExportingZip, setIsExportingZip] = useState(false);
 
-  const handleConfigChange = (patch: Partial<AddonConfig> | Partial<ViewportSceneConfig>) => {
+  const handleConfigChange = (patch: Partial<StudioConfig> | Partial<ViewportSceneConfig>) => {
     setConfig((prev) => ({ ...prev, ...patch }));
   };
 
-  const handleApplyProceduralToViewport = (params: ProceduralPbrParams) => {
-    setProceduralParams(params);
-    setProceduralRequest((prev) => ({
-      params,
-      nonce: (prev?.nonce ?? 0) + 1,
-    }));
+  const handleApplySubstanceToViewport = (req: SubstanceTextureSetRequest) => {
+    setSubstanceRequest(req);
     setActiveTab('viewport');
   };
 
@@ -59,7 +79,7 @@ export default function App() {
           Alex<span className="text-orange-500">Design</span>
         </a>
 
-        {/* Zone 2: 4 concise single-line nav links */}
+        {/* Zone 2: 3 concise single-line nav links */}
         <nav
           aria-label="Navegação principal"
           className="h-full flex items-center gap-6 overflow-x-auto overflow-y-hidden no-scrollbar"
@@ -99,16 +119,18 @@ export default function App() {
       </header>
 
       {/* Main Content Area (Viewport3D remains mounted to preserve 3D model, rig, paints and atlas) */}
-      <main className="flex-1 flex flex-col">
-        <div className={activeTab === 'viewport' ? 'flex-1 flex flex-col' : 'hidden'}>
-          <Viewport3D
-            config={config}
-            onConfigChange={handleConfigChange}
-            onImportedUvs={setImportedUvs}
-            proceduralMaterialRequest={proceduralRequest}
-            exportZipNonce={exportZipNonce}
-            onExportStateChange={setIsExportingZip}
-          />
+      <main className="flex-1 flex flex-col min-h-0">
+        <div className={activeTab === 'viewport' ? 'h-[calc(100vh-4rem)] min-h-[520px] flex flex-col' : 'hidden'}>
+          <ViewportErrorBoundary>
+            <Viewport3D
+              config={config}
+              onConfigChange={handleConfigChange}
+              onImportedUvs={setImportedUvs}
+              substanceTextureRequest={substanceRequest}
+              exportZipNonce={exportZipNonce}
+              onExportStateChange={setIsExportingZip}
+            />
+          </ViewportErrorBoundary>
         </div>
         {activeTab === 'atlas' && (
           <AtlasUvInspector
@@ -119,12 +141,11 @@ export default function App() {
         )}
         {activeTab === 'ecosystem' && (
           <MaterialEcosystemView
-            params={proceduralParams}
-            onParamsChange={setProceduralParams}
-            onApplyToViewport={handleApplyProceduralToViewport}
+            config={config}
+            importedUvs={importedUvs}
+            onApplySubstanceToViewport={handleApplySubstanceToViewport}
           />
         )}
-        {activeTab === 'guide' && <PipelineGuide config={config} />}
       </main>
     </div>
   );

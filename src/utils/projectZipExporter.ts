@@ -2,7 +2,7 @@ import JSZip from 'jszip';
 import * as THREE from 'three';
 import { GLTFExporter } from 'three/addons/exporters/GLTFExporter.js';
 import { auditThreeScene } from './gltfVerifier';
-import { RigPreset, RIG_PRESET_DEFINITIONS } from '../addon/blenderAddonTemplates';
+import { RigPreset, RIG_PRESET_DEFINITIONS } from '../types/studioConfig';
 
 export interface CompleteBundleInput {
   targetRoot: THREE.Object3D;

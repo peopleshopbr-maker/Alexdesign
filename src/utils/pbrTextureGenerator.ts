@@ -361,9 +361,9 @@ export function generateProceduralPbrCanvases(
       imgHeight.data[p4 + 2] = hVal;
       imgHeight.data[p4 + 3] = 255;
 
-      // Normal Map (Tangent space)
+      // Normal Map (Tangent space OpenGL Y+ for Blender / Three.js / glTF)
       const dx = (hL - hR) * normalStrength;
-      const dy = (hU - hD) * normalStrength;
+      const dy = (hD - hU) * normalStrength;
       const invLen = 1 / Math.hypot(dx, dy, 1);
       const nx = dx * invLen;
       const ny = dy * invLen;

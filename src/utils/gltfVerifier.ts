@@ -1,5 +1,7 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
+import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
 
 export type CheckSeverity = 'ok' | 'warn' | 'error';
 
@@ -125,7 +127,7 @@ export async function inspectGltfBinaryOrJson(
       }
 
       const jsonBytes = new Uint8Array(buffer, 20, chunk0Len);
-      const jsonText = new TextDecoder().decode(jsonBytes);
+      const jsonText = new TextDecoder().decode(jsonBytes).replace(/\0+$/, '').trim();
       const json = JSON.parse(jsonText) as Record<string, unknown>;
 
       let binChunkBytes = 0;
@@ -154,10 +156,6 @@ export async function inspectGltfBinaryOrJson(
           extReq.includes('KHR_draco_mesh_compression'),
         jsonChunkBytes: chunk0Len,
         binChunkBytes,
-        parseError:
-          declaredLength !== buffer.byteLength
-            ? `Tamanho declarado (${declaredLength} B) difere do tamanho real (${buffer.byteLength} B).`
-            : undefined,
       };
     } else {
       const text = await file.text();
@@ -542,11 +540,18 @@ export async function verifyStandaloneGltfFiles(fileList: FileList | File[]): Pr
     return urlMap.get(clean) || url;
   });
 
+  const dracoLoader = new DRACOLoader();
+  dracoLoader.setDecoderPath('./libs/draco/');
   const loader = new GLTFLoader(manager);
-  const mainUrl = urlMap.get(mainFile.name.toLowerCase())!;
+  loader.setDRACOLoader(dracoLoader);
+  loader.setMeshoptDecoder(MeshoptDecoder);
 
   try {
-    const gltf = await loader.loadAsync(mainUrl);
+    if (MeshoptDecoder?.ready) {
+      await MeshoptDecoder.ready.catch(() => undefined);
+    }
+    const payload = /\.glb$/i.test(mainFile.name) ? await mainFile.arrayBuffer() : await mainFile.text();
+    const gltf = await loader.parseAsync(payload, '');
     const report = auditThreeScene(gltf.scene, gltf.animations || [], mainFile.name, container);
 
     gltf.scene.traverse((obj) => {
@@ -560,6 +565,7 @@ export async function verifyStandaloneGltfFiles(fileList: FileList | File[]): Pr
 
     return report;
   } finally {
+    dracoLoader.dispose();
     createdUrls.forEach((u) => URL.revokeObjectURL(u));
   }
 }

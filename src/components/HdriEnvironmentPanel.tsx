@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ChevronDown, ChevronUp, RotateCw, Sun, Upload } from 'lucide-react';
+import { ChevronDown, RotateCw, Sun, Upload } from 'lucide-react';
 import { HDRI_ENVIRONMENT_OPTIONS, HdriEnvironmentId } from '../utils/studioLighting';
 
 interface HdriEnvironmentPanelProps {
@@ -31,7 +31,7 @@ export const HdriEnvironmentPanel: React.FC<HdriEnvironmentPanelProps> = ({
   onExposureChange,
   onShowHdriBgChange,
 }) => {
-  const [expanded, setExpanded] = useState(true);
+  const [expanded, setExpanded] = useState(false);
 
   const builtInPresets = HDRI_ENVIRONMENT_OPTIONS.filter((o) => o.kind !== 'cdn');
   const webPresets = HDRI_ENVIRONMENT_OPTIONS.filter((o) => o.kind === 'cdn');
@@ -40,28 +40,32 @@ export const HdriEnvironmentPanel: React.FC<HdriEnvironmentPanelProps> = ({
     hdriId === 'custom' && customHdriName ? customHdriName : activeMeta?.label || 'Estúdio Neutro';
 
   return (
-    <aside
+    <section
       aria-label="Painel de ambientes HDRI"
-      className="absolute top-4 right-5 z-10 w-64 rounded-xl bg-[#141923]/92 border border-slate-700/80 shadow-2xl text-xs overflow-hidden"
+      className="rounded-lg bg-[#141923] border border-slate-800/90 text-xs overflow-hidden"
     >
-      {/* Header / Toggle */}
       <button
         type="button"
+        aria-expanded={expanded}
         onClick={() => setExpanded((v) => !v)}
-        className="w-full px-3 py-2 flex items-center justify-between gap-2 hover:bg-slate-800/60 transition-colors cursor-pointer"
+        className="w-full px-3 py-2.5 flex items-center justify-between gap-2 hover:bg-slate-800/60 transition-colors cursor-pointer"
       >
         <div className="flex items-center gap-2 min-w-0">
           <Sun className="w-3.5 h-3.5 text-amber-400 shrink-0" />
           <div className="text-left min-w-0">
-            <div className="font-semibold text-slate-100 leading-tight">Ambiente HDRI</div>
+            <div className="text-[11px] font-semibold tracking-wider uppercase text-slate-200 leading-tight">
+              Ambiente HDRI
+            </div>
             <div className="text-[11px] text-orange-400 truncate leading-tight">{activeLabel}</div>
           </div>
         </div>
-        {expanded ? (
-          <ChevronUp className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-        ) : (
-          <ChevronDown className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-        )}
+        <span className="inline-flex items-center justify-center w-5 h-5 rounded bg-[#0D1017] border border-slate-800 text-slate-400 shrink-0">
+          <ChevronDown
+            className={`w-3.5 h-3.5 transition-transform duration-150 ${
+              expanded ? 'rotate-180 text-orange-400' : ''
+            }`}
+          />
+        </span>
       </button>
 
       {expanded && (
@@ -96,25 +100,28 @@ export const HdriEnvironmentPanel: React.FC<HdriEnvironmentPanelProps> = ({
 
           {/* Web HDRIs + Custom .HDR/.EXR Upload */}
           <div className="flex items-center gap-1.5">
-            <select
-              aria-label="HDRIs equiretangulares online"
-              value={webPresets.some((p) => p.id === hdriId) ? hdriId : ''}
-              onChange={(e) => {
-                if (e.target.value) {
-                  onSelectHdri(e.target.value as HdriEnvironmentId);
-                }
-              }}
-              className="flex-1 min-w-0 px-2 py-1 rounded-md bg-[#0D1017] border border-slate-800 text-[11px] text-slate-200"
-            >
-              <option value="" disabled>
-                HDRIs Web (.hdr)...
-              </option>
-              {webPresets.map((opt) => (
-                <option key={opt.id} value={opt.id}>
-                  {opt.label}
+            <div className="relative flex-1 min-w-0">
+              <select
+                aria-label="HDRIs equiretangulares online"
+                value={webPresets.some((p) => p.id === hdriId) ? hdriId : ''}
+                onChange={(e) => {
+                  if (e.target.value) {
+                    onSelectHdri(e.target.value as HdriEnvironmentId);
+                  }
+                }}
+                className="w-full appearance-none pl-2 pr-6 py-1 rounded-md bg-[#0D1017] border border-slate-800 hover:border-slate-600 text-[11px] text-slate-200 cursor-pointer focus:outline-none focus:border-orange-500"
+              >
+                <option value="" disabled>
+                  HDRIs Web (.hdr)...
                 </option>
-              ))}
-            </select>
+                {webPresets.map((opt) => (
+                  <option key={opt.id} value={opt.id}>
+                    {opt.label}
+                  </option>
+                ))}
+              </select>
+              <ChevronDown className="pointer-events-none w-3 h-3 text-slate-400 absolute right-1.5 top-1/2 -translate-y-1/2" />
+            </div>
 
             <button
               type="button"
@@ -192,6 +199,6 @@ export const HdriEnvironmentPanel: React.FC<HdriEnvironmentPanelProps> = ({
           </div>
         </div>
       )}
-    </aside>
+    </section>
   );
 };
