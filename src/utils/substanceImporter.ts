@@ -20,15 +20,58 @@ export interface SubstanceTextureSlot {
   channel: SubstanceChannelId;
   fileName: string;
   dataUrl: string;
+  flipY?: boolean;
 }
 
 export interface SubstanceTextureSetRequest {
   materialName: string;
+  targetMeshName?: string;
   slots: Partial<Record<SubstanceChannelId, SubstanceTextureSlot>>;
   normalDirectXToOpenGL: boolean;
   useBumpConversion: boolean;
   uvScale: number;
   nonce: number;
+}
+
+export interface GlbExtractedTexturesInput {
+  baseColor?: string | null;
+  roughness?: string | null;
+  metallic?: string | null;
+  normal?: string | null;
+  ao?: string | null;
+  emissive?: string | null;
+  opacity?: string | null;
+}
+
+export function buildSubstanceSlotsFromGlbTextures(
+  materialName: string,
+  textures?: GlbExtractedTexturesInput | null
+): Partial<Record<SubstanceChannelId, SubstanceTextureSlot>> {
+  if (!textures) return {};
+  const safeName = materialName.replace(/[^a-zA-Z0-9_-]/g, '_') || 'GLB_Material';
+  const slots: Partial<Record<SubstanceChannelId, SubstanceTextureSlot>> = {};
+
+  const mapping: [SubstanceChannelId, string | null | undefined, string][] = [
+    ['baseColor', textures.baseColor, 'BaseColor'],
+    ['roughness', textures.roughness, 'Roughness'],
+    ['metallic', textures.metallic, 'Metallic'],
+    ['normal', textures.normal, 'Normal'],
+    ['ao', textures.ao, 'AO'],
+    ['emissive', textures.emissive, 'Emissive'],
+    ['opacity', textures.opacity, 'Opacity'],
+  ];
+
+  for (const [channel, dataUrl, suffix] of mapping) {
+    if (dataUrl) {
+      slots[channel] = {
+        channel,
+        fileName: `${safeName}_${suffix}.png`,
+        dataUrl,
+        flipY: true,
+      };
+    }
+  }
+  return slots;
 }
 
 export const SUBSTANCE_CHANNEL_META: {
@@ -263,7 +306,7 @@ export async function loadSubstanceBundleToThree(
 
     const tex = new THREE.CanvasTexture(canvas);
     tex.colorSpace = isColor ? THREE.SRGBColorSpace : THREE.NoColorSpace;
-    tex.flipY = flipY;
+    tex.flipY = slot?.flipY ?? flipY;
     tex.wrapS = THREE.RepeatWrapping;
     tex.wrapT = THREE.RepeatWrapping;
     tex.repeat.set(req.uvScale, req.uvScale);
@@ -386,11 +429,13 @@ function generateAutoLoadBlenderMaterialPy(
   return `import os
 import bpy
 
-# Compativel com Blender 4.2 - 5.3+ (Principled BSDF + EEVEE Next / Cycles)
+# Compativel com Blender 4.2 - 5.3+ (Principled BSDF + BLENDER_EEVEE / Cycles + interop_id)
 def create_blender_substance_material():
     base_dir = os.path.dirname(bpy.data.filepath) if bpy.data.filepath else os.path.dirname(__file__)
     mat = bpy.data.materials.get("${safeName}") or bpy.data.materials.new(name="${safeName}")
-    mat.use_nodes = True
+    # Blender 5.0+: material.use_nodes foi descontinuado; materiais ja usam nos nativamente
+    if bpy.app.version < (5, 0, 0) and hasattr(mat, "use_nodes"):
+        mat.use_nodes = True
     nt = mat.node_tree
     nt.nodes.clear()
 
@@ -629,7 +674,9 @@ class STM_OT_import_substance_textures(bpy.types.Operator, ImportHelper):
     def execute(self, context):
         folder = os.path.dirname(self.filepath)
         mat = context.material or bpy.data.materials.new(name=self.material_name)
-        mat.use_nodes = True
+        # Blender 5.0+: material.use_nodes foi descontinuado; todos materiais usam nos nativamente
+        if bpy.app.version < (5, 0, 0) and hasattr(mat, "use_nodes"):
+            mat.use_nodes = True
         nt = mat.node_tree
         nt.nodes.clear()
 

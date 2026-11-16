@@ -15,6 +15,7 @@ export interface CompleteBundleInput {
   resolution?: number;
   userLights?: THREE.Object3D | null;
   studioRenderBlob?: Blob | null;
+  blenderPipelinePy?: string | null;
 }
 
 function textureToPngBlob(tex: THREE.Texture | null | undefined, size = 512): Promise<Blob | null> {
@@ -205,6 +206,9 @@ export async function exportCompleteProjectZip(input: CompleteBundleInput): Prom
   if (input.studioRenderBlob) {
     zip.file(`renders/${safeBase}_Studio_Render.png`, input.studioRenderBlob);
   }
+  if (input.blenderPipelinePy) {
+    zip.file('blender/pipeline_blender_5_3.py', input.blenderPipelinePy);
+  }
 
   // 3. Technical Verification Report JSON
   const report = auditThreeScene(input.targetRoot, input.clips, input.assetName, null);
@@ -233,6 +237,7 @@ export async function exportCompleteProjectZip(input: CompleteBundleInput): Prom
     ...(emissiveBlob ? [`- textures/${safeBase}_Emissive.png  (Mapa Emissivo)`] : []),
     `- uv_layouts/${safeBase}_UV_Layout.png (Layout UV 1024x1024)`,
     ...(input.studioRenderBlob ? [`- renders/${safeBase}_Studio_Render.png (Render de Estúdio PNG)`] : []),
+    ...(input.blenderPipelinePy ? [`- blender/pipeline_blender_5_3.py   (Script Python bpy Etapas 1-13 Blender 5.3+)`] : []),
     `- report/verification_report.json    (Auditoria técnica PBR/UV/Rig)`,
   ].join('\n');
 

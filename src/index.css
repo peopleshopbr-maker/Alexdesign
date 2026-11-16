@@ -37,9 +37,68 @@
   display: none;
 }
 
-/* Range input styling for studio precision */
+.pb-safe {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+button,
+[role="button"],
+a,
+select,
+input[type="checkbox"],
+input[type="range"] {
+  touch-action: manipulation;
+}
+
+button:focus-visible,
+a:focus-visible,
+select:focus-visible,
+input:focus-visible {
+  outline: 2px solid #f97316;
+  outline-offset: 2px;
+}
+
+/* Studio dark subtle scrollbars */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(100, 116, 139, 0.45) transparent;
+}
+
+*::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  background-color: rgba(100, 116, 139, 0.45);
+  border-radius: 9999px;
+}
+
+/* Range input styling for studio & touch precision */
 input[type="range"] {
   accent-color: #f97316;
+  min-height: 24px;
+}
+
+@media (pointer: coarse) {
+  input[type="range"] {
+    min-height: 32px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
 
 @layer base { button, .btn, [role='button'] { min-height: 44px; max-width: 100%; padding: clamp(10px, 2.5vw, 14px) clamp(16px, 4vw, 28px); font-size: clamp(0.9rem, 2.5vw, 1.05rem); box-sizing: border-box; } @media (max-width: 600px) { button, .btn, [role='button'] { width: 100%; } } }

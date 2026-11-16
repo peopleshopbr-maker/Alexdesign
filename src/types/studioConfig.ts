@@ -1,6 +1,6 @@
 export type TargetEngine = 'BLENDER' | 'UNITY' | 'UNREAL' | 'GODOT';
 export type ShaderPreset = 'PBR_PRINCIPLED' | 'PBR_CEL_OUTLINE' | 'ANIME_TOON';
-export type RigPreset = 'HUMANOIDE' | 'BIPEDE' | 'QUADRUPEDE';
+export type RigPreset = 'OBJETO' | 'BIPEDE' | 'QUADRUPEDE';
 
 export type BoneTuple = readonly [
   name: string,
@@ -19,34 +19,16 @@ export interface RigPresetDefinition {
 }
 
 export const RIG_PRESET_DEFINITIONS: Record<RigPreset, RigPresetDefinition> = {
-  HUMANOIDE: {
-    id: 'HUMANOIDE',
-    label: 'Humanoide (21 Ossos)',
-    shortLabel: 'Humanoide',
-    boneCount: 21,
-    description: 'Esqueleto completo com clavículas, coluna em 3 segmentos e osso dinâmico de cabelo.',
+  OBJETO: {
+    id: 'OBJETO',
+    label: 'Objeto / Prop (3 Ossos)',
+    shortLabel: 'Objeto / Prop',
+    boneCount: 3,
+    description: 'Armadura leve com pivô raiz, controle central e topo — ideal para Helmet e props 3D.',
     bones: [
-      ['pelvis', null, [0.0, 0.0, 0.92], [0.0, 0.0, 1.04]],
-      ['spine_01', 'pelvis', [0.0, 0.0, 1.04], [0.0, 0.0, 1.18]],
-      ['spine_02', 'spine_01', [0.0, 0.0, 1.18], [0.0, 0.0, 1.32]],
-      ['chest', 'spine_02', [0.0, 0.0, 1.32], [0.0, 0.0, 1.46]],
-      ['neck', 'chest', [0.0, 0.0, 1.46], [0.0, 0.0, 1.54]],
-      ['head', 'neck', [0.0, 0.0, 1.54], [0.0, 0.0, 1.74]],
-      ['hair_dyn', 'head', [0.0, 0.07, 1.66], [0.0, 0.16, 1.46]],
-      ['clavicle_L', 'chest', [0.03, 0.0, 1.42], [0.14, 0.0, 1.42]],
-      ['upper_arm_L', 'clavicle_L', [0.14, 0.0, 1.42], [0.36, 0.0, 1.42]],
-      ['forearm_L', 'upper_arm_L', [0.36, 0.0, 1.42], [0.58, 0.0, 1.42]],
-      ['hand_L', 'forearm_L', [0.58, 0.0, 1.42], [0.68, 0.0, 1.42]],
-      ['clavicle_R', 'chest', [-0.03, 0.0, 1.42], [-0.14, 0.0, 1.42]],
-      ['upper_arm_R', 'clavicle_R', [-0.14, 0.0, 1.42], [-0.36, 0.0, 1.42]],
-      ['forearm_R', 'upper_arm_R', [-0.36, 0.0, 1.42], [-0.58, 0.0, 1.42]],
-      ['hand_R', 'forearm_R', [-0.58, 0.0, 1.42], [-0.68, 0.0, 1.42]],
-      ['thigh_L', 'pelvis', [0.09, 0.0, 0.9], [0.09, 0.0, 0.48]],
-      ['shin_L', 'thigh_L', [0.09, 0.0, 0.48], [0.09, 0.0, 0.08]],
-      ['foot_L', 'shin_L', [0.09, 0.0, 0.08], [0.09, -0.14, 0.0]],
-      ['thigh_R', 'pelvis', [-0.09, 0.0, 0.9], [-0.09, 0.0, 0.48]],
-      ['shin_R', 'thigh_R', [-0.09, 0.0, 0.48], [-0.09, 0.0, 0.08]],
-      ['foot_R', 'shin_R', [-0.09, 0.0, 0.08], [-0.09, -0.14, 0.0]],
+      ['root_pivot', null, [0.0, 0.0, 0.0], [0.0, 0.0, 0.35]],
+      ['center_ctrl', 'root_pivot', [0.0, 0.0, 0.35], [0.0, 0.0, 0.72]],
+      ['top_ctrl', 'center_ctrl', [0.0, 0.0, 0.72], [0.0, 0.0, 1.05]],
     ],
   },
   BIPEDE: {
@@ -120,7 +102,7 @@ export interface StudioConfig {
 
 export const DEFAULT_STUDIO_CONFIG: StudioConfig = {
   targetEngine: 'UNITY',
-  rigPreset: 'HUMANOIDE',
+  rigPreset: 'OBJETO',
   textureResolution: 2048,
   uvMargin: 0.02,
   seamAngleDeg: 66.0,

@@ -19,11 +19,19 @@ function distToSegmentSq(
   return p.distanceToSquared(scratchAb);
 }
 
+export interface AutoUvOptions {
+  uvMargin?: number;
+  seamAngleDeg?: number;
+}
+
 /**
  * Generates clean box-projected UV0 coordinates in [0, 1] for any meshes inside `group`
  * (or repairs missing UVs) and returns extracted UV edge arrays for the 2D UV Inspector.
  */
-export function autoGenerateUvsForGroup(group: THREE.Object3D): ImportedUvMesh[] {
+export function autoGenerateUvsForGroup(
+  group: THREE.Object3D,
+  options?: AutoUvOptions
+): ImportedUvMesh[] {
   group.updateMatrixWorld(true);
   const results: ImportedUvMesh[] = [];
   const meshes: THREE.Mesh[] = [];
@@ -41,10 +49,11 @@ export function autoGenerateUvsForGroup(group: THREE.Object3D): ImportedUvMesh[]
 
   if (meshes.length === 0) return results;
 
-  // Pack all meshes into an NxN grid of UV tiles inside [0.02, 0.98] so islands never overlap
+  // Pack all meshes into an NxN grid of UV tiles inside [0, 1] respecting user uvMargin
   const gridCols = Math.ceil(Math.sqrt(meshes.length));
   const cellSpan = 1 / gridCols;
-  const pad = cellSpan * 0.06;
+  const userMargin = THREE.MathUtils.clamp(options?.uvMargin ?? 0.02, 0.002, 0.25);
+  const pad = cellSpan * (0.04 + userMargin);
   const innerSpan = Math.max(0.02, cellSpan - pad * 2);
 
   const pA = new THREE.Vector3();
@@ -209,6 +218,29 @@ function buildClipsForPreset(
   const compact = (arr: (THREE.KeyframeTrack | null)[]) =>
     arr.filter((t): t is THREE.KeyframeTrack => t !== null);
 
+  if (preset === 'OBJETO') {
+    const t5 = [0, 0.625, 1.25, 1.875, 2.5];
+    const idleTracks = compact([
+      posTrack('root_pivot', t5, [[0, 0, 0], [0, 0.03, 0], [0, 0, 0], [0, 0.03, 0], [0, 0, 0]]),
+      quatTrack('center_ctrl', t5, [[0, 0, 0], [0.04, 0.25, 0], [0, 0, 0], [-0.04, -0.25, 0], [0, 0, 0]]),
+      quatTrack('top_ctrl', t5, [[0, 0, 0], [0, 0.15, 0.03], [0, 0, 0], [0, -0.15, -0.03], [0, 0, 0]]),
+    ]);
+    const spinTracks = compact([
+      posTrack('root_pivot', t5, [[0, 0, 0], [0, 0.04, 0], [0, 0, 0], [0, 0.04, 0], [0, 0, 0]]),
+      quatTrack('center_ctrl', t5, [[0, 0, 0], [0, Math.PI * 0.5, 0], [0, Math.PI, 0], [0, Math.PI * 1.5, 0], [0, Math.PI * 2, 0]]),
+    ]);
+    const tiltTracks = compact([
+      posTrack('root_pivot', t5, [[0, 0, 0], [0, 0.05, 0], [0, -0.01, 0], [0, 0.03, 0], [0, 0, 0]]),
+      quatTrack('center_ctrl', t5, [[0, 0, 0], [0.16, 0.35, 0.08], [0, 0, 0], [-0.14, -0.35, -0.08], [0, 0, 0]]),
+      quatTrack('top_ctrl', t5, [[0, 0, 0], [0.08, -0.2, 0], [0, 0, 0], [-0.08, 0.2, 0], [0, 0, 0]]),
+    ]);
+    return [
+      new THREE.AnimationClip('Idle_Float', 2.5, idleTracks),
+      new THREE.AnimationClip('Turntable_Spin', 2.5, spinTracks),
+      new THREE.AnimationClip('Test_Rig_Animation', 2.5, tiltTracks),
+    ];
+  }
+
   if (preset === 'QUADRUPEDE') {
     const t5 = [0, 0.625, 1.25, 1.875, 2.5];
     const idleTracks = compact([
@@ -341,7 +373,7 @@ export function autoRigAndAnimateGroup(group: THREE.Group, preset: RigPreset): A
   box.getSize(size);
   box.getCenter(center);
 
-  const def = RIG_PRESET_DEFINITIONS[preset] || RIG_PRESET_DEFINITIONS.HUMANOIDE;
+  const def = RIG_PRESET_DEFINITIONS[preset] || RIG_PRESET_DEFINITIONS.OBJETO;
 
   // Determine normalized preset bounds in Three.js Y-up space
   const refBox = new THREE.Box3();

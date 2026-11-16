@@ -18,7 +18,7 @@ export type SplineMaterialStyle = 'physical' | 'glass' | 'chrome' | 'clay' | 'ne
 
 export type SplineInteractionType = 'none' | 'spin' | 'float' | 'hover_pulse' | 'click_toggle';
 
-export type SplineTemplateId = 'glass_neon' | 'product_showcase' | 'floating_shapes' | 'character_rig';
+export type SplineTemplateId = 'glass_neon' | 'product_showcase' | 'floating_shapes';
 
 export type SplineToolMode =
   | 'orbit'
@@ -26,7 +26,10 @@ export type SplineToolMode =
   | 'rotate'
   | 'scale'
   | 'paint'
-  | 'assign_mat';
+  | 'assign_mat'
+  | 'sculpt_push'
+  | 'sculpt_pull'
+  | 'sculpt_smooth';
 
 export interface SelectedObjectInspector {
   id: string;
@@ -71,7 +74,6 @@ export const SPLINE_TEMPLATES: { id: SplineTemplateId; label: string; subtitle: 
   { id: 'glass_neon', label: 'Vidro & Neon', subtitle: 'Nó de vidro refrativo + esferas luminosas' },
   { id: 'product_showcase', label: 'Vitrine Produto', subtitle: 'Pedestal metálico + forma escultural' },
   { id: 'floating_shapes', label: 'Formas Flutuantes', subtitle: 'Composição interativa com levitação' },
-  { id: 'character_rig', label: 'Estúdio Personagem', subtitle: 'Ativo articulado com rig e animações' },
 ];
 
 export const SPLINE_MATERIAL_STYLES: { id: SplineMaterialStyle; label: string }[] = [

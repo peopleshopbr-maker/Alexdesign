@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   AlertTriangle,
   CheckCircle2,
@@ -53,6 +53,16 @@ export const FileVerificationModal: React.FC<FileVerificationModalProps> = ({
   const [isVerifyingExternal, setIsVerifyingExternal] = useState(false);
   const [externalError, setExternalError] = useState<string | null>(null);
 
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [onClose]);
+
   const badge = STATUS_BADGE[report.summaryStatus];
 
   const handleVerifyExternalFiles = async (files: FileList | null) => {
@@ -87,19 +97,24 @@ export const FileVerificationModal: React.FC<FileVerificationModalProps> = ({
 
   return (
     <div
-      className="fixed inset-0 z-50 bg-black/75 flex items-center justify-center p-4"
+      className="fixed inset-0 z-50 bg-black/75 backdrop-blur-[2px] flex items-end sm:items-center justify-center p-0 sm:p-4"
       role="dialog"
       aria-modal="true"
       aria-label="Verificação de Arquivo GLB/glTF"
+      onClick={onClose}
     >
-      <div className="w-full max-w-4xl max-h-[88vh] rounded-xl bg-[#111622] border border-slate-700/90 shadow-2xl flex flex-col overflow-hidden">
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className="w-full max-w-4xl max-h-[92dvh] sm:max-h-[88vh] rounded-t-2xl sm:rounded-xl bg-[#111622] border border-slate-700/90 shadow-2xl flex flex-col overflow-hidden"
+      >
+        <div className="sm:hidden w-10 h-1 rounded-full bg-slate-700 mx-auto mt-2.5 mb-0.5 shrink-0" />
         {/* Header */}
-        <div className="px-5 py-4 border-b border-slate-800 flex flex-wrap items-center justify-between gap-3 bg-[#141926]">
-          <div className="flex items-center gap-3">
-            <FileSearch className="w-5 h-5 text-orange-400 shrink-0" />
-            <div>
-              <div className="flex items-center gap-2.5">
-                <h2 className="text-base font-bold text-white">Verificação de Arquivo 3D</h2>
+        <div className="px-4 py-3.5 sm:px-5 sm:py-4 border-b border-slate-800 flex flex-wrap items-center justify-between gap-3 bg-[#141926]">
+          <div className="flex items-start sm:items-center gap-3 min-w-0">
+            <FileSearch className="w-5 h-5 text-orange-400 shrink-0 mt-0.5 sm:mt-0" />
+            <div className="min-w-0">
+              <div className="flex flex-wrap items-center gap-2">
+                <h2 className="text-sm sm:text-base font-bold text-white">Verificação de Arquivo 3D</h2>
                 <span
                   className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md border text-xs font-semibold ${badge.cls}`}
                 >
@@ -107,14 +122,14 @@ export const FileVerificationModal: React.FC<FileVerificationModalProps> = ({
                   <span>{badge.label}</span>
                 </span>
               </div>
-              <p className="text-xs text-slate-400 mt-0.5">
+              <p className="text-xs text-slate-400 mt-0.5 truncate">
                 Ativo inspecionado: <span className="text-slate-200 font-medium">{report.assetName}</span> ·{' '}
                 <span className="tabular-nums">{report.checkedAt}</span>
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto justify-end">
             <input
               ref={verifyInputRef}
               type="file"
@@ -131,16 +146,16 @@ export const FileVerificationModal: React.FC<FileVerificationModalProps> = ({
               type="button"
               disabled={isVerifyingExternal}
               onClick={() => verifyInputRef.current?.click()}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-orange-600 hover:bg-orange-500 disabled:opacity-50 text-xs font-semibold text-white transition-colors cursor-pointer whitespace-nowrap"
+              className="inline-flex items-center justify-center gap-1.5 min-h-[40px] px-3 py-1.5 rounded-lg bg-orange-600 hover:bg-orange-500 disabled:opacity-50 text-xs font-semibold text-white transition-colors cursor-pointer whitespace-nowrap flex-1 sm:flex-initial"
             >
-              <Upload className="w-3.5 h-3.5" />
-              <span>{isVerifyingExternal ? 'Analisando...' : 'Verificar Outro Arquivo'}</span>
+              <Upload className="w-3.5 h-3.5 shrink-0" />
+              <span>{isVerifyingExternal ? 'Analisando...' : 'Verificar Outro'}</span>
             </button>
 
             <button
               type="button"
               onClick={onVerifyCurrentScene}
-              className="px-2.5 py-1.5 rounded-lg bg-[#0D1017] border border-slate-700 hover:border-slate-500 text-xs font-medium text-slate-200 transition-colors cursor-pointer whitespace-nowrap"
+              className="min-h-[40px] px-2.5 py-1.5 rounded-lg bg-[#0D1017] border border-slate-700 hover:border-slate-500 text-xs font-medium text-slate-200 transition-colors cursor-pointer whitespace-nowrap"
             >
               Cena Atual
             </button>
@@ -148,7 +163,7 @@ export const FileVerificationModal: React.FC<FileVerificationModalProps> = ({
             <button
               type="button"
               onClick={handleDownloadJsonReport}
-              className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-[#0D1017] border border-slate-700 hover:border-slate-500 text-xs font-medium text-slate-200 transition-colors cursor-pointer whitespace-nowrap"
+              className="inline-flex items-center gap-1.5 min-h-[40px] px-2.5 py-1.5 rounded-lg bg-[#0D1017] border border-slate-700 hover:border-slate-500 text-xs font-medium text-slate-200 transition-colors cursor-pointer whitespace-nowrap"
             >
               <Download className="w-3.5 h-3.5 text-emerald-400" />
               <span>JSON</span>
@@ -158,7 +173,7 @@ export const FileVerificationModal: React.FC<FileVerificationModalProps> = ({
               type="button"
               onClick={onClose}
               aria-label="Fechar verificação"
-              className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer"
+              className="min-w-[40px] min-h-[40px] inline-flex items-center justify-center rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer"
             >
               <X className="w-4 h-4" />
             </button>
@@ -166,7 +181,7 @@ export const FileVerificationModal: React.FC<FileVerificationModalProps> = ({
         </div>
 
         {/* Scrollable Content */}
-        <div className="flex-1 overflow-y-auto p-5 flex flex-col gap-5">
+        <div className="flex-1 overflow-y-auto p-4 sm:p-5 pb-safe flex flex-col gap-5">
           {externalError && (
             <div className="rounded-lg bg-red-950/80 border border-red-700/70 px-3.5 py-2.5 text-xs text-red-200">
               {externalError}

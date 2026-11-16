@@ -1,4 +1,4 @@
-﻿=== DIAGNOSTICO DE RIG E ANIMACAO ===
+=== DIAGNOSTICO DE RIG E ANIMACAO ===
 
 --- ARQUIVO: C:\Users\studio alex\OneDrive\Documentos\Alexdesign\Alexdesign-main\src\components\AddonCodeStudio.tsx ---
 import React, { useMemo, useState } from 'react';

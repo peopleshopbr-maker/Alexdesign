@@ -232,7 +232,7 @@ export const PbrAtlasPanel: React.FC<PbrAtlasPanelProps> = ({ config, importedUv
   };
 
   return (
-    <section className="rounded-xl bg-[#141923] border border-slate-800 p-6 flex flex-col gap-5">
+    <section className="rounded-xl bg-[#141923] border border-slate-800 p-4 sm:p-6 flex flex-col gap-5">
       <input
         ref={textureInputRef}
         type="file"
@@ -247,17 +247,17 @@ export const PbrAtlasPanel: React.FC<PbrAtlasPanelProps> = ({ config, importedUv
 
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
         <div>
-          <h2 className="text-xl font-semibold text-white">Atlas de Texturas PBR</h2>
-          <p className="mt-1 text-xs text-slate-400">
+          <h2 className="text-lg sm:text-xl font-semibold text-white">Atlas de Texturas PBR</h2>
+          <p className="mt-1 text-xs text-slate-400 leading-relaxed">
             Inspecione os canais do Atlas PBR ({config.textureResolution}px) do modelo GLB/glTF importado ou do ativo padrão, com sobreposição opcional da malha UV.
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2 w-full lg:w-auto">
           <button
             type="button"
             onClick={() => setOverlayUvOnAtlas((v) => !v)}
-            className={`inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border text-xs font-medium transition-colors cursor-pointer whitespace-nowrap shrink-0 ${
+            className={`inline-flex items-center justify-center gap-1.5 min-h-[40px] px-3 py-2 rounded-lg border text-xs font-medium transition-colors cursor-pointer whitespace-nowrap shrink-0 ${
               overlayUvOnAtlas
                 ? 'bg-orange-600/20 border-orange-500 text-orange-200'
                 : 'bg-[#0D1017] border-slate-700 text-slate-300'
@@ -269,7 +269,7 @@ export const PbrAtlasPanel: React.FC<PbrAtlasPanelProps> = ({ config, importedUv
           <button
             type="button"
             onClick={() => textureInputRef.current?.click()}
-            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-[#0D1017] border border-slate-700 hover:border-slate-500 text-xs font-medium text-slate-100 transition-colors cursor-pointer whitespace-nowrap shrink-0"
+            className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 min-h-[40px] px-3 py-2 rounded-lg bg-[#0D1017] border border-slate-700 hover:border-slate-500 text-xs font-medium text-slate-100 transition-colors cursor-pointer whitespace-nowrap shrink-0"
           >
             <Upload className="w-3.5 h-3.5" />
             <span>Importar Textura</span>
@@ -279,15 +279,16 @@ export const PbrAtlasPanel: React.FC<PbrAtlasPanelProps> = ({ config, importedUv
               type="button"
               onClick={() => setCustomTexture(null)}
               title="Remover textura importada"
-              className="p-2 rounded-lg bg-[#0D1017] border border-slate-700 hover:border-slate-500 text-slate-300 hover:text-white cursor-pointer"
+              aria-label="Remover textura importada"
+              className="min-w-[40px] min-h-[40px] inline-flex items-center justify-center p-2 rounded-lg bg-[#0D1017] border border-slate-700 hover:border-slate-500 text-slate-300 hover:text-white cursor-pointer"
             >
-              <X className="w-3.5 h-3.5" />
+              <X className="w-4 h-4" />
             </button>
           )}
           <button
             type="button"
             onClick={handleExportPng}
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-orange-600 hover:bg-orange-500 text-xs font-semibold text-white transition-colors cursor-pointer whitespace-nowrap shrink-0"
+            className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 min-h-[40px] px-3.5 py-2 rounded-lg bg-orange-600 hover:bg-orange-500 text-xs font-semibold text-white transition-colors cursor-pointer whitespace-nowrap shrink-0"
           >
             <Download className="w-3.5 h-3.5" />
             <span>Exportar Atlas PNG</span>
@@ -295,7 +296,7 @@ export const PbrAtlasPanel: React.FC<PbrAtlasPanelProps> = ({ config, importedUv
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 lg:gap-6 items-start">
         <div className="lg:col-span-4 flex flex-col gap-3">
           <div className="text-xs font-semibold text-slate-300">
             {importedUvs && importedUvs.length > 0
@@ -308,7 +309,7 @@ export const PbrAtlasPanel: React.FC<PbrAtlasPanelProps> = ({ config, importedUv
               <button
                 type="button"
                 onClick={() => setSelectedImportedIdx('all')}
-                className={`px-3 py-2 rounded-lg text-left text-xs font-mono transition-colors cursor-pointer ${
+                className={`min-h-[40px] sm:min-h-0 px-3 py-2 rounded-lg text-left text-xs font-mono transition-colors cursor-pointer ${
                   selectedImportedIdx === 'all'
                     ? 'bg-orange-600/20 text-orange-300 border border-orange-500/40'
                     : 'bg-[#0D1017] text-slate-400 hover:text-slate-200 border border-slate-800/80'
@@ -321,7 +322,7 @@ export const PbrAtlasPanel: React.FC<PbrAtlasPanelProps> = ({ config, importedUv
                   key={`${m.name}-${idx}`}
                   type="button"
                   onClick={() => setSelectedImportedIdx(idx)}
-                  className={`px-3 py-2 rounded-lg text-left text-xs font-mono transition-colors truncate cursor-pointer flex items-center justify-between gap-2 ${
+                  className={`min-h-[40px] sm:min-h-0 px-3 py-2 rounded-lg text-left text-xs font-mono transition-colors truncate cursor-pointer flex items-center justify-between gap-2 ${
                     selectedImportedIdx === idx
                       ? 'bg-orange-600/20 text-orange-300 border border-orange-500/40'
                       : 'bg-[#0D1017] text-slate-400 hover:text-slate-200 border border-slate-800/80'
@@ -337,7 +338,7 @@ export const PbrAtlasPanel: React.FC<PbrAtlasPanelProps> = ({ config, importedUv
               <button
                 type="button"
                 onClick={() => setSelectedIsland('all')}
-                className={`col-span-2 px-3 py-2 rounded-lg text-left text-xs font-mono transition-colors cursor-pointer ${
+                className={`col-span-2 min-h-[40px] sm:min-h-0 px-3 py-2 rounded-lg text-left text-xs font-mono transition-colors cursor-pointer ${
                   selectedIsland === 'all'
                     ? 'bg-orange-600/20 text-orange-300 border border-orange-500/40'
                     : 'bg-[#0D1017] text-slate-400 hover:text-slate-200 border border-slate-800/80'
@@ -350,7 +351,7 @@ export const PbrAtlasPanel: React.FC<PbrAtlasPanelProps> = ({ config, importedUv
                   key={isl.part}
                   type="button"
                   onClick={() => setSelectedIsland(isl.part)}
-                  className={`px-3 py-2 rounded-lg text-left text-xs font-mono transition-colors cursor-pointer ${
+                  className={`min-h-[40px] sm:min-h-0 px-3 py-2 rounded-lg text-left text-xs font-mono transition-colors cursor-pointer ${
                     selectedIsland === isl.part
                       ? 'bg-orange-600/20 text-orange-300 border border-orange-500/40'
                       : 'bg-[#0D1017] text-slate-400 hover:text-slate-200 border border-slate-800/80'
@@ -378,7 +379,7 @@ export const PbrAtlasPanel: React.FC<PbrAtlasPanelProps> = ({ config, importedUv
                 key={tab.id}
                 type="button"
                 onClick={() => setChannel(tab.id)}
-                className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
+                className={`min-h-[36px] px-3 py-1.5 rounded-md text-xs font-medium transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
                   channel === tab.id ? 'bg-orange-600 text-white' : 'text-slate-400 hover:text-white'
                 }`}
               >
