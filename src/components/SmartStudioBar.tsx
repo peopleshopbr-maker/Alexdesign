@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 import { useStudioIntelligence } from '../context/StudioIntelligenceContext';
 import { AdaptiveActionGroup } from './AdaptiveActionGroup';
 import type { AdaptiveActionItem } from '../hooks/useAdaptiveUI';

@@ -1,4 +1,4 @@
-﻿import {
+import {
   type TargetEngine,
   type ShaderPreset,
   type RigPreset,

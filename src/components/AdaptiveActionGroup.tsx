@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 import { useAdaptiveUI, type AdaptiveActionItem } from '../hooks/useAdaptiveUI';
 
 interface AdaptiveActionGroupProps {

@@ -1,4 +1,4 @@
-﻿import { computeSmartBoxUvWithRust } from './rustBridge';
+import { computeSmartBoxUvWithRust } from './rustBridge';
 import * as THREE from 'three';
 import { RIG_PRESET_DEFINITIONS, RigPreset } from '../types/studioConfig';
 import { ImportedUvMesh } from '../components/Viewport3D';

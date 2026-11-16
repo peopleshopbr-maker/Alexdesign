@@ -1,4 +1,4 @@
-﻿import init, {
+import init, {
   enforce_tpose_symmetry,
   compute_procedural_pose,
   validate_skeleton_bounds,

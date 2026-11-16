@@ -13,3 +13,5 @@ coverage/
 *.bak
 *.tmp
 *.log
+
+*.disabled

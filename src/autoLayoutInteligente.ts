@@ -16,9 +16,9 @@ function extrairMetricasDaTela() {
     const matchOcupacao = textoPagina.match(/Ocupa.ao\s*UV\s*(\d+(?:[.,]\d+)?)%/i);
     const matchFora = textoPagina.match(/Fora\s*0..1:\s*(\d+)/i);
 
-    const degenerados = matchDegenerados ? parseInt(matchDegenerados, 10) : 0;
-    const ocupacao = matchOcupacao ? parseFloat(matchOcupacao.replace(',', '.')) : 0;
-    const foraEspaco = matchFora ? parseInt(matchFora, 10) : 0;
+    const degenerados = matchDegenerados ? parseInt(matchDegenerados[1], 10) : 0;
+    const ocupacao = matchOcupacao ? parseFloat(matchOcupacao[1].replace(',', '.')) : 0;
+    const foraEspaco = matchFora ? parseInt(matchFora[1], 10) : 0;
 
     return { ocupacao, degenerados, foraEspaco };
 }

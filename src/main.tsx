@@ -1,4 +1,4 @@
-﻿import { StudioIntelligenceProvider } from './context/StudioIntelligenceContext';
+import { StudioIntelligenceProvider } from './context/StudioIntelligenceContext';
 import {createRoot} from 'react-dom/client';
 import App from './App.tsx';
 import './index.css';
