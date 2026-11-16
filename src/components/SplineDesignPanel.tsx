@@ -117,7 +117,7 @@ export const SplineDesignPanel: React.FC<SplineDesignPanelProps> = ({
           <Shapes className="w-3.5 h-3.5 text-sky-400 shrink-0" />
           <div className="text-left min-w-0">
             <div className="text-[11px] font-semibold tracking-wider uppercase text-slate-200 leading-tight">
-              Cena &amp; Modelagem 3D
+              Cena
             </div>
             <div className="text-[11px] text-slate-400 truncate leading-tight tabular-nums">
               {playMode ? 'Play Ativo' : 'Editar'} · {primitiveCount} objeto(s)

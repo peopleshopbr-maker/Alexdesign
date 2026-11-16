@@ -18,7 +18,6 @@ import JSZip from 'jszip';
 import {
   Archive,
   Bone,
-  Box,
   Camera,
   ChevronDown,
   ChevronLeft,
@@ -4348,14 +4347,6 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
     loadFilesRef.current(files);
   };
 
-  const triggerLoadSample = () => {
-    if (!loadSampleRef.current) {
-      setLoadError('A Viewport 3D não foi inicializada (WebGL indisponível). Recarregue a janela ou tente novamente.');
-      return;
-    }
-    loadSampleRef.current();
-  };
-
   return (
     <div
       className="relative flex-1 w-full h-full min-h-[520px] bg-[#0D1017] flex overflow-hidden select-none"
@@ -4540,17 +4531,7 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
                     <span>{isLoadingModel ? 'Carregando...' : 'Importar GLB/glTF'}</span>
                   </button>
 
-                  <div className="grid grid-cols-3 gap-1.5">
-                    <button
-                      type="button"
-                      disabled={isLoadingModel}
-                      onClick={triggerLoadSample}
-                      title="Carregar modelo de exemplo PBR (DamagedHelmet.glb)"
-                      className="inline-flex items-center justify-center gap-1 px-2 py-1.5 rounded-md bg-[#0D1017] border border-slate-800 hover:border-slate-600 font-medium text-slate-200 cursor-pointer"
-                    >
-                      <Box className="w-3.5 h-3.5 text-sky-400" />
-                      <span>Exemplo</span>
-                    </button>
+                  <div className="grid grid-cols-2 gap-1.5">
                     <button
                       type="button"
                       aria-expanded={showMeshDrawer}
