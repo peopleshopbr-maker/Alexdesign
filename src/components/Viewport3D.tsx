@@ -2359,7 +2359,17 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
 
     duplicateSelectedRef.current = () => {
       const rec = getPrimitiveRecord(selectedSceneObject);
-      if (!rec) return;
+      if (!rec) {
+        if (!selectedSceneObject) return;
+        const targetObj = selectedSceneObject;
+        const removedName = targetObj.name || 'Modelo da Cena';
+        selectThreeObject(null);
+        targetObj.visible = false;
+        if (targetObj.parent) targetObj.parent.remove(targetObj);
+        refreshHierarchyState();
+        showBriefStatus(`Removido: ${removedName}`);
+        return;
+      }
       const dup = spawnPrimitiveMesh(rec.kind === 'mesh' ? 'cube' : rec.kind, {
         name: `${rec.mesh.name}_Copia`,
         position: [rec.mesh.position.x + 0.45, rec.mesh.position.y, rec.mesh.position.z],
@@ -2382,7 +2392,17 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
 
     deleteSelectedRef.current = () => {
       const rec = getPrimitiveRecord(selectedSceneObject);
-      if (!rec) return;
+      if (!rec) {
+        if (!selectedSceneObject) return;
+        const targetObj = selectedSceneObject;
+        const removedName = targetObj.name || 'Modelo da Cena';
+        selectThreeObject(null);
+        targetObj.visible = false;
+        if (targetObj.parent) targetObj.parent.remove(targetObj);
+        refreshHierarchyState();
+        showBriefStatus(`Removido: ${removedName}`);
+        return;
+      }
       const removedName = rec.mesh.name;
       selectThreeObject(null);
       const idx = studioPrimitives.indexOf(rec);
