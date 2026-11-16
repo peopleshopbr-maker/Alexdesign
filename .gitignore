@@ -8,3 +8,8 @@ coverage/
 .wrangler/
 .env*
 !.env.example
+
+# Arquivos temporarios e backups locais
+*.bak
+*.tmp
+*.log
