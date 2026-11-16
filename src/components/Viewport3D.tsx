@@ -128,7 +128,6 @@ import {
   subdivideMeshGeometry,
   weldCleanTopology,
 } from '../utils/retopologyOps';
-import { generateBlender53PipelinePy } from '../utils/blenderPipelineGenerator';
 
 type ShadingMode = 'pbr' | 'uv_checker' | 'normals' | 'cel_borde';
 type CameraPreset = 'q34' | 'front' | 'side' | 'back';
@@ -2908,28 +2907,7 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
             : Math.round((g?.attributes?.position?.count || 0) / 3);
         }
       });
-      setExportedBlenderCode(
-        generateBlender53PipelinePy({
-          config: {
-            targetEngine: config.targetEngine ?? 'BLENDER',
-            rigPreset: stateRef.current.rigPreset,
-            textureResolution: stateRef.current.textureResolution,
-            uvMargin: stateRef.current.uvMargin,
-            seamAngleDeg: stateRef.current.seamAngleDeg,
-            texelDensity: config.texelDensity ?? 512,
-            shaderPreset: config.shaderPreset,
-            outlineThickness: stateRef.current.outlineThickness,
-            normalStrength: stateRef.current.normalStrength,
-            animEndFrame: stateRef.current.animEndFrame,
-          },
-          assetName: loadedAssetNameRef.current,
-          targetTriangles: currentTris,
-          currentFrame: Math.round(stateRef.current.frame),
-          cameraLensMm: stateRef.current.cameraLensMm,
-          rotationMode: stateRef.current.rotationMode,
-          objects: specs,
-        })
-      );
+      setExportedBlenderCode('');
       setCodeExportModalOpen(true);
     };
 
@@ -4913,45 +4891,7 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
               : Math.round((g?.attributes?.position?.count || 0) / 3);
           }
         });
-        const blenderPipelinePy = generateBlender53PipelinePy({
-          config: {
-            targetEngine: config.targetEngine ?? 'BLENDER',
-            rigPreset: stateRef.current.rigPreset,
-            textureResolution: stateRef.current.textureResolution,
-            uvMargin: stateRef.current.uvMargin,
-            seamAngleDeg: stateRef.current.seamAngleDeg,
-            texelDensity: config.texelDensity ?? 512,
-            shaderPreset: config.shaderPreset,
-            outlineThickness: stateRef.current.outlineThickness,
-            normalStrength: stateRef.current.normalStrength,
-            animEndFrame: stateRef.current.animEndFrame,
-          },
-          assetName,
-          targetTriangles: totalZipTris,
-          currentFrame: Math.round(stateRef.current.frame),
-          cameraLensMm: stateRef.current.cameraLensMm,
-          rotationMode: stateRef.current.rotationMode,
-          objects: studioPrimitives.map((r) => {
-            const mat = r.mesh.material as THREE.MeshPhysicalMaterial;
-            return {
-              name: r.mesh.name,
-              kind: r.kind,
-              position: [r.mesh.position.x, r.mesh.position.y, r.mesh.position.z],
-              rotationDeg: [
-                THREE.MathUtils.radToDeg(r.mesh.rotation.x),
-                THREE.MathUtils.radToDeg(r.mesh.rotation.y),
-                THREE.MathUtils.radToDeg(r.mesh.rotation.z),
-              ],
-              scale: [r.mesh.scale.x, r.mesh.scale.y, r.mesh.scale.z],
-              color: `#${mat.color.getHexString()}`,
-              roughness: mat.roughness,
-              metalness: mat.metalness,
-              transmission: mat.transmission,
-              emissiveIntensity: mat.emissiveIntensity,
-              interaction: r.interaction,
-            };
-          }),
-        });
+        const blenderPipelinePy = null;
         const zipName = await exportCompleteProjectZip({
           targetRoot: target,
           clips: uploadedGroup ? uploadedClips : [],

@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+﻿import React, { useEffect, useRef, useState } from 'react';
 import {
   Archive,
   CheckCircle2,
@@ -17,7 +17,6 @@ import {
   SubstanceTextureSlot,
   exportSubstanceBundleForBlenderZip,
   extractSubstanceFiles,
-  generateBlenderSubstanceImporterAddonPy,
 } from '../utils/substanceImporter';
 import { ImportedUvMesh } from './Viewport3D';
 
@@ -174,17 +173,7 @@ export const SubstanceImporterPanel: React.FC<SubstanceImporterPanelProps> = ({
     }
   };
 
-  const handleDownloadBlenderAddon = () => {
-    const pyCode = generateBlenderSubstanceImporterAddonPy();
-    const blob = new Blob([pyCode], { type: 'text/x-python;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'substance_textures_importer.py';
-    a.click();
-    URL.revokeObjectURL(url);
-  };
-
+  
   return (
     <section className="rounded-xl bg-[#141923] border border-slate-800 p-4 sm:p-6 flex flex-col gap-5 sm:gap-6">
       {/* Top Toolbar */}
@@ -228,15 +217,7 @@ export const SubstanceImporterPanel: React.FC<SubstanceImporterPanelProps> = ({
             </button>
           </div>
 
-          <button
-            type="button"
-            onClick={handleDownloadBlenderAddon}
-            title="Baixar script add-on compatível com Blender 4.2 - 5.3+"
-            className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 min-h-[40px] px-3 py-2 rounded-lg bg-[#0D1017] border border-slate-700 hover:border-orange-500 text-xs font-medium text-slate-200 hover:text-white transition-colors whitespace-nowrap cursor-pointer"
-          >
-            <FileCode2 className="w-3.5 h-3.5 text-orange-400" />
-            <span>Add-on Blender 5.3+ (.py)</span>
-          </button>
+          
         </div>
       </div>
 
