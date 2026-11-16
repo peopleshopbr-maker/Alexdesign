@@ -206,7 +206,7 @@ export function createSplinePrimitiveGeometry(kind: PrimitiveShapeKind): THREE.B
   }
 }
 
-export function getStyleDefaults(style: SplineMaterialStyle): {
+function getStyleDefaults(style: SplineMaterialStyle): {
   roughness: number;
   metalness: number;
   transmission: number;

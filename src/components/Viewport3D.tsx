@@ -176,6 +176,7 @@ interface Viewport3DProps {
   pendingImportFiles?: File[] | null;
   onConsumedPendingImport?: () => void;
   exportZipNonce?: number;
+  autoUvNonce?: number;
   onExportStateChange?: (exporting: boolean) => void;
 }
 
@@ -348,6 +349,7 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
   pendingImportFiles,
   onConsumedPendingImport,
   exportZipNonce,
+  autoUvNonce,
   onExportStateChange,
 }) => {
   const onImportedUvsRef = useRef(onImportedUvs);

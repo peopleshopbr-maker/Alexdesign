@@ -1,3 +1,4 @@
+import { iniciarMonitoramentoAutomatico } from './autoLayoutInteligente';
 import { Component, ReactNode, useState } from 'react';
 import { Archive, RotateCcw } from 'lucide-react';
 import { DEFAULT_STUDIO_CONFIG, StudioConfig } from './types/studioConfig';
@@ -52,6 +53,7 @@ export default function App() {
   const [importedUvs, setImportedUvs] = useState<ImportedUvMesh[] | null>(null);
   const [substanceRequest, setSubstanceRequest] = useState<SubstanceTextureSetRequest | null>(null);
   const [exportZipNonce, setExportZipNonce] = useState(0);
+  const [autoUvNonce, setAutoUvNonce] = useState(0);
   const [isExportingZip, setIsExportingZip] = useState(false);
 
   const handleConfigChange = (patch: Partial<StudioConfig> | Partial<ViewportSceneConfig>) => {
@@ -128,6 +130,7 @@ export default function App() {
               onImportedUvs={setImportedUvs}
               substanceTextureRequest={substanceRequest}
               exportZipNonce={exportZipNonce}
+              autoUvNonce={autoUvNonce}
               onExportStateChange={setIsExportingZip}
             />
           </ViewportErrorBoundary>
@@ -137,6 +140,7 @@ export default function App() {
             config={config}
             onConfigChange={handleConfigChange}
             importedUvs={importedUvs}
+            onGenerateAutoUv={() => setAutoUvNonce((n) => n + 1)}
           />
         )}
         {activeTab === 'ecosystem' && (
@@ -150,3 +154,6 @@ export default function App() {
     </div>
   );
 }
+
+iniciarMonitoramentoAutomatico();
+

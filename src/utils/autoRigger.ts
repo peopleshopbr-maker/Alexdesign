@@ -1,3 +1,4 @@
+﻿import { computeSmartBoxUvWithRust } from './rustBridge';
 import * as THREE from 'three';
 import { RIG_PRESET_DEFINITIONS, RigPreset } from '../types/studioConfig';
 import { ImportedUvMesh } from '../components/Viewport3D';
@@ -78,7 +79,27 @@ export function autoGenerateUvsForGroup(group: THREE.Object3D): ImportedUvMesh[]
     const tileY = row * cellSpan + pad;
 
     const triCount = Math.floor(pos.count / 3);
-    for (let t = 0; t < triCount; t++) {
+    workingGeo.computeVertexNormals();
+    const normAttr = workingGeo.attributes.normal;
+
+    // Tenta calcular a projecao Smart Box UV via Rust/WebAssembly
+    let usedRust = false;
+    if (pos.array instanceof Float32Array && normAttr && normAttr.array instanceof Float32Array) {
+      try {
+        const rustRawUvs = computeSmartBoxUvWithRust(pos.array, normAttr.array);
+        if (rustRawUvs.length === pos.count * 2) {
+          for (let i = 0; i < pos.count; i++) {
+            uvArray[i * 2] = tileX + THREE.MathUtils.clamp(rustRawUvs[i * 2], 0, 1) * innerSpan;
+            uvArray[i * 2 + 1] = tileY + THREE.MathUtils.clamp(rustRawUvs[i * 2 + 1], 0, 1) * innerSpan;
+          }
+          usedRust = true;
+        }
+      } catch {
+        usedRust = false;
+      }
+    }
+
+    if (!usedRust) for (let t = 0; t < triCount; t++) {
       const i0 = t * 3;
       const i1 = t * 3 + 1;
       const i2 = t * 3 + 2;

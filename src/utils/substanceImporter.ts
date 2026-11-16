@@ -48,7 +48,7 @@ export const SUBSTANCE_CHANNEL_META: {
   { id: 'opacity', label: 'Opacity / Alpha', colorSpace: 'Non-Color', bsdfInput: 'Alpha', suffixHint: '_Opacity / _Alpha' },
 ];
 
-export function stripExtensionAndUdim(fileName: string): string {
+function stripExtensionAndUdim(fileName: string): string {
   // Remove image extension and optional UDIM tile suffix (.1001, _1001)
   return fileName
     .toLowerCase()
@@ -56,12 +56,12 @@ export function stripExtensionAndUdim(fileName: string): string {
     .replace(/[._-](1\d{3})$/, '');
 }
 
-export function isPackedOrmFilename(fileName: string): boolean {
+function isPackedOrmFilename(fileName: string): boolean {
   const clean = stripExtensionAndUdim(fileName);
   return /(occlusionroughnessmetallic|[_-]orm$|[_-]arm$|[_-]rma$|[_-]mrao$)/i.test(clean);
 }
 
-export function detectSubstanceChannel(fileName: string): SubstanceChannelId | null {
+function detectSubstanceChannel(fileName: string): SubstanceChannelId | null {
   const clean = stripExtensionAndUdim(fileName);
   if (/(base[_-]?color|basecolor|albedo|diffuse|[_-]col$|[_-]bc$)/i.test(clean)) return 'baseColor';
   if (/(roughness|[_-]rough$|[_-]rgh$)/i.test(clean)) return 'roughness';
@@ -495,7 +495,7 @@ if __name__ == "__main__":
 `;
 }
 
-export function generateBlenderExtensionManifestToml(): string {
+function generateBlenderExtensionManifestToml(): string {
   return `schema_version = "1.0.0"
 
 id = "substance_textures_importer"
@@ -544,7 +544,7 @@ export async function exportSubstanceBundleForBlenderZip(
   return zip.generateAsync({ type: 'blob' });
 }
 
-export async function exportProceduralPbrForBlenderZip(
+async function exportProceduralPbrForBlenderZip(
   params: ProceduralPbrParams,
   size = 1024
 ): Promise<Blob> {

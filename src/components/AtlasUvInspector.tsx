@@ -1,7 +1,9 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { Download, Upload, X } from 'lucide-react';
+﻿import React, { useEffect, useRef, useState } from 'react';
+import { Download, Grid, Upload, X } from 'lucide-react';
 import { StudioConfig } from '../types/studioConfig';
 import { ImportedUvMesh } from './Viewport3D';
+import { auditUvWithRust } from '../utils/rustBridge';
+import { useStudioIntelligence } from '../context/StudioIntelligenceContext';
 
 type UvLayerId =
   | 'UV_all_parts'
@@ -47,6 +49,7 @@ interface AtlasUvInspectorProps {
   config: StudioConfig;
   onConfigChange: (patch: Partial<StudioConfig>) => void;
   importedUvs: ImportedUvMesh[] | null;
+  onGenerateAutoUv?: () => void;
 }
 
 function loadImageCached(
@@ -74,9 +77,24 @@ export const AtlasUvInspector: React.FC<AtlasUvInspectorProps> = ({
   config,
   onConfigChange,
   importedUvs,
+  onGenerateAutoUv,
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const textureInputRef = useRef<HTMLInputElement>(null);
+  const { telemetry, logUserIntent } = useStudioIntelligence();
+
+  // Auditoria matematica em tempo real via Rust/WASM sobre as malhas importadas
+  const rustUvAudit = React.useMemo(() => {
+    if (!importedUvs || importedUvs.length === 0) return null;
+    const totalLen = importedUvs.reduce((acc, m) => acc + m.uvEdges.length, 0);
+    const merged = new Float32Array(totalLen);
+    let offset = 0;
+    for (const m of importedUvs) {
+      merged.set(m.uvEdges, offset);
+      offset += m.uvEdges.length;
+    }
+    return auditUvWithRust(merged);
+  }, [importedUvs]);
   const imgCacheRef = useRef<Map<string, HTMLImageElement>>(new Map());
 
   const [selectedLayer, setSelectedLayer] = useState<UvLayerId>('UV_all_parts_dark');
@@ -368,6 +386,35 @@ export const AtlasUvInspector: React.FC<AtlasUvInspectorProps> = ({
             />
           </label>
 
+                    {rustUvAudit && (
+            <div className="rounded-lg border border-slate-700/80 bg-slate-950/80 p-2.5 text-[11px] space-y-1">
+              <div className="flex items-center justify-between font-semibold">
+                <span className="text-slate-300">
+                  {telemetry.rustActive ? 'Auditoria UV (Rust/WASM)' : 'Auditoria UV'}
+                </span>
+                <span className={rustUvAudit.isHealthy ? 'text-emerald-400' : 'text-amber-400'}>
+                  {rustUvAudit.isHealthy ? 'UV Saudável' : 'Atenção na Malha'}
+                </span>
+              </div>
+              <div className="flex flex-wrap gap-x-3 gap-y-1 text-slate-400">
+                <span>Uso Atlas: <strong className="text-slate-200">{rustUvAudit.atlasCoveragePercent}%</strong></span>
+                <span>Fora 0..1: <strong className="text-slate-200">{rustUvAudit.outOfBoundsCount}</strong></span>
+                <span>Degenerados: <strong className="text-slate-200">{rustUvAudit.degenerateTriangles}</strong></span>
+              </div>
+            </div>
+          )}
+
+          {onGenerateAutoUv && (
+            <button
+              type="button"
+              onClick={() => { logUserIntent('Auto-UV Inteligente acionado'); onGenerateAutoUv(); }}
+              className="w-full inline-flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-sky-600 hover:bg-sky-500 text-xs font-semibold text-white transition-colors cursor-pointer"
+            >
+              <Grid className="w-3.5 h-3.5" />
+              <span>Gerar UV Auto</span>
+            </button>
+          )}
+
           <div className="grid grid-cols-3 gap-3 pt-3 border-t border-slate-800 text-xs">
             <div>
               <div className="text-slate-500">Ocupação UV</div>
@@ -495,7 +542,7 @@ export const AtlasUvInspector: React.FC<AtlasUvInspectorProps> = ({
             <button
               type="button"
               onClick={() => textureInputRef.current?.click()}
-              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-medium text-slate-100 transition-colors cursor-pointer whitespace-nowrap shrink-0"
+              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-medium text-slate-100 transition-colors cursor-pointer whitespace-normal text-center leading-tight"
             >
               <Upload className="w-3.5 h-3.5" />
               <span>Importar Textura</span>
@@ -513,7 +560,7 @@ export const AtlasUvInspector: React.FC<AtlasUvInspectorProps> = ({
             <button
               type="button"
               onClick={handleExportPng}
-              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-orange-600 hover:bg-orange-500 text-xs font-semibold text-white transition-colors cursor-pointer whitespace-nowrap shrink-0"
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-orange-600 hover:bg-orange-500 text-xs font-semibold text-white transition-colors cursor-pointer whitespace-normal text-center leading-tight"
             >
               <Download className="w-3.5 h-3.5" />
               <span>Exportar PNG</span>
