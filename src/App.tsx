@@ -1,5 +1,5 @@
 import { iniciarMonitoramentoAutomatico } from './autoLayoutInteligente';
-import { Component, ReactNode, useState } from 'react';
+import { Component, ReactNode, useEffect, useState } from 'react';
 import { Archive, RotateCcw } from 'lucide-react';
 import { DEFAULT_STUDIO_CONFIG, StudioConfig } from './types/studioConfig';
 import { ImportedUvMesh, Viewport3D, ViewportSceneConfig } from './components/Viewport3D';
@@ -23,14 +23,14 @@ class ViewportErrorBoundary extends Component<{ children: ReactNode }, ErrorBoun
   state: ErrorBoundaryState = { errorMessage: null };
 
   static getDerivedStateFromError(error: Error): ErrorBoundaryState {
-    return { errorMessage: error?.message || 'Erro inesperado no estúdio 3D.' };
+    return { errorMessage: error?.message || 'Erro inesperado no estudio 3D.' };
   }
 
   render() {
     if (this.state.errorMessage) {
       return (
         <div className="flex-1 min-h-[520px] flex flex-col items-center justify-center gap-3 bg-[#0D1017] p-6 text-center">
-          <div className="text-sm font-semibold text-red-300">Falha ao inicializar o Estúdio 3D</div>
+          <div className="text-sm font-semibold text-red-300">Falha ao inicializar o Estudio 3D</div>
           <div className="max-w-md text-xs text-slate-400">{this.state.errorMessage}</div>
           <button
             type="button"
@@ -65,11 +65,15 @@ export default function App() {
     setActiveTab('viewport');
   };
 
+  useEffect(() => {
+    window.dispatchEvent(new CustomEvent('alexdesign:sync-state', {
+      detail: { activeTab, config, importedUvs, substanceRequest }
+    }));
+  }, [activeTab, config, importedUvs, substanceRequest]);
+
   return (
     <div className="min-h-screen flex flex-col bg-[#0D1017] text-slate-100">
-      {/* 3-Zone Top Bar Contract */}
-      <header className="h-16 px-6 border-b border-slate-800/90 bg-[#0D1017] flex items-center justify-between gap-8 shrink-0">
-        {/* Zone 1: Single-element Brand Wordmark */}
+      <header className="h-16 px-6 border-b border-slate-800/90 bg-[#0D1017] flex items-center justify-between gap-8 shrink-0 z-20">
         <a
           href="#top"
           onClick={(e) => {
@@ -81,9 +85,8 @@ export default function App() {
           Alex<span className="text-orange-500">Design</span>
         </a>
 
-        {/* Zone 2: 3 concise single-line nav links */}
         <nav
-          aria-label="Navegação principal"
+          aria-label="Navegacao principal"
           className="h-full flex items-center gap-6 overflow-x-auto overflow-y-hidden no-scrollbar"
         >
           {NAV_TABS.map((tab) => {
@@ -106,7 +109,6 @@ export default function App() {
           })}
         </nav>
 
-        {/* Zone 3: 1 Primary Action */}
         <div className="shrink-0">
           <button
             type="button"
@@ -120,9 +122,14 @@ export default function App() {
         </div>
       </header>
 
-      {/* Main Content Area (Viewport3D remains mounted to preserve 3D model, rig, paints and atlas) */}
-      <main className="flex-1 flex flex-col min-h-0">
-        <div className={activeTab === 'viewport' ? 'h-[calc(100vh-4rem)] min-h-[520px] flex flex-col' : 'hidden'}>
+      <main className="flex-1 flex flex-col min-h-0 relative">
+        <div
+          className={
+            activeTab === 'viewport'
+              ? 'h-[calc(100vh-4rem)] min-h-[520px] flex flex-col'
+              : 'fixed inset-0 top-16 opacity-0 pointer-events-none -z-10 flex flex-col'
+          }
+        >
           <ViewportErrorBoundary>
             <Viewport3D
               config={config}
@@ -135,20 +142,27 @@ export default function App() {
             />
           </ViewportErrorBoundary>
         </div>
+
         {activeTab === 'atlas' && (
-          <AtlasUvInspector
-            config={config}
-            onConfigChange={handleConfigChange}
-            importedUvs={importedUvs}
-            onGenerateAutoUv={() => setAutoUvNonce((n) => n + 1)}
-          />
+          <div className="flex-1 w-full flex flex-col z-10 bg-[#0D1017]">
+            <AtlasUvInspector
+              config={config}
+              onConfigChange={handleConfigChange}
+              importedUvs={importedUvs}
+              onGenerateAutoUv={() => setAutoUvNonce((n) => n + 1)}
+            />
+          </div>
         )}
+
         {activeTab === 'ecosystem' && (
-          <MaterialEcosystemView
-            config={config}
-            importedUvs={importedUvs}
-            onApplySubstanceToViewport={handleApplySubstanceToViewport}
-          />
+          <div className="flex-1 w-full flex flex-col z-10 bg-[#0D1017]">
+            <MaterialEcosystemView
+              config={config}
+              onConfigChange={handleConfigChange}
+              importedUvs={importedUvs}
+              onApplySubstanceToViewport={handleApplySubstanceToViewport}
+            />
+          </div>
         )}
       </main>
     </div>
@@ -156,4 +170,3 @@ export default function App() {
 }
 
 iniciarMonitoramentoAutomatico();
-

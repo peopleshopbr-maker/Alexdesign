@@ -7,6 +7,7 @@ import { SubstanceImporterPanel } from './SubstanceImporterPanel';
 
 interface MaterialEcosystemViewProps {
   config: StudioConfig;
+  onConfigChange?: (patch: Partial<StudioConfig>) => void;
   importedUvs: ImportedUvMesh[] | null;
   onApplySubstanceToViewport: (req: SubstanceTextureSetRequest) => void;
 }
@@ -17,7 +18,7 @@ export const MaterialEcosystemView: React.FC<MaterialEcosystemViewProps> = ({
   onApplySubstanceToViewport,
 }) => {
   return (
-    <div className="max-w-[1280px] mx-auto px-6 py-8 flex flex-col gap-8">
+    <div className="w-full max-w-none px-6 py-6 flex flex-col gap-6">
       <SubstanceImporterPanel onApplyToViewport={onApplySubstanceToViewport} />
       <PbrAtlasPanel config={config} importedUvs={importedUvs} />
     </div>
