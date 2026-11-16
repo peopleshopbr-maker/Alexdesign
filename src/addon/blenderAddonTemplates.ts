@@ -1,4 +1,4 @@
-import {
+﻿import {
   type TargetEngine,
   type ShaderPreset,
   type RigPreset,
@@ -52,7 +52,7 @@ export const DEFAULT_ADDON_CONFIG: AddonConfig = {
   version: '1.3.0',
   blenderTarget: '3.5_TO_5.3',
   targetEngine: 'UNITY',
-  rigPreset: 'HUMANOIDE',
+  rigPreset: 'OBJETO',
   textureResolution: 2048,
   uvMargin: 0.02,
   seamAngleDeg: 66.0,
@@ -147,8 +147,8 @@ BAKE_CHANNELS = {
 
 # Predefinições estruturais de esqueleto compatíveis com Blender, Unity, UE5 e Godot
 RIG_PRESETS = {
-    "HUMANOIDE": [
-${formatBoneTuples(RIG_PRESET_DEFINITIONS.HUMANOIDE.bones)}
+    "OBJETO": [
+${formatBoneTuples(RIG_PRESET_DEFINITIONS.OBJETO.bones)}
     ],
     "BIPEDE": [
 ${formatBoneTuples(RIG_PRESET_DEFINITIONS.BIPEDE.bones)}
@@ -158,7 +158,7 @@ ${formatBoneTuples(RIG_PRESET_DEFINITIONS.QUADRUPEDE.bones)}
     ],
 }
 
-STANDARD_21_BONES = RIG_PRESETS["HUMANOIDE"]
+STANDARD_21_BONES = RIG_PRESETS["OBJETO"]
 `;
 
   const operatorsUvPy = `# SPDX-License-Identifier: GPL-2.0-or-later
@@ -811,7 +811,7 @@ def create_preset_armature(context, rig_preset=DEFAULT_RIG_PRESET, name=None):
     if context.mode != 'OBJECT':
         bpy.ops.object.mode_set(mode='OBJECT')
 
-    bones_def = RIG_PRESETS.get(rig_preset, RIG_PRESETS["HUMANOIDE"])
+    bones_def = RIG_PRESETS.get(rig_preset, RIG_PRESETS["OBJETO"])
     arm_name = name or f"Armature_{rig_preset.title()}"
 
     arm_data = bpy.data.armatures.new(arm_name)
@@ -840,7 +840,7 @@ def create_preset_armature(context, rig_preset=DEFAULT_RIG_PRESET, name=None):
 
 def create_standardized_21_bone_armature(context, name="Armature_21Bones"):
     """Wrapper retrocompativel para criar a Armature Humanoide de 21 ossos."""
-    return create_preset_armature(context, rig_preset="HUMANOIDE", name=name)
+    return create_preset_armature(context, rig_preset="OBJETO", name=name)
 
 
 def generate_test_rig_animation(arm_obj, start_frame=1, end_frame=60):
@@ -1237,7 +1237,7 @@ class PBRAutoPipelineProperties(PropertyGroup):
     rig_preset: EnumProperty(
         name="Predefinicao de Rig",
         items=[
-            ('HUMANOIDE', "Humanoide (21 Ossos)", "Esqueleto completo com claviculas e cabelo"),
+            ('OBJETO', "Objeto / Prop (3 Ossos)", "Esqueleto completo com claviculas e cabelo"),
             ('BIPEDE', "Bipede (16 Ossos)", "Esqueleto bipede simplificado para jogos"),
             ('QUADRUPEDE', "Quadrupede (20 Ossos)", "Esqueleto quadrupede com cauda e 4 patas"),
         ],

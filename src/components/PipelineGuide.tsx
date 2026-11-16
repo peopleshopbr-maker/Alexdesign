@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { AddonConfig, RIG_PRESET_DEFINITIONS } from '../addon/blenderAddonTemplates';
 
 interface PipelineGuideProps {
@@ -6,7 +6,7 @@ interface PipelineGuideProps {
 }
 
 const BONE_GROUPS = [
-  { group: 'Humanoide (21 Ossos)', bones: 'pelvis · spine_01/02 · chest · neck · head · hair_dyn · braços e pernas completos' },
+  { group: 'Objeto / Prop (3 Ossos)', bones: 'root_base · center_ctrl · top_tip (armadura leve para Helmet e props 3D)' },
   { group: 'Bípede (16 Ossos)', bones: 'pelvis · spine · chest · neck · head · upper_arm/forearm/hand · thigh/shin/foot' },
   { group: 'Quadrúpede (20 Ossos)', bones: 'pelvis · spine_01/02 · chest · neck · head · tail_01/02 · 4 membros dianteiros/traseiros' },
 ];
@@ -55,7 +55,7 @@ export const PipelineGuide: React.FC<PipelineGuideProps> = ({ config }) => {
           <div className="text-xs font-mono text-orange-400">04. Rigs Padronizados &amp; Exportação GLB/glTF</div>
           <h3 className="text-lg font-semibold text-white">Pré-visualização Esquelética &amp; Exportação</h3>
           <p className="text-sm text-slate-400 leading-relaxed">
-            Alterne entre as estruturas <strong>Humanoide (21)</strong>, <strong>Bípede (16)</strong> e <strong>Quadrúpede (20)</strong> para validar proporções e poses animadas antes de exportar o ativo com materiais e pinturas preservados em <code className="text-slate-200">.glb</code> ou <code className="text-slate-200">.gltf</code>.
+            Alterne entre as estruturas <strong>Objeto (3)</strong>, <strong>Bípede (16)</strong> e <strong>Quadrúpede (20)</strong> para validar proporções e poses animadas antes de exportar o ativo com materiais e pinturas preservados em <code className="text-slate-200">.glb</code> ou <code className="text-slate-200">.gltf</code>.
           </p>
         </section>
       </div>

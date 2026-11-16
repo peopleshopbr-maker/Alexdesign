@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+﻿import React, { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { TransformControls } from 'three/addons/controls/TransformControls.js';
@@ -676,6 +676,34 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
   const clearPaintTexturesRef = useRef<(() => void) | null>(null);
   const undoPaintRef = useRef<(() => void) | null>(null);
   const undoSculptRef = useRef<(() => void) | null>(null);
+
+  useEffect(() => {
+    const handleUndoKeyDown = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement | null;
+      if (
+        target &&
+        (target.tagName === 'INPUT' ||
+          target.tagName === 'TEXTAREA' ||
+          target.tagName === 'SELECT' ||
+          target.isContentEditable)
+      ) {
+        return;
+      }
+
+      if ((e.ctrlKey || e.metaKey) && !e.shiftKey && !e.altKey && e.key.toLowerCase() === 'z') {
+        if (canUndoSculpt && undoSculptRef.current) {
+          e.preventDefault();
+          undoSculptRef.current();
+        } else if (canUndoPaint && undoPaintRef.current) {
+          e.preventDefault();
+          undoPaintRef.current();
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleUndoKeyDown);
+    return () => window.removeEventListener('keydown', handleUndoKeyDown);
+  }, [canUndoPaint, canUndoSculpt]);
   const generateRigAndAnimRef = useRef<(() => void) | null>(null);
   const generateAutoUvRef = useRef<(() => void) | null>(null);
   const exportZipRef = useRef<(() => void) | null>(null);
