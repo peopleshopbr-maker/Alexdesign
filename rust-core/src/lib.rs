@@ -1,4 +1,4 @@
-﻿use wasm_bindgen::prelude::*;
+use wasm_bindgen::prelude::*;
 
 /// Normaliza a T-Pose humanoide garantindo simetria perfeita no eixo X
 /// Recebe um slice achatado [x, y, z, x, y, z...] das juntas esquerda/direita e retorna corrigido
@@ -60,7 +60,7 @@ pub fn compute_procedural_pose(clip_type: u8, time_sec: f32) -> Vec<f32> {
 /// Valida se todas as coordenadas de uma malha ou esqueleto sao finitas e livres de NaN
 #[wasm_bindgen]
 pub fn validate_skeleton_bounds(coords: &[f32]) -> bool {
-    if coords.is_empty() || !coords.len().is_multiple_of(3) {
+    if coords.is_empty() || coords.len() % 3 != 0 {
         return false;
     }
     coords.iter().all(|v| v.is_finite() && v.abs() < 10000.0)
@@ -173,7 +173,7 @@ pub fn generate_smart_box_uv(positions: &[f32], normals: &[f32]) -> Vec<f32> {
 }
 
 // --- INICIO AUTO-LAYOUT INTELIGENTE ---
-
+use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
 pub fn calcular_prioridade_botoes(ocupacao_uv: f32, degenerados: u32) -> String {

@@ -5,7 +5,6 @@ interface SplineCodeExportModalProps {
   open: boolean;
   threeCode: string;
   reactCode: string;
-  blenderCode?: string;
   onClose: () => void;
 }
 
@@ -13,10 +12,9 @@ export const SplineCodeExportModal: React.FC<SplineCodeExportModalProps> = ({
   open,
   threeCode,
   reactCode,
-  blenderCode = '',
   onClose,
 }) => {
-  const [tab, setTab] = useState<'three' | 'react' | 'blender'>('react');
+  const [tab, setTab] = useState<'three' | 'react'>('react');
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
@@ -32,7 +30,7 @@ export const SplineCodeExportModal: React.FC<SplineCodeExportModalProps> = ({
 
   if (!open) return null;
 
-  const activeCode = tab === 'react' ? reactCode : tab === 'three' ? threeCode : blenderCode;
+  const activeCode = tab === 'react' ? reactCode : threeCode;
 
   const handleCopy = async () => {
     try {
@@ -82,17 +80,6 @@ export const SplineCodeExportModal: React.FC<SplineCodeExportModalProps> = ({
               >
                 Three.js
               </button>
-              {blenderCode && (
-                <button
-                  type="button"
-                  onClick={() => setTab('blender')}
-                  className={`min-h-[34px] sm:min-h-[28px] px-2.5 py-1 rounded font-medium cursor-pointer whitespace-nowrap ${
-                    tab === 'blender' ? 'bg-orange-600 text-white' : 'text-slate-400 hover:text-white'
-                  }`}
-                >
-                  Blender 5.3 (bpy)
-                </button>
-              )}
             </div>
           </div>
           <div className="flex items-center gap-2 ml-auto">

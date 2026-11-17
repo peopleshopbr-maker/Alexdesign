@@ -15,5 +15,3 @@ coverage/
 *.log
 
 *.disabled
-
-rust-core/target/

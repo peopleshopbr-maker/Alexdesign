@@ -1,12 +1,11 @@
-import initWasm, * as wasmCore from './wasm/rust_core.js';
-
-let wasmPronto = false;
-
-async function garantirWasm() {
-    if (!wasmPronto) {
-        await initWasm();
-        wasmPronto = true;
+function calcularPrioridadeBotoes(ocupacao: number, degenerados: number): string[] {
+    if (degenerados > 0 || ocupacao < 40) {
+        return ['btn-gerar-uv', 'btn-importar-textura', 'btn-exportar-png', 'btn-exportar-zip'];
     }
+    if (ocupacao >= 75) {
+        return ['btn-exportar-zip', 'btn-exportar-png', 'btn-importar-textura', 'btn-gerar-uv'];
+    }
+    return ['btn-importar-textura', 'btn-gerar-uv', 'btn-exportar-png', 'btn-exportar-zip'];
 }
 
 function extrairMetricasDaTela() {
@@ -77,14 +76,10 @@ function adequarTelaUVAutomaticamente() {
 
 export async function sincronizarLayoutComRust() {
     try {
-        await garantirWasm();
         adequarTelaUVAutomaticamente();
 
-        if (!wasmCore.calcular_prioridade_botoes) return;
-
         const { ocupacao, degenerados, foraEspaco } = extrairMetricasDaTela();
-        const ordemString = wasmCore.calcular_prioridade_botoes(ocupacao, degenerados);
-        const prioridades = ordemString.split(',');
+        const prioridades = calcularPrioridadeBotoes(ocupacao, degenerados);
 
         const mapaTextos: Record<string, string> = {
             'btn-gerar-uv': 'Gerar UV Auto',
@@ -95,7 +90,7 @@ export async function sincronizarLayoutComRust() {
 
         const todosBotoes = Array.from(document.querySelectorAll('button'));
 
-        prioridades.forEach((chave, indice) => {
+        prioridades.forEach((chave: string, indice: number) => {
             const textoAlvo = mapaTextos[chave.trim()];
             const botaoEncontrado = todosBotoes.find(b => b.textContent && b.textContent.includes(textoAlvo));
 

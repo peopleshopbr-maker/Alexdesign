@@ -1,0 +1,1 @@
+C:\Users\studio\ alex\OneDrive\Documentos\Alexdesign\Alexdesign-main\rust-core\target\wasm32-unknown-unknown\release\rust_core.wasm: C:\Users\studio\ alex\OneDrive\Documentos\Alexdesign\Alexdesign-main\rust-core\src\lib.rs

@@ -1,0 +1,933 @@
+<!doctype html>
+<html lang="pt-BR" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>GLB Studio</title>
+<style>
+:root{--bg:#f4f4f4;--panel:#fff;--text:#222;--muted:#777;--line:#ddd;--accent:#1e88e5;--view:#f8f8f8;--hover:#e9eef5}
+[data-theme=dark]{--bg:#1d1f23;--panel:#25282d;--text:#e8e8e8;--muted:#9aa3ad;--line:#363a41;--accent:#4aa3ff;--view:#16181b;--hover:#30343b}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--text);font:13px/1.4 system-ui,Segoe UI,Roboto,sans-serif}
+button,select,input{font:inherit;color:var(--text)}
+button{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:6px 10px;cursor:pointer}
+button:hover{background:var(--hover)}
+button:disabled{opacity:.4;cursor:default}
+button.primary{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
+button.primary:hover{filter:brightness(1.1)}
+select,input[type=number],input[type=text]{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:4px 6px}
+input[type=color]{padding:0;border:1px solid var(--line);border-radius:4px;height:26px;width:40px;background:none}
+input[type=range]{width:100%}
+#app{display:grid;grid-template-rows:48px 1fr;height:100%}
+header{display:flex;align-items:center;gap:8px;padding:0 12px;background:var(--panel);border-bottom:1px solid var(--line);overflow-x:auto;white-space:nowrap}
+header .logo{font-weight:700;font-size:18px;margin-right:12px}
+header .sp{flex:1}
+header .sep{width:1px;height:24px;background:var(--line);margin:0 4px}
+main{display:grid;grid-template-columns:260px 1fr 340px;min-height:0}
+aside{background:var(--panel);overflow:auto;padding:12px;min-height:0}
+#left{border-right:1px solid var(--line)}
+#right{border-left:1px solid var(--line);display:flex;flex-direction:column;gap:10px}
+h3{margin:0 0 8px;font-size:14px}
+#view{position:relative;background:var(--view);min-width:0;min-height:0}
+#view canvas{display:block;width:100%;height:100%}
+#drop{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;color:var(--muted);text-align:center;font-size:15px}
+#view.drag{outline:3px dashed var(--accent);outline-offset:-8px}
+#loading{position:absolute;left:12px;bottom:12px;background:var(--panel);border:1px solid var(--line);padding:4px 10px;border-radius:6px;display:none}
+.meshrow{display:flex;align-items:center;gap:4px;padding:4px 6px;border-radius:6px;cursor:pointer}
+.meshrow:hover{background:var(--hover)}
+.meshrow.sel{background:var(--accent);color:#fff}
+.meshrow span{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.meshrow button{padding:0 6px;border:0;background:transparent;color:inherit}
+table.kv{width:100%;border-collapse:collapse}
+table.kv td{padding:2px 0}
+table.kv td:last-child{text-align:right}
+.tabs{display:flex;gap:4px;flex-wrap:wrap}
+.tabs button{flex:1;padding:6px 4px}
+.tabs button.on{background:var(--accent);color:#fff;border-color:var(--accent)}
+.tab{display:none;flex-direction:column;gap:8px}
+.tab.on{display:flex}
+.row{display:flex;align-items:center;gap:8px}
+.row label{min-width:90px;color:var(--muted)}
+.row>*:not(label){flex:1}
+.note{color:var(--muted);font-size:12px}
+.warn{color:#e67e22;font-size:12px}
+canvas#uv{width:100%;aspect-ratio:1;border:1px solid var(--line);border-radius:6px;background:var(--view)}
+.card{border:1px solid var(--line);border-radius:8px;padding:8px;display:flex;flex-direction:column;gap:6px}
+.card .top{display:flex;justify-content:space-between;align-items:center;font-weight:600}
+.pos{display:grid;grid-template-columns:repeat(3,1fr);gap:4px}
+.pos input{width:100%}
+#exportBtn{margin-top:auto;padding:12px;font-size:16px}
+@media(max-width:900px){main{grid-template-columns:1fr}#left,#right{max-height:40vh}#view{min-height:50vh}}
+
+/* ===== AJUSTES DE CELULAR =====================================================
+   Tudo daqui para baixo só vale em telas de toque ou de até 900px.
+   No desktop com mouse nada abaixo é aplicado. Para desfazer, apague este bloco inteiro. */
+.d-touch{display:none}
+@media(hover:none){.d-pc{display:none}.d-touch{display:inline}}
+@media(max-width:900px){
+  html,body{height:auto;min-height:100%;-webkit-text-size-adjust:100%}
+  #app{height:auto;min-height:100vh;min-height:100dvh;grid-template-rows:52px 1fr}
+  /* barra do topo fixa: Importar e Render final sempre ao alcance, com rolagem lateral sem barra */
+  header{position:sticky;top:0;z-index:30;scrollbar-width:none;-webkit-overflow-scrolling:touch;padding-left:max(12px,env(safe-area-inset-left));padding-right:max(12px,env(safe-area-inset-right))}
+  header::-webkit-scrollbar{display:none}
+  header button{flex:0 0 auto}
+  /* o modelo vem primeiro; as malhas e os painéis rolam logo abaixo */
+  main{grid-template-columns:minmax(0,1fr);align-content:start}
+  #left,#right{min-width:0}
+  #view{order:-1;min-height:0;height:46vh;height:46dvh;max-height:520px}
+  #left{max-height:32vh;max-height:32dvh;border-right:0;border-bottom:1px solid var(--line)}
+  #right{max-height:none;overflow:visible;border-left:0;border-top:1px solid var(--line)}
+  /* abas fixas ao rolar, com rolagem lateral quando não couberem */
+  #tabs{position:sticky;top:52px;z-index:20;background:var(--panel);flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;margin:0 -12px;padding:6px 12px;border-bottom:1px solid var(--line)}
+  #tabs::-webkit-scrollbar{display:none}
+  .tabs button{flex:1 1 auto;min-width:0;padding:8px 6px}
+  /* alvos de toque de ~40px e fonte de 16px nos campos (evita o zoom automático do iPhone) */
+  button{min-height:40px}
+  select,input[type=number],input[type=text]{min-height:40px;font-size:16px}
+  input[type=color]{height:36px}
+  input[type=range]{min-height:32px}
+  input[type=checkbox]{width:22px;height:22px;min-width:22px}
+  .row{min-height:40px}
+  .row label{min-width:104px}
+  .meshrow{padding:8px;min-height:44px}
+  .meshrow button{min-width:40px;min-height:36px;font-size:16px}
+  .note,.warn{font-size:13px}
+  canvas#uv{max-width:560px;align-self:center}
+  #drop{padding:0 20px}
+  #loading{bottom:max(12px,env(safe-area-inset-bottom))}
+  #exportBtn{margin-top:8px;min-height:48px}
+}
+@media(max-width:480px){header .logo{font-size:15px;margin-right:4px}}
+</style>
+</head>
+<body>
+<div id="app">
+<header>
+  <span class="logo">GLB Studio</span>
+  <button id="btnOpen">Importar GLB/glTF</button>
+  <button id="btnSample">Carregar exemplo</button>
+  <span class="sep"></span>
+  <button id="btnFrame" title="Enquadrar (F)">Enquadrar</button>
+  <button id="btnWire">Wireframe</button>
+  <button id="btnGrid">Grade</button>
+  <button id="btnAnim">Animação</button>
+  <span class="sep"></span>
+  <button id="btnUndo" title="Desfazer (Ctrl+Z)" disabled>↶ Desfazer</button>
+  <button id="btnRedo" title="Refazer (Ctrl+Shift+Z)" disabled>↷ Refazer</button>
+  <span class="sp"></span>
+  <button id="btnRender" class="primary">Render final (PNG)</button>
+  <button id="btnTheme">Tema</button>
+  <input id="fileInput" type="file" accept=".glb,.gltf,.zip,.bin,.png,.jpg,.jpeg,.webp,.ktx2" multiple hidden>
+</header>
+<main>
+  <aside id="left">
+    <h3>Meshes</h3>
+    <div id="meshList"></div>
+    <p class="note" id="meshHint">Importe um modelo para listar as malhas.</p>
+  </aside>
+  <div id="view">
+    <div id="drop"><span class="d-pc">Arraste um arquivo .glb, .gltf ou .zip aqui<br>(para .gltf solte também o .bin e as texturas, ou um .zip com tudo)</span><span class="d-touch">Toque em <b>Importar GLB/glTF</b> ou em <b>Carregar exemplo</b><br>(para .gltf escolha também o .bin e as texturas, ou um .zip com tudo)</span></div>
+    <div id="loading">Carregando…</div>
+  </div>
+  <aside id="right">
+    <div>
+      <h3>Detalhes</h3>
+      <table class="kv">
+        <tr><td>Arquivo</td><td id="dFile">—</td></tr>
+        <tr><td>Vértices</td><td id="dVert">—</td></tr>
+        <tr><td>Triângulos</td><td id="dTri">—</td></tr>
+        <tr><td>Malhas</td><td id="dMesh">—</td></tr>
+        <tr><td>Materiais</td><td id="dMat">—</td></tr>
+        <tr><td>Texturas</td><td id="dTex">—</td></tr>
+        <tr><td>Tamanho X / Y / Z</td><td id="dSize">—</td></tr>
+        <tr><td>Animações</td><td id="dAnim">—</td></tr>
+      </table>
+    </div>
+
+    <div class="tabs" id="tabs">
+      <button data-tab="uv" class="on">UV</button>
+      <button data-tab="mat">Material</button>
+      <button data-tab="luz">Luz</button>
+      <button data-tab="render">Render</button>
+      <button data-tab="exp">Exportar</button>
+    </div>
+
+    <!-- UV -->
+    <div class="tab on" id="tab-uv">
+      <canvas id="uv" width="512" height="512"></canvas>
+      <div class="row"><label>Canal UV</label>
+        <select id="uvChan"><option value="uv">uv (TEXCOORD_0)</option><option value="uv1">uv1 (TEXCOORD_1)</option></select></div>
+      <div class="row"><label>Mostrar textura</label><input type="checkbox" id="uvTex" checked style="flex:0"></div>
+      <div class="row"><label>Textura xadrez</label><input type="checkbox" id="uvChecker" style="flex:0"></div>
+      <div class="note" id="uvInfo">Selecione uma malha.</div>
+    </div>
+
+    <!-- Material -->
+    <div class="tab" id="tab-mat">
+      <div class="note" id="matName">Selecione uma malha.</div>
+      <div class="row"><label>Aplicar em</label>
+        <select id="matScope"><option value="sel">Malha selecionada</option><option value="all">Todas as malhas</option></select></div>
+      <div class="row"><label>Cor</label><input type="color" id="mColor" value="#ffffff"></div>
+      <div class="row"><label>Metalness</label><input type="range" id="mMetal" min="0" max="1" step="0.01"></div>
+      <div class="row"><label>Roughness</label><input type="range" id="mRough" min="0" max="1" step="0.01"></div>
+      <div class="row"><label>Emissivo</label><input type="color" id="mEmis" value="#000000"></div>
+      <div class="row"><label>Int. emissiva</label><input type="range" id="mEmisI" min="0" max="10" step="0.1"></div>
+      <div class="row"><label>Opacidade</label><input type="range" id="mOpac" min="0" max="1" step="0.01"></div>
+      <div class="row"><label>Clearcoat</label><input type="range" id="mClear" min="0" max="1" step="0.01"></div>
+      <div class="row"><label>Transmissão</label><input type="range" id="mTrans" min="0" max="1" step="0.01"></div>
+      <div class="row"><label>IOR</label><input type="range" id="mIor" min="1" max="2.333" step="0.01"></div>
+      <div class="row"><label>Dois lados</label><input type="checkbox" id="mDouble" style="flex:0"></div>
+      <h3 style="margin-top:6px">Texturas</h3>
+      <div id="texSlots"></div>
+      <button id="mReset">Restaurar material original</button>
+      <div class="note">Cor e emissivo usam sRGB; roughness, metal, normal e AO usam linear. Roughness/Metal seguem o padrão glTF (G = rugosidade, B = metal).</div>
+    </div>
+
+    <!-- Luz -->
+    <div class="tab" id="tab-luz">
+      <h3>Ambiente (HDRI)</h3>
+      <div class="row"><label>Ambiente</label>
+        <select id="envSel"><option value="room">Estúdio (padrão)</option><optgroup label="HDRIs prontos (1K)"><option value="p:royal_esplanade_1k.hdr">Palácio (interior claro)</option><option value="p:venice_sunset_1k.hdr">Veneza (pôr do sol)</option><option value="p:quarry_01_1k.hdr">Pedreira (céu aberto)</option><option value="p:pedestrian_overpass_1k.hdr">Passarela (cidade)</option></optgroup><option value="none">Nenhum</option><option value="hdr">Carregar .hdr…</option></select></div>
+      <div class="row"><label>Intensidade</label><input type="range" id="envInt" min="0" max="4" step="0.05" value="1"></div>
+      <div class="row"><label>Fundo</label>
+        <select id="bgMode"><option value="theme">Tema</option><option value="color">Cor sólida</option><option value="env">Mostrar HDRI</option></select>
+        <input type="color" id="bgColor" value="#2a2d33" style="flex:0 0 40px"></div>
+      <input type="file" id="hdrInput" accept=".hdr" hidden>
+      <div class="row"><label>Sombras</label><input type="checkbox" id="shadowOn" style="flex:0"></div>
+      <div class="row"><label>Chão</label><input type="checkbox" id="groundOn" style="flex:0"></div>
+      <h3>Luzes da cena</h3>
+      <div class="row">
+        <select id="lightType">
+          <option value="dir">Direcional</option><option value="point">Pontual</option>
+          <option value="spot">Spot</option><option value="amb">Ambiente</option>
+        </select>
+        <button id="addLight" style="flex:0 0 auto">Adicionar</button>
+        <button id="studioLights" style="flex:0 0 auto">3 pontos</button>
+      </div>
+      <div id="lightList"></div>
+      <div class="note">Luzes adicionadas aqui vão no arquivo exportado (KHR_lights_punctual). HDRI e tone mapping não vão.</div>
+    </div>
+
+    <!-- Render -->
+    <div class="tab" id="tab-render">
+      <div class="row"><label>Resolução</label>
+        <select id="rSize">
+          <option value="view">Tamanho da tela</option>
+          <option value="1920x1080" selected>1920 × 1080</option>
+          <option value="2560x1440">2560 × 1440</option>
+          <option value="3840x2160">3840 × 2160 (4K)</option>
+          <option value="2048x2048">2048 × 2048</option>
+        </select></div>
+      <div class="row"><label>Tone mapping</label>
+        <select id="rTone"><option value="aces">ACES Filmic</option><option value="agx">AgX</option><option value="neutral">Neutro</option><option value="none">Nenhum</option></select></div>
+      <div class="row"><label>Exposição</label><input type="range" id="rExp" min="0.2" max="3" step="0.05" value="1"></div>
+      <div class="row"><label>Fundo transparente</label><input type="checkbox" id="rAlpha" style="flex:0"></div>
+      <button class="primary" id="rGo">Gerar PNG</button>
+    </div>
+
+    <!-- Exportar -->
+    <div class="tab" id="tab-exp">
+      <div class="row"><label>Formato</label>
+        <select id="expFmt"><option value="glb">.glb (binário)</option><option value="gltf">.gltf (JSON + texturas embutidas)</option></select></div>
+      <div class="row"><label>Textura máx.</label>
+        <select id="expTex"><option value="0">Original</option><option value="4096">4096</option><option value="2048">2048</option><option value="1024">1024</option><option value="512">512</option></select></div>
+      <div class="row"><label>Só visíveis</label><input type="checkbox" id="expVis" checked style="flex:0"></div>
+      <div class="row"><label>Incluir luzes</label><input type="checkbox" id="expLights" checked style="flex:0"></div>
+      <div class="row"><label>Animações</label><input type="checkbox" id="expAnim" checked style="flex:0"></div>
+      <div class="note">Texturas KTX2/Basis não podem ser reexportadas pelo navegador. Para comprimir o resultado final use gltf-transform (Draco/Meshopt/KTX2).</div>
+    </div>
+
+    <button id="exportBtn" class="primary">exportar</button>
+  </aside>
+</main>
+</div>
+
+<script type="importmap">
+{"imports":{
+ "three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+ "three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+}}
+</script>
+<script type="module">
+import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
+import { KTX2Loader } from 'three/addons/loaders/KTX2Loader.js';
+import { RGBELoader } from 'three/addons/loaders/RGBELoader.js';
+import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { GLTFExporter } from 'three/addons/exporters/GLTFExporter.js';
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+
+const $ = id => document.getElementById(id);
+const css = v => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+const SAMPLE = 'https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/main/2.0/DamagedHelmet/glTF-Binary/DamagedHelmet.glb';
+
+/* ---------- cena ---------- */
+const view = $('view');
+const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+renderer.setClearColor(0x000000, 0);
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+view.prepend(renderer.domElement);
+
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(45, 1, 0.01, 1000);
+camera.position.set(2.5, 1.5, 3.5);
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+
+const root = new THREE.Group(); root.name = 'modelo';
+const userLights = new THREE.Group(); userLights.name = 'luzes';
+const helpers = new THREE.Group();
+scene.add(root, userLights, helpers);
+
+const grid = new THREE.GridHelper(10, 20, 0x888888, 0xbbbbbb);
+grid.material.transparent = true; grid.material.opacity = 0.4;
+scene.add(grid);
+
+const ground = new THREE.Mesh(new THREE.PlaneGeometry(60, 60), new THREE.ShadowMaterial({ opacity: 0.35 }));
+ground.rotation.x = -Math.PI / 2; ground.receiveShadow = true; ground.visible = false;
+scene.add(ground);
+
+const selBox = new THREE.Box3Helper(new THREE.Box3(), 0x1e88e5);
+selBox.visible = false; scene.add(selBox);
+
+const pmrem = new THREE.PMREMGenerator(renderer);
+let envTex = null;
+function setEnv(tex) {
+  if (envTex) envTex.dispose();
+  envTex = tex; scene.environment = tex; applyBackground();
+}
+setEnv(pmrem.fromScene(new RoomEnvironment(), 0.04).texture);
+
+function resize() {
+  const w = view.clientWidth, h = view.clientHeight;
+  renderer.setSize(w, h, false);
+  camera.aspect = w / h; camera.updateProjectionMatrix();
+}
+new ResizeObserver(resize).observe(view); resize();
+
+/* ---------- loaders ---------- */
+const draco = new DRACOLoader().setDecoderPath('https://www.gstatic.com/draco/versioned/decoders/1.5.6/');
+const ktx2 = new KTX2Loader().setTranscoderPath('https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/libs/basis/').detectSupport(renderer);
+
+let state = { meshes: [], selected: null, clips: [], mixer: null, playing: true, fileName: '' };
+const clock = new THREE.Clock();
+
+/* ---------- histórico (desfazer / refazer) ---------- */
+const hist = { stack: [], idx: 0, replay: false, buf: null };
+function updateHistoryButtons() {
+  $('btnUndo').disabled = hist.idx === 0;
+  $('btnRedo').disabled = hist.idx >= hist.stack.length;
+}
+function pushHistory(e) {
+  if (hist.replay) return;
+  if (hist.buf) { hist.buf.push(e); return; }
+  hist.stack.length = hist.idx;
+  hist.stack.push(e);
+  if (hist.stack.length > 100) hist.stack.shift();
+  hist.idx = hist.stack.length;
+  updateHistoryButtons();
+}
+function batch(fn) {
+  hist.buf = [];
+  try { fn(); } finally {
+    const b = hist.buf; hist.buf = null;
+    if (b.length) pushHistory({ undo: () => [...b].reverse().forEach(e => e.undo()), redo: () => b.forEach(e => e.redo()) });
+  }
+}
+function runHistory(kind) {
+  const e = kind === 'undo' ? hist.stack[hist.idx - 1] : hist.stack[hist.idx];
+  if (!e) return;
+  hist.replay = true;
+  try { e[kind](); } finally { hist.replay = false; }
+  hist.idx += kind === 'undo' ? -1 : 1;
+  updateHistoryButtons();
+}
+function clearHistory() { hist.stack = []; hist.idx = 0; updateHistoryButtons(); }
+
+function setLoading(on, txt) { $('loading').style.display = on ? 'block' : 'none'; if (txt) $('loading').textContent = txt; }
+
+function makeLoader(manager) {
+  const l = new GLTFLoader(manager).setDRACOLoader(draco).setKTX2Loader(ktx2).setMeshoptDecoder(MeshoptDecoder);
+  return l;
+}
+
+async function expandZips(files) {
+  const out = [];
+  for (const f of files) {
+    if (!/\.zip$/i.test(f.name)) { out.push(f); continue; }
+    setLoading(true, 'Lendo ' + f.name + '…');
+    const JSZip = (await import('https://cdn.jsdelivr.net/npm/jszip@3.10.1/+esm')).default;
+    const zip = await JSZip.loadAsync(f);
+    for (const entry of Object.values(zip.files)) {
+      if (entry.dir || /(^|\/)(__MACOSX|\.)/.test(entry.name)) continue;
+      const blob = await entry.async('blob');
+      out.push(new File([blob], entry.name.split('/').pop()));
+    }
+  }
+  return out;
+}
+
+async function loadFiles(fileList) {
+  let files;
+  try { files = await expandZips([...fileList]); }
+  catch (e) { setLoading(false); alert('Não foi possível ler o .zip: ' + (e.message || e)); return; }
+  setLoading(false);
+  const main = files.find(f => /\.(glb|gltf)$/i.test(f.name));
+  if (!main) { alert('Selecione um arquivo .glb ou .gltf.'); return; }
+  const urls = new Map();
+  files.forEach(f => urls.set(f.name, URL.createObjectURL(f)));
+  const manager = new THREE.LoadingManager();
+  manager.setURLModifier(u => {
+    const name = decodeURIComponent(u.split('?')[0].split('/').pop());
+    return urls.get(name) || u;
+  });
+  setLoading(true, 'Carregando ' + main.name + '…');
+  try {
+    const gltf = await makeLoader(manager).loadAsync(urls.get(main.name), e => {
+      if (e.total) setLoading(true, `Carregando… ${Math.round(e.loaded / e.total * 100)}%`);
+    });
+    adoptModel(gltf, main.name);
+  } catch (err) {
+    console.error(err);
+    alert('Erro ao carregar o arquivo:\n' + (err.message || err) + '\n\nSe for .gltf, selecione também o .bin e as imagens.');
+  } finally {
+    setLoading(false);
+    urls.forEach(u => URL.revokeObjectURL(u));
+  }
+}
+
+async function loadSample() {
+  setLoading(true, 'Baixando exemplo…');
+  try {
+    const gltf = await makeLoader().loadAsync(SAMPLE, e => { if (e.total) setLoading(true, `Baixando… ${Math.round(e.loaded / e.total * 100)}%`); });
+    adoptModel(gltf, 'DamagedHelmet.glb');
+  } catch (e) { alert('Não foi possível baixar o exemplo: ' + e.message); }
+  finally { setLoading(false); }
+}
+
+function disposeObject(obj) {
+  obj.traverse(o => {
+    if (o.geometry) o.geometry.dispose();
+    const mats = o.material ? (Array.isArray(o.material) ? o.material : [o.material]) : [];
+    mats.forEach(m => { Object.values(m).forEach(v => v && v.isTexture && v.dispose()); m.dispose(); });
+  });
+}
+
+function adoptModel(gltf, name) {
+  if (state.mixer) { state.mixer.stopAllAction(); state.mixer = null; }
+  [...root.children].forEach(c => { root.remove(c); disposeObject(c); });
+  state.selected = null; selBox.visible = false;
+  root.add(gltf.scene);
+  clearHistory();
+  state.fileName = name;
+  state.clips = gltf.animations || [];
+  if (state.clips.length) {
+    state.mixer = new THREE.AnimationMixer(gltf.scene);
+    state.clips.forEach(c => state.mixer.clipAction(c).play());
+  }
+  state.meshes = [];
+  root.traverse(o => { if (o.isMesh) { state.meshes.push(o); o.castShadow = o.receiveShadow = true; } });
+  applyEnvIntensity();
+  $('drop').style.display = 'none';
+  $('uvChecker').checked = false;
+  frame();
+  refreshAll();
+  if (state.meshes[0]) select(state.meshes[0]);
+}
+
+function frame() {
+  const box = new THREE.Box3().setFromObject(root);
+  if (box.isEmpty()) return;
+  const size = box.getSize(new THREE.Vector3()), c = box.getCenter(new THREE.Vector3());
+  const r = Math.max(size.x, size.y, size.z) || 1;
+  const dist = r / (2 * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2))) * 1.6;
+  camera.near = r / 100; camera.far = r * 100; camera.updateProjectionMatrix();
+  camera.position.copy(c).add(new THREE.Vector3(0.6, 0.35, 1).normalize().multiplyScalar(dist));
+  controls.target.copy(c); controls.update();
+  ground.position.y = box.min.y - r * 0.001;
+  grid.position.y = box.min.y;
+  grid.scale.setScalar(Math.max(1, r / 5));
+}
+
+/* ---------- detalhes e lista de meshes ---------- */
+function refreshAll() { refreshDetails(); refreshMeshList(); }
+
+function refreshDetails() {
+  let v = 0, t = 0; const mats = new Set(), texs = new Set();
+  state.meshes.forEach(m => {
+    const g = m.geometry; v += g.attributes.position.count;
+    t += (g.index ? g.index.count : g.attributes.position.count) / 3;
+    (Array.isArray(m.material) ? m.material : [m.material]).forEach(mt => {
+      mats.add(mt);
+      Object.values(mt).forEach(x => x && x.isTexture && texs.add(x));
+    });
+  });
+  const box = new THREE.Box3().setFromObject(root), s = box.getSize(new THREE.Vector3());
+  const fmt = n => n.toLocaleString('pt-BR');
+  $('dFile').textContent = state.fileName || '—';
+  $('dVert').textContent = fmt(v); $('dTri').textContent = fmt(Math.round(t));
+  $('dMesh').textContent = state.meshes.length; $('dMat').textContent = mats.size; $('dTex').textContent = texs.size;
+  $('dSize').textContent = box.isEmpty() ? '—' : [s.x, s.y, s.z].map(n => n.toFixed(2).replace('.', ',')).join(' / ');
+  $('dAnim').textContent = state.clips.length;
+  $('meshHint').style.display = state.meshes.length ? 'none' : 'block';
+}
+
+function refreshMeshList() {
+  const box = $('meshList'); box.innerHTML = '';
+  state.meshes.forEach((m, i) => {
+    const row = document.createElement('div');
+    row.className = 'meshrow' + (m === state.selected ? ' sel' : '');
+    row.innerHTML = `<span></span><button title="Enquadrar">⤢</button><button title="Visibilidade">${m.visible ? '👁' : '🚫'}</button>`;
+    row.querySelector('span').textContent = m.name || ('mesh_' + i);
+    const [bf, bv] = row.querySelectorAll('button');
+    bf.onclick = e => { e.stopPropagation(); focusMesh(m); };
+    bv.onclick = e => { e.stopPropagation(); m.visible = !m.visible; refreshMeshList(); };
+    row.onclick = () => select(m);
+    box.appendChild(row);
+  });
+}
+
+function focusMesh(m) {
+  const b = new THREE.Box3().setFromObject(m), c = b.getCenter(new THREE.Vector3());
+  const r = Math.max(...b.getSize(new THREE.Vector3()).toArray()) || 1;
+  const dir = camera.position.clone().sub(controls.target).normalize();
+  controls.target.copy(c);
+  camera.position.copy(c).add(dir.multiplyScalar(r * 2.2)); controls.update();
+}
+
+function select(m) {
+  state.selected = m;
+  if (m) { selBox.box.setFromObject(m); selBox.visible = true; } else selBox.visible = false;
+  refreshMeshList(); syncMaterialUI(); drawUV();
+}
+
+/* ---------- abas ---------- */
+document.querySelectorAll('#tabs button').forEach(b => b.onclick = () => {
+  document.querySelectorAll('#tabs button').forEach(x => x.classList.toggle('on', x === b));
+  document.querySelectorAll('.tab').forEach(t => t.classList.toggle('on', t.id === 'tab-' + b.dataset.tab));
+  if (b.dataset.tab === 'uv') drawUV();
+});
+
+/* ---------- UV ---------- */
+const checker = (() => {
+  const c = document.createElement('canvas'); c.width = c.height = 512;
+  const x = c.getContext('2d');
+  for (let i = 0; i < 16; i++) for (let j = 0; j < 16; j++) { x.fillStyle = (i + j) % 2 ? '#222' : '#eee'; x.fillRect(i * 32, j * 32, 32, 32); }
+  const t = new THREE.CanvasTexture(c);
+  t.colorSpace = THREE.SRGBColorSpace; t.flipY = false; t.wrapS = t.wrapT = THREE.RepeatWrapping; return t;
+})();
+
+function firstMat(m) { return m && (Array.isArray(m.material) ? m.material[0] : m.material); }
+
+function drawUV() {
+  const c = $('uv'), ctx = c.getContext('2d'), S = c.width;
+  ctx.clearRect(0, 0, S, S); ctx.fillStyle = css('--view'); ctx.fillRect(0, 0, S, S);
+  const m = state.selected;
+  if (!m) { $('uvInfo').textContent = 'Selecione uma malha.'; return; }
+  const mat = firstMat(m);
+  const img = mat && (mat._origMap || mat.map) && (mat._origMap || mat.map).image;
+  if (img && $('uvTex').checked) { try { ctx.globalAlpha = 0.55; ctx.drawImage(img, 0, 0, S, S); ctx.globalAlpha = 1; } catch (e) { } }
+  const attr = m.geometry.attributes[$('uvChan').value];
+  if (!attr) { $('uvInfo').textContent = 'Esta malha não possui o canal ' + $('uvChan').value + '.'; return; }
+  const idx = m.geometry.index, n = Math.min(idx ? idx.count : attr.count, 600000);
+  let out = 0;
+  ctx.strokeStyle = css('--accent'); ctx.lineWidth = 0.7; ctx.beginPath();
+  for (let i = 0; i < n; i += 3) {
+    const k = [0, 1, 2].map(j => idx ? idx.getX(i + j) : i + j);
+    const p = k.map(a => [attr.getX(a), attr.getY(a)]);
+    if (p.some(q => q[0] < 0 || q[0] > 1 || q[1] < 0 || q[1] > 1)) out++;
+    ctx.moveTo(p[0][0] * S, p[0][1] * S); ctx.lineTo(p[1][0] * S, p[1][1] * S);
+    ctx.lineTo(p[2][0] * S, p[2][1] * S); ctx.lineTo(p[0][0] * S, p[0][1] * S);
+  }
+  ctx.stroke();
+  ctx.strokeStyle = '#e67e22'; ctx.strokeRect(0.5, 0.5, S - 1, S - 1);
+  $('uvInfo').innerHTML = `${Math.round(n / 3).toLocaleString('pt-BR')} triângulos.` +
+    (out ? `<br><span class="warn">${out} triângulo(s) com UV fora do espaço 0–1 (tiling/repetição).</span>` : ' Todas as UVs dentro de 0–1.');
+}
+$('uvChan').onchange = $('uvTex').onchange = drawUV;
+$('uvChecker').onchange = () => {
+  const on = $('uvChecker').checked;
+  state.meshes.forEach(m => (Array.isArray(m.material) ? m.material : [m.material]).forEach(mt => {
+    if (!mt.isMeshStandardMaterial) return;
+    if (on) { mt._origMap = mt.map; mt.map = checker; } else if ('_origMap' in mt) { mt.map = mt._origMap; delete mt._origMap; }
+    mt.needsUpdate = true;
+  }));
+  drawUV();
+};
+
+/* ---------- materiais ---------- */
+const SLOTS = [
+  ['map', 'Base color', true], ['normalMap', 'Normal', false], ['metalnessMap', 'Metal (canal B)', false],
+  ['roughnessMap', 'Rough. (canal G)', false], ['aoMap', 'Oclusão (AO)', false], ['emissiveMap', 'Emissivo', true]
+];
+const texInput = document.createElement('input'); texInput.type = 'file'; texInput.accept = 'image/*'; texInput.hidden = true;
+document.body.appendChild(texInput);
+let pendingSlot = null, pendingTargets = [];
+texInput.onchange = () => {
+  const f = texInput.files[0]; texInput.value = '';
+  if (!f || !pendingSlot) return;
+  const [slot, , srgb] = pendingSlot;
+  const url = URL.createObjectURL(f);
+  new THREE.TextureLoader().load(url, tex => {
+    tex.flipY = false; tex.colorSpace = srgb ? THREE.SRGBColorSpace : THREE.NoColorSpace; tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+    tex.anisotropy = renderer.capabilities.getMaxAnisotropy();
+    const before = snapOf(pendingTargets);
+    pendingTargets.forEach(m => {
+      const mt = ensureEditable(m);
+      mt[slot] = tex;
+      if (slot === 'metalnessMap' && !mt.roughnessMap) mt.roughnessMap = tex;
+      if (slot === 'roughnessMap' && !mt.metalnessMap) mt.metalnessMap = tex;
+      mt.needsUpdate = true;
+    });
+    commitMatEdit(before);
+    URL.revokeObjectURL(url); syncMaterialUI(); drawUV(); refreshDetails();
+  });
+};
+
+function buildSlots() {
+  const box = $('texSlots'); box.innerHTML = '';
+  SLOTS.forEach(s => {
+    const row = document.createElement('div'); row.className = 'row';
+    row.innerHTML = `<label>${s[1]}</label><span class="note" data-s="${s[0]}">—</span><button data-a="set">Trocar</button><button data-a="del">✕</button>`;
+    row.querySelector('[data-a=set]').onclick = () => { pendingTargets = targets(); if (!pendingTargets.length) return; pendingSlot = s; texInput.click(); };
+    row.querySelector('[data-a=del]').onclick = () => {
+      const tg = targets(), before = snapOf(tg);
+      tg.forEach(m => { const mt = ensureEditable(m); mt[s[0]] = null; mt.needsUpdate = true; });
+      if (tg.length) commitMatEdit(before);
+      syncMaterialUI(); drawUV();
+    };
+    box.appendChild(row);
+  });
+}
+buildSlots();
+
+const MAP_KEYS = ['map', 'normalMap', 'metalnessMap', 'roughnessMap', 'aoMap', 'emissiveMap'];
+const SCALAR_KEYS = ['metalness', 'roughness', 'emissiveIntensity', 'opacity', 'transparent', 'clearcoat', 'transmission', 'ior', 'side'];
+function snapMesh(m) {
+  const mt = m.userData.editMat;
+  if (!mt) return { edited: false };
+  const p = { color: mt.color.getHex(), emissive: mt.emissive.getHex() };
+  SCALAR_KEYS.concat(MAP_KEYS).forEach(k => p[k] = mt[k]);
+  return { edited: true, p };
+}
+function snapOf(list) { return new Map(list.map(m => [m, snapMesh(m)])); }
+function resetMesh(m) {
+  if (m.userData.origMat) { m.material.dispose(); m.material = m.userData.origMat; delete m.userData.origMat; delete m.userData.editMat; }
+}
+function restoreMesh(m, s) {
+  if (!s.edited) { resetMesh(m); return; }
+  const mt = ensureEditable(m), p = s.p;
+  mt.color.setHex(p.color); mt.emissive.setHex(p.emissive);
+  SCALAR_KEYS.concat(MAP_KEYS).forEach(k => mt[k] = p[k]);
+  mt.needsUpdate = true;
+}
+function commitMatEdit(before) {
+  const after = snapOf([...before.keys()]);
+  pushHistory({
+    undo: () => { before.forEach((s, m) => restoreMesh(m, s)); syncMaterialUI(); drawUV(); },
+    redo: () => { after.forEach((s, m) => restoreMesh(m, s)); syncMaterialUI(); drawUV(); }
+  });
+}
+
+function targets() {
+  if ($('matScope').value === 'all') return state.meshes;
+  return state.selected ? [state.selected] : [];
+}
+
+function ensureEditable(mesh) {
+  if (mesh.userData.editMat) return mesh.userData.editMat;
+  const old = firstMat(mesh);
+  const nm = new THREE.MeshPhysicalMaterial();
+  if (old.isMeshStandardMaterial) THREE.MeshStandardMaterial.prototype.copy.call(nm, old);
+  else { nm.color.copy(old.color || new THREE.Color(1, 1, 1)); nm.map = old.map || null; nm.metalness = 0; nm.roughness = 0.6; }
+  nm.name = old.name;
+  if (old._origMap) nm._origMap = old._origMap;
+  nm.envMapIntensity = envInt;
+  mesh.userData.origMat = mesh.material;
+  mesh.userData.editMat = nm;
+  mesh.material = nm;
+  return nm;
+}
+
+function syncMaterialUI() {
+  const m = state.selected, mt = firstMat(m);
+  if (!m || !mt) { $('matName').textContent = 'Selecione uma malha.'; return; }
+  $('matName').textContent = `${m.name || 'mesh'} → material "${mt.name || '(sem nome)'}"`;
+  if (mt.color) $('mColor').value = '#' + mt.color.getHexString();
+  $('mMetal').value = mt.metalness ?? 0; $('mRough').value = mt.roughness ?? 1;
+  $('mEmis').value = '#' + (mt.emissive ? mt.emissive.getHexString() : '000000');
+  $('mEmisI').value = mt.emissiveIntensity ?? 1;
+  $('mOpac').value = mt.opacity ?? 1;
+  $('mClear').value = mt.clearcoat ?? 0; $('mTrans').value = mt.transmission ?? 0; $('mIor').value = mt.ior ?? 1.5;
+  $('mDouble').checked = mt.side === THREE.DoubleSide;
+  SLOTS.forEach(s => {
+    const el = document.querySelector(`[data-s="${s[0]}"]`);
+    const t = mt[s[0]] || mt['_origMap' ] && s[0] === 'map' && mt._origMap;
+    el.textContent = t ? (t.image && t.image.width ? `${t.image.width}×${t.image.height}` : 'definida') : 'vazio';
+  });
+}
+
+let pendingMat = null;
+function bindMat(id, fn) {
+  const el = $(id);
+  el.addEventListener('input', () => {
+    const tg = targets();
+    if (!pendingMat) pendingMat = snapOf(tg);
+    const v = el.type === 'checkbox' ? el.checked : el.value;
+    tg.forEach(m => { const mt = ensureEditable(m); fn(mt, v); mt.needsUpdate = true; });
+  });
+  el.addEventListener('change', () => { if (pendingMat) { commitMatEdit(pendingMat); pendingMat = null; } });
+}
+bindMat('mColor', (m, v) => m.color.set(v));
+bindMat('mMetal', (m, v) => m.metalness = +v);
+bindMat('mRough', (m, v) => m.roughness = +v);
+bindMat('mEmis', (m, v) => m.emissive.set(v));
+bindMat('mEmisI', (m, v) => m.emissiveIntensity = +v);
+bindMat('mOpac', (m, v) => { m.opacity = +v; m.transparent = +v < 1; });
+bindMat('mClear', (m, v) => m.clearcoat = +v);
+bindMat('mTrans', (m, v) => m.transmission = +v);
+bindMat('mIor', (m, v) => m.ior = +v);
+bindMat('mDouble', (m, v) => m.side = v ? THREE.DoubleSide : THREE.FrontSide);
+
+$('mReset').onclick = () => {
+  const tg = targets(), before = snapOf(tg);
+  tg.forEach(resetMesh);
+  if ([...before.values()].some(s => s.edited)) commitMatEdit(before);
+  syncMaterialUI(); drawUV();
+};
+
+/* ---------- ambiente, fundo, sombras ---------- */
+function applyBackground(forRender = false, transparent = false) {
+  const mode = $('bgMode').value;
+  if (forRender && transparent) { scene.background = null; return; }
+  if (mode === 'color') scene.background = new THREE.Color($('bgColor').value);
+  else if (mode === 'env' && envTex) scene.background = envTex;
+  else scene.background = forRender ? new THREE.Color(css('--view')) : null;
+}
+$('bgMode').onchange = $('bgColor').oninput = () => applyBackground();
+let envInt = 1;
+function applyEnvIntensity() {
+  root.traverse(o => {
+    if (!o.material) return;
+    (Array.isArray(o.material) ? o.material : [o.material]).forEach(m => { if ('envMapIntensity' in m) m.envMapIntensity = envInt; });
+    if (o.userData.origMat && 'envMapIntensity' in o.userData.origMat) o.userData.origMat.envMapIntensity = envInt;
+  });
+}
+$('envInt').oninput = () => { envInt = +$('envInt').value; scene.backgroundIntensity = envInt; applyEnvIntensity(); };
+
+const HDRI_BASE = 'https://cdn.jsdelivr.net/gh/mrdoob/three.js@r160/examples/textures/equirectangular/';
+function loadHDR(url, revoke) {
+  setLoading(true, 'Carregando HDRI…');
+  new RGBELoader().load(url, t => {
+    t.mapping = THREE.EquirectangularReflectionMapping;
+    const env = pmrem.fromEquirectangular(t).texture; t.dispose(); setEnv(env);
+    setLoading(false); if (revoke) URL.revokeObjectURL(url);
+  }, undefined, () => {
+    setLoading(false); if (revoke) URL.revokeObjectURL(url);
+    alert('Não foi possível carregar o HDRI. Verifique a conexão ou use "Carregar .hdr…".');
+  });
+}
+$('envSel').onchange = () => {
+  const v = $('envSel').value;
+  if (v === 'room') setEnv(pmrem.fromScene(new RoomEnvironment(), 0.04).texture);
+  else if (v === 'none') setEnv(null);
+  else if (v === 'hdr') $('hdrInput').click();
+  else if (v.startsWith('p:')) loadHDR(HDRI_BASE + v.slice(2));
+};
+$('hdrInput').onchange = () => {
+  const f = $('hdrInput').files[0]; $('hdrInput').value = ''; if (!f) return;
+  loadHDR(URL.createObjectURL(f), true);
+};
+function updateShadows() {
+  const on = $('shadowOn').checked;
+  renderer.shadowMap.enabled = on; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  userLights.children.forEach(l => { if (l.isLight && !l.isAmbientLight) { l.castShadow = on; l.shadow.mapSize.set(2048, 2048); } });
+  scene.traverse(o => { if (o.material) { (Array.isArray(o.material) ? o.material : [o.material]).forEach(m => m.needsUpdate = true); } });
+}
+$('shadowOn').onchange = updateShadows;
+$('groundOn').onchange = () => ground.visible = $('groundOn').checked;
+
+/* ---------- luzes ---------- */
+let lightCount = 0;
+function createLight(type, opts = {}) {
+  let l, label;
+  if (type === 'dir') { l = new THREE.DirectionalLight(0xffffff, 2); l.position.set(3, 4, 3); label = 'Direcional'; }
+  else if (type === 'point') { l = new THREE.PointLight(0xffffff, 30); l.position.set(2, 3, 2); label = 'Pontual'; }
+  else if (type === 'spot') { l = new THREE.SpotLight(0xffffff, 60, 0, 0.5, 0.4); l.position.set(3, 4, 3); label = 'Spot'; }
+  else { l = new THREE.AmbientLight(0xffffff, 0.5); label = 'Ambiente'; }
+  if (opts.pos) l.position.set(...opts.pos);
+  if (opts.color) l.color.set(opts.color);
+  if (opts.intensity != null) l.intensity = opts.intensity;
+  l.name = `${label} ${++lightCount}`;
+  l.userData.type = type;
+  return l;
+}
+function attachLight(l) {
+  const type = l.userData.type;
+  const r = Math.max(...new THREE.Box3().setFromObject(root).getSize(new THREE.Vector3()).toArray(), 1);
+  let h = null;
+  if (type === 'dir') h = new THREE.DirectionalLightHelper(l, r * 0.2);
+  if (type === 'point') h = new THREE.PointLightHelper(l, r * 0.05);
+  if (type === 'spot') h = new THREE.SpotLightHelper(l);
+  if (h) { l.userData.helper = h; helpers.add(h); }
+  if (!l.isAmbientLight) { l.castShadow = $('shadowOn').checked; l.shadow.mapSize.set(2048, 2048); }
+  userLights.add(l); renderLights();
+}
+function detachLight(l) {
+  const h = l.userData.helper;
+  if (h) { helpers.remove(h); h.dispose(); delete l.userData.helper; }
+  userLights.remove(l); renderLights();
+}
+function addLight(type, opts = {}) {
+  const l = createLight(type, opts); attachLight(l);
+  pushHistory({ undo: () => detachLight(l), redo: () => attachLight(l) });
+}
+function removeLight(l) {
+  detachLight(l);
+  pushHistory({ undo: () => attachLight(l), redo: () => detachLight(l) });
+}
+function snapLight(l) { return { c: l.color.getHex(), i: l.intensity, p: l.position.toArray() }; }
+function restoreLight(l, s) {
+  l.color.setHex(s.c); l.intensity = s.i; l.position.fromArray(s.p);
+  if (l.userData.helper && l.userData.helper.update) l.userData.helper.update();
+}
+function renderLights() {
+  const box = $('lightList'); box.innerHTML = '';
+  userLights.children.forEach(l => {
+    const d = document.createElement('div'); d.className = 'card';
+    const hasPos = l.userData.type !== 'amb';
+    d.innerHTML = `<div class="top"><span>${l.name}</span><button>Remover</button></div>
+      <div class="row"><label>Cor</label><input type="color" data-k="c" value="#${l.color.getHexString()}"></div>
+      <div class="row"><label>Intensidade</label><input type="range" data-k="i" min="0" max="${l.userData.type === 'dir' || l.userData.type === 'amb' ? 10 : 300}" step="0.1" value="${l.intensity}"></div>
+      ${hasPos ? `<div class="pos"><input type="number" step="0.5" data-k="x" value="${l.position.x}"><input type="number" step="0.5" data-k="y" value="${l.position.y}"><input type="number" step="0.5" data-k="z" value="${l.position.z}"></div>` : ''}`;
+    d.querySelector('button').onclick = () => removeLight(l);
+    let before = null;
+    d.querySelectorAll('[data-k]').forEach(inp => {
+      inp.addEventListener('input', () => {
+        if (!before) before = snapLight(l);
+        const k = inp.dataset.k;
+        if (k === 'c') l.color.set(inp.value); else if (k === 'i') l.intensity = +inp.value;
+        else l.position[k] = +inp.value || 0;
+        if (l.userData.helper && l.userData.helper.update) l.userData.helper.update();
+      });
+      inp.addEventListener('change', () => {
+        if (!before) return;
+        const b = before, a = snapLight(l); before = null;
+        pushHistory({ undo: () => { restoreLight(l, b); renderLights(); }, redo: () => { restoreLight(l, a); renderLights(); } });
+      });
+    });
+    box.appendChild(d);
+  });
+}
+$('addLight').onclick = () => addLight($('lightType').value);
+$('studioLights').onclick = () => batch(() => {
+  [...userLights.children].forEach(removeLight);
+  addLight('dir', { pos: [3, 4, 3], intensity: 3 });
+  addLight('dir', { pos: [-4, 2, 2], intensity: 1.2, color: '#b8d4ff' });
+  addLight('dir', { pos: [0, 3, -4], intensity: 2 });
+});
+
+/* ---------- render final ---------- */
+const TONES = { aces: THREE.ACESFilmicToneMapping, agx: THREE.AgXToneMapping, neutral: THREE.NeutralToneMapping ?? THREE.ReinhardToneMapping, none: THREE.NoToneMapping };
+$('rTone').onchange = () => renderer.toneMapping = TONES[$('rTone').value];
+$('rExp').oninput = () => renderer.toneMappingExposure = +$('rExp').value;
+
+function download(blob, name) {
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+}
+function renderPNG() {
+  const sel = $('rSize').value;
+  const cw = view.clientWidth, ch = view.clientHeight;
+  const [w, h] = sel === 'view' ? [cw, ch] : sel.split('x').map(Number);
+  const oldPR = renderer.getPixelRatio(), oldBg = scene.background, aspect = camera.aspect;
+  const hideHelp = [helpers.visible, grid.visible, selBox.visible];
+  helpers.visible = grid.visible = selBox.visible = false;
+  renderer.setPixelRatio(1); renderer.setSize(w, h, false);
+  camera.aspect = w / h; camera.updateProjectionMatrix();
+  applyBackground(true, $('rAlpha').checked);
+  renderer.render(scene, camera);
+  renderer.domElement.toBlob(b => download(b, (state.fileName.replace(/\.\w+$/, '') || 'render') + '.png'), 'image/png');
+  renderer.setPixelRatio(oldPR); renderer.setSize(cw, ch, false);
+  camera.aspect = aspect; camera.updateProjectionMatrix();
+  [helpers.visible, grid.visible, selBox.visible] = hideHelp; scene.background = oldBg;
+  applyBackground();
+}
+$('btnRender').onclick = () => { if (!state.meshes.length) return alert('Importe um modelo primeiro.'); renderPNG(); };
+$('rGo').onclick = $('btnRender').onclick;
+
+/* ---------- exportar ---------- */
+function doExport() {
+  if (!state.meshes.length) return alert('Importe um modelo primeiro.');
+  const binary = $('expFmt').value === 'glb';
+  const inputs = [root];
+  if ($('expLights').checked && userLights.children.length) inputs.push(userLights);
+  const opts = { binary, onlyVisible: $('expVis').checked, maxTextureSize: +$('expTex').value || Infinity };
+  if ($('expAnim').checked && state.clips.length) opts.animations = state.clips;
+  setLoading(true, 'Exportando…');
+  new GLTFExporter().parse(inputs, res => {
+    setLoading(false);
+    const base = state.fileName.replace(/\.\w+$/, '') || 'modelo';
+    if (binary) download(new Blob([res], { type: 'model/gltf-binary' }), base + '_editado.glb');
+    else download(new Blob([JSON.stringify(res)], { type: 'model/gltf+json' }), base + '_editado.gltf');
+  }, err => { setLoading(false); alert('Erro ao exportar: ' + (err.message || err)); }, opts);
+}
+$('exportBtn').onclick = doExport;
+
+/* ---------- toolbar / eventos ---------- */
+$('btnOpen').onclick = () => $('fileInput').click();
+$('fileInput').onchange = () => { if ($('fileInput').files.length) loadFiles($('fileInput').files); $('fileInput').value = ''; };
+$('btnSample').onclick = loadSample;
+$('btnFrame').onclick = frame;
+$('btnGrid').onclick = () => grid.visible = !grid.visible;
+$('btnWire').onclick = () => {
+  const on = !(state.wire); state.wire = on;
+  state.meshes.forEach(m => (Array.isArray(m.material) ? m.material : [m.material]).forEach(mt => mt.wireframe = on));
+};
+$('btnAnim').onclick = () => { state.playing = !state.playing; $('btnAnim').style.opacity = state.playing ? 1 : 0.5; };
+$('btnTheme').onclick = () => {
+  const d = document.documentElement; d.dataset.theme = d.dataset.theme === 'dark' ? 'light' : 'dark';
+  applyBackground(); drawUV();
+};
+$('btnUndo').onclick = () => runHistory('undo');
+$('btnRedo').onclick = () => runHistory('redo');
+addEventListener('keydown', e => {
+  const tag = e.target.tagName, typing = tag === 'INPUT' && ['number', 'text'].includes(e.target.type);
+  const k = e.key.toLowerCase();
+  if ((e.ctrlKey || e.metaKey) && !typing) {
+    if (k === 'z') { e.preventDefault(); runHistory(e.shiftKey ? 'redo' : 'undo'); return; }
+    if (k === 'y') { e.preventDefault(); runHistory('redo'); return; }
+  }
+  if (k === 'f' && !e.ctrlKey && !e.metaKey && !/INPUT|SELECT/.test(tag)) frame();
+});
+
+['dragenter', 'dragover'].forEach(ev => view.addEventListener(ev, e => { e.preventDefault(); view.classList.add('drag'); }));
+['dragleave', 'drop'].forEach(ev => view.addEventListener(ev, e => { e.preventDefault(); view.classList.remove('drag'); }));
+view.addEventListener('drop', e => { if (e.dataTransfer.files.length) loadFiles(e.dataTransfer.files); });
+
+renderer.domElement.addEventListener('dblclick', e => {
+  const r = renderer.domElement.getBoundingClientRect();
+  const ray = new THREE.Raycaster();
+  ray.setFromCamera(new THREE.Vector2(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1), camera);
+  const hit = ray.intersectObjects(state.meshes, false)[0];
+  if (hit) select(hit.object);
+});
+
+/* ---------- loop ---------- */
+renderer.setAnimationLoop(() => {
+  const dt = clock.getDelta();
+  if (state.mixer && state.playing) state.mixer.update(dt);
+  controls.update();
+  helpers.children.forEach(h => { if (h.isSpotLightHelper) h.update(); });
+  renderer.render(scene, camera);
+});
+
+addLight('dir', { pos: [3, 4, 3], intensity: 1.5 });
+clearHistory();
+</script>
+</body>
+</html>

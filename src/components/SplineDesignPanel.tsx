@@ -175,12 +175,12 @@ export const SplineDesignPanel: React.FC<SplineDesignPanelProps> = ({
         </div>
       )}
 
-      {showModeling && !playMode && (
+      {showModeling && (
         <>
           {/* Transform Gizmo Tools */}
           <div className="flex flex-col gap-1">
             <div className="flex items-center justify-between text-slate-400">
-              <span>Gizmo Blender / Spline</span>
+              <span>Gizmo 3D (Transformação)</span>
               <button
                 type="button"
                 onClick={onToggleHideDefaultBase}

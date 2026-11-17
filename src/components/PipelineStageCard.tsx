@@ -8,6 +8,8 @@ interface PipelineStageCardProps {
   expanded: boolean;
   onToggle: () => void;
   badgeText?: string;
+  hidden?: boolean;
+  standalone?: boolean;
   children: React.ReactNode;
 }
 
@@ -18,17 +20,21 @@ export const PipelineStageCard: React.FC<PipelineStageCardProps> = ({
   expanded,
   onToggle,
   badgeText,
+  hidden = false,
+  standalone = false,
   children,
 }) => {
   const sectionRef = useRef<HTMLElement>(null);
   const wasExpandedRef = useRef(expanded);
 
   useEffect(() => {
-    if (expanded && !wasExpandedRef.current) {
+    if (expanded && !wasExpandedRef.current && !hidden) {
       sectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
     wasExpandedRef.current = expanded;
-  }, [expanded]);
+  }, [expanded, hidden]);
+
+  if (hidden) return null;
 
   return (
     <section
@@ -61,17 +67,23 @@ export const PipelineStageCard: React.FC<PipelineStageCardProps> = ({
             </div>
           </div>
         </div>
-        <span className="inline-flex items-center justify-center w-7 h-7 sm:w-6 sm:h-6 rounded-md bg-[#0D1017] border border-slate-800 text-slate-400 shrink-0">
-          <ChevronDown
-            className={`w-3.5 h-3.5 transition-transform duration-150 ${
-              expanded ? 'rotate-180 text-orange-400' : ''
-            }`}
-          />
-        </span>
+        {!standalone && (
+          <span className="inline-flex items-center justify-center w-7 h-7 sm:w-6 sm:h-6 rounded-md bg-[#0D1017] border border-slate-800 text-slate-400 shrink-0">
+            <ChevronDown
+              className={`w-3.5 h-3.5 transition-transform duration-150 ${
+                expanded ? 'rotate-180 text-orange-400' : ''
+              }`}
+            />
+          </span>
+        )}
       </button>
 
       {expanded && (
-        <div className="max-h-[min(56dvh,400px)] overflow-y-auto px-3 pb-3 pt-2.5 border-t border-slate-800/80 flex flex-col gap-2.5 text-xs sm:text-[11px]">
+        <div
+          className={`${
+            standalone ? '' : 'max-h-[min(56dvh,400px)] overflow-y-auto'
+          } px-3 pb-3 pt-2.5 border-t border-slate-800/80 flex flex-col gap-2.5 text-xs sm:text-[11px]`}
+        >
           {children}
         </div>
       )}

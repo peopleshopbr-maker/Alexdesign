@@ -1,8 +1,7 @@
-﻿import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   Archive,
   CheckCircle2,
-  FileCode2,
   FolderOpen,
   FolderUp,
   Layers,
@@ -163,17 +162,16 @@ export const SubstanceImporterPanel: React.FC<SubstanceImporterPanelProps> = ({
       const a = document.createElement('a');
       const safeName = req.materialName.replace(/[^a-zA-Z0-9_-]/g, '_') || 'Substance_Material';
       a.href = url;
-      a.download = `${safeName}_Blender5_PBR.zip`;
+      a.download = `${safeName}_PBR_Maps.zip`;
       a.click();
       URL.revokeObjectURL(url);
     } catch (err) {
-      setErrorMsg(err instanceof Error ? err.message : 'Falha ao gerar pacote Blender.');
+      setErrorMsg(err instanceof Error ? err.message : 'Falha ao gerar pacote PBR.');
     } finally {
       setIsExportingZip(false);
     }
   };
 
-  
   return (
     <section className="rounded-xl bg-[#141923] border border-slate-800 p-4 sm:p-6 flex flex-col gap-5 sm:gap-6">
       {/* Top Toolbar */}
@@ -187,10 +185,10 @@ export const SubstanceImporterPanel: React.FC<SubstanceImporterPanelProps> = ({
               6. Material &amp; Texturing
             </div>
             <h2 className="text-base sm:text-lg font-semibold text-white leading-snug">
-              Substance Textures Importer · Blender 5.3+
+              Materiais PBR &amp; Texturas 3D
             </h2>
             <p className="text-xs text-slate-400 mt-0.5 leading-relaxed">
-              Carrega automaticamente materiais PBR de modelos GLB/glTF, detecta sufixos Substance/UDIM/ORM e exporta para Principled BSDF.
+              Carrega automaticamente materiais PBR de modelos GLB/glTF, detecta sufixos PBR/UDIM/ORM e aplica direto na Viewport 3D Web.
             </p>
           </div>
         </div>
@@ -216,8 +214,6 @@ export const SubstanceImporterPanel: React.FC<SubstanceImporterPanelProps> = ({
               Manual por Canal
             </button>
           </div>
-
-          
         </div>
       </div>
 
@@ -413,7 +409,7 @@ export const SubstanceImporterPanel: React.FC<SubstanceImporterPanelProps> = ({
               <span className="truncate">
                 {isExportingZip
                   ? 'Empacotando ZIP...'
-                  : 'Exportar Pacote Blender 5.3+ (.zip)'}
+                  : 'Exportar Pacote PBR (.zip)'}
               </span>
             </button>
           </div>
@@ -512,7 +508,7 @@ export const SubstanceImporterPanel: React.FC<SubstanceImporterPanelProps> = ({
               </div>
             </div>
             <div className="pt-2 border-t border-slate-800/80 text-[11px] text-slate-500">
-              Pronto p/ Viewport 3D e Blender 5.3+
+              Pronto para Viewport 3D Web
             </div>
           </div>
         </div>

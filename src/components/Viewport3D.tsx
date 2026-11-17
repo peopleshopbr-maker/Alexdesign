@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { TransformControls } from 'three/addons/controls/TransformControls.js';
@@ -23,6 +23,7 @@ import {
   ChevronDown,
   ChevronLeft,
   ChevronRight,
+  Cloud,
   Code2,
   Copy,
   Download,
@@ -51,8 +52,10 @@ import {
   Trash2,
   Undo2,
   Upload,
+  Sliders,
   Video,
   Wand2,
+  Wind,
   Workflow,
   X,
 } from 'lucide-react';
@@ -128,8 +131,52 @@ import {
   subdivideMeshGeometry,
   weldCleanTopology,
 } from '../utils/retopologyOps';
+import {
+  createContactShadowTexture,
+  createMatcapTexture,
+  createProceduralFabricNormalTexture,
+  createToonGradient,
+  createUvCheckerTexture,
+  disposeMaterialTree,
+  extractTextureDataUrl,
+  type TextureExtractCache,
+} from '../engine/viewportTextureUtils';
+import { bakeAoAndCurvatureForGroup } from '../engine/meshBakeUtils';
+import {
+  SceneHistoryManager,
+  captureObjectSnapshot,
+  type ObjectTransformSnapshot,
+} from '../engine/historyManager';
+import {
+  DEFAULT_MOGRAPH_CONFIG,
+  type MoGraphCloneEntry,
+  type MoGraphConfig,
+  buildMoGraphClones,
+  updateMoGraphEffectorFrame,
+} from '../engine/mographEngine';
+import { MoGraphPanel } from './MoGraphPanel';
+import { AnimationPrinciplesPanel } from './AnimationPrinciplesPanel';
+import {
+  type AnimationPrinciplesConfig,
+  DEFAULT_ANIMATION_PRINCIPLES,
+  applyAnimationPrinciplesFrame,
+  createMotionTrailLine,
+  createPrinciplesRuntimeState,
+} from '../engine/animationPrinciplesEngine';
+import {
+  type MeshModelingOp,
+  applyMeshModelingOp,
+} from '../engine/meshModelingOps';
+import { GoogleDriveModal } from './drive/GoogleDriveModal';
 
-type ShadingMode = 'pbr' | 'uv_checker' | 'normals' | 'cel_borde';
+type ShadingMode =
+  | 'pbr'
+  | 'uv_checker'
+  | 'normals'
+  | 'cel_borde'
+  | 'matcap_clay'
+  | 'matcap_chrome'
+  | 'matcap_redwax';
 type CameraPreset = 'q34' | 'front' | 'side' | 'back';
 type ToolMode = SplineToolMode;
 
@@ -200,6 +247,20 @@ export interface ViewportSceneConfig {
   texelDensity?: number;
 }
 
+export type ViewportStageKey =
+  | 'stage1'
+  | 'stage2'
+  | 'stage3'
+  | 'stage4'
+  | 'stage7'
+  | 'stage8'
+  | 'stage9'
+  | 'stage10'
+  | 'stage11'
+  | 'stage12'
+  | 'stage13'
+  | 'stage14';
+
 interface Viewport3DProps {
   config: ViewportSceneConfig;
   onConfigChange: (patch: Partial<ViewportSceneConfig>) => void;
@@ -210,7 +271,8 @@ interface Viewport3DProps {
   onConsumedPendingImport?: () => void;
   exportZipNonce?: number;
   onExportStateChange?: (exporting: boolean) => void;
-  onOpenTab?: (tab: 'viewport' | 'atlas' | 'ecosystem') => void;
+  onOpenTab?: (tab: 'viewport' | 'atlas' | 'ecosystem' | ViewportStageKey) => void;
+  focusedStage?: ViewportStageKey | null;
 }
 
 const CAMERA_PRESETS: Record<CameraPreset, { pos: [number, number, number]; target: [number, number, number]; label: string }> = {
@@ -223,191 +285,6 @@ const CAMERA_PRESETS: Record<CameraPreset, { pos: [number, number, number]; targ
 const _camTargetPos = new THREE.Vector3();
 const _camTargetLook = new THREE.Vector3();
 
-function createUvCheckerTexture(maxAniso: number): THREE.CanvasTexture {
-  const size = 512;
-  const canvas = document.createElement('canvas');
-  canvas.width = size;
-  canvas.height = size;
-  const ctx = canvas.getContext('2d');
-  if (ctx) {
-    const cells = 8;
-    const step = size / cells;
-    for (let y = 0; y < cells; y++) {
-      for (let x = 0; x < cells; x++) {
-        const even = (x + y) % 2 === 0;
-        ctx.fillStyle = even ? '#1e293b' : '#e2e8f0';
-        ctx.fillRect(x * step, y * step, step, step);
-        ctx.strokeStyle = even ? '#334155' : '#cbd5e1';
-        ctx.lineWidth = 1;
-        ctx.strokeRect(x * step, y * step, step, step);
-
-        ctx.fillStyle = even ? '#f97316' : '#0f172a';
-        ctx.font = 'bold 14px monospace';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        const label = `${String.fromCharCode(65 + x)}${y + 1}`;
-        ctx.fillText(label, x * step + step / 2, y * step + step / 2);
-      }
-    }
-  }
-  const tex = new THREE.CanvasTexture(canvas);
-  tex.colorSpace = THREE.SRGBColorSpace;
-  tex.wrapS = THREE.RepeatWrapping;
-  tex.wrapT = THREE.RepeatWrapping;
-  tex.anisotropy = maxAniso;
-  tex.needsUpdate = true;
-  return tex;
-}
-
-function createProceduralFabricNormalTexture(maxAniso: number): THREE.CanvasTexture {
-  const size = 256;
-  const canvas = document.createElement('canvas');
-  canvas.width = size;
-  canvas.height = size;
-  const ctx = canvas.getContext('2d');
-  if (ctx) {
-    const imgData = ctx.createImageData(size, size);
-    const data = imgData.data;
-    for (let y = 0; y < size; y++) {
-      for (let x = 0; x < size; x++) {
-        const idx = (y * size + x) * 4;
-        const weaveX = Math.sin(x * 0.65) * 24;
-        const weaveY = Math.cos(y * 0.65) * 24;
-        data[idx] = Math.max(0, Math.min(255, 128 + weaveX));
-        data[idx + 1] = Math.max(0, Math.min(255, 128 + weaveY));
-        data[idx + 2] = 248;
-        data[idx + 3] = 255;
-      }
-    }
-    ctx.putImageData(imgData, 0, 0);
-  }
-  const tex = new THREE.CanvasTexture(canvas);
-  tex.wrapS = THREE.RepeatWrapping;
-  tex.wrapT = THREE.RepeatWrapping;
-  tex.repeat.set(6, 6);
-  tex.anisotropy = maxAniso;
-  tex.needsUpdate = true;
-  return tex;
-}
-
-function createContactShadowTexture(): THREE.CanvasTexture {
-  const size = 256;
-  const canvas = document.createElement('canvas');
-  canvas.width = size;
-  canvas.height = size;
-  const ctx = canvas.getContext('2d');
-  if (ctx) {
-    const grad = ctx.createRadialGradient(size / 2, size / 2, 10, size / 2, size / 2, size / 2);
-    grad.addColorStop(0, 'rgba(0,0,0,0.65)');
-    grad.addColorStop(0.55, 'rgba(0,0,0,0.25)');
-    grad.addColorStop(1, 'rgba(0,0,0,0)');
-    ctx.fillStyle = grad;
-    ctx.fillRect(0, 0, size, size);
-  }
-  const tex = new THREE.CanvasTexture(canvas);
-  tex.needsUpdate = true;
-  return tex;
-}
-
-function createToonGradient(): THREE.DataTexture {
-  const colors = new Uint8Array([70, 175, 255]);
-  const grad = new THREE.DataTexture(colors, 3, 1, THREE.RedFormat);
-  grad.minFilter = THREE.NearestFilter;
-  grad.magFilter = THREE.NearestFilter;
-  grad.needsUpdate = true;
-  return grad;
-}
-
-function disposeMaterialTree(mat: THREE.Material) {
-  const mapKeys = [
-    'map',
-    'normalMap',
-    'roughnessMap',
-    'metalnessMap',
-    'aoMap',
-    'emissiveMap',
-    'alphaMap',
-    'bumpMap',
-    'displacementMap',
-  ] as const;
-  const record = mat as unknown as Record<string, unknown>;
-  for (const key of mapKeys) {
-    const tex = record[key];
-    if (tex instanceof THREE.Texture) {
-      tex.dispose();
-    }
-  }
-  mat.dispose();
-}
-
-type TextureExtractCache = WeakMap<
-  THREE.Texture,
-  Partial<Record<'rgba' | 'r' | 'g' | 'b', string | null>>
->;
-
-function extractTextureDataUrl(
-  tex: THREE.Texture | null | undefined,
-  cache: TextureExtractCache,
-  rgbChannel?: 'r' | 'g' | 'b'
-): string | null {
-  if (!tex || !tex.image) return null;
-  const cacheKey = rgbChannel ?? 'rgba';
-  let entry = cache.get(tex);
-  if (entry && cacheKey in entry) {
-    return entry[cacheKey] ?? null;
-  }
-  if (!entry) {
-    entry = {};
-    cache.set(tex, entry);
-  }
-  try {
-    const imgObj = tex.image as { width?: number; height?: number; naturalWidth?: number; naturalHeight?: number };
-    const rawW = imgObj.naturalWidth || imgObj.width || 512;
-    const rawH = imgObj.naturalHeight || imgObj.height || 512;
-    const targetMax = Math.min(1024, Math.max(256, rawW, rawH));
-    const scale = Math.min(1, targetMax / Math.max(rawW, rawH, 1));
-    const w = Math.max(128, Math.round(rawW * scale));
-    const h = Math.max(128, Math.round(rawH * scale));
-    const canvas = document.createElement('canvas');
-    canvas.width = w;
-    canvas.height = h;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) {
-      entry[cacheKey] = null;
-      return null;
-    }
-    ctx.save();
-    // Align glTF flipY=false textures with Blender/UV bottom-left (1 - v) convention
-    if (!tex.flipY) {
-      ctx.translate(0, h);
-      ctx.scale(1, -1);
-    }
-    ctx.drawImage(tex.image as CanvasImageSource, 0, 0, w, h);
-    ctx.restore();
-
-    if (rgbChannel) {
-      const offset = rgbChannel === 'r' ? 0 : rgbChannel === 'g' ? 1 : 2;
-      const imgData = ctx.getImageData(0, 0, w, h);
-      const d = imgData.data;
-      for (let i = 0; i < d.length; i += 4) {
-        const val = d[i + offset];
-        d[i] = val;
-        d[i + 1] = val;
-        d[i + 2] = val;
-        d[i + 3] = 255;
-      }
-      ctx.putImageData(imgData, 0, 0);
-    }
-
-    const url = canvas.toDataURL('image/png');
-    entry[cacheKey] = url;
-    return url;
-  } catch {
-    entry[cacheKey] = null;
-    return null;
-  }
-}
-
 export const Viewport3D: React.FC<Viewport3DProps> = ({
   config,
   onConfigChange,
@@ -419,6 +296,7 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
   exportZipNonce,
   onExportStateChange,
   onOpenTab,
+  focusedStage = null,
 }) => {
   const onImportedUvsRef = useRef(onImportedUvs);
   onImportedUvsRef.current = onImportedUvs;
@@ -455,7 +333,9 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
     stage6: boolean;
     stage7: boolean;
     stage8: boolean;
+    stage9: boolean;
     stage10: boolean;
+    stage11: boolean;
     stage12: boolean;
     stage13: boolean;
     stage14: boolean;
@@ -468,12 +348,26 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
     stage6: false,
     stage7: false,
     stage8: false,
+    stage9: false,
     stage10: false,
+    stage11: false,
     stage12: false,
     stage13: false,
     stage14: false,
   });
   const toggleSection = (key: keyof typeof openSections) => {
+    if (!focusedStage && onOpenTab) {
+      if (key === 'stage5') {
+        onOpenTab('atlas');
+        return;
+      }
+      if (key === 'stage6') {
+        onOpenTab('ecosystem');
+        return;
+      }
+      onOpenTab(key);
+      return;
+    }
     setOpenSections((prev) => ({ ...prev, [key]: !prev[key] }));
   };
   const [contextLost, setContextLost] = useState(false);
@@ -544,7 +438,6 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
   const [codeExportModalOpen, setCodeExportModalOpen] = useState(false);
   const [exportedThreeCode, setExportedThreeCode] = useState('');
   const [exportedReactCode, setExportedReactCode] = useState('');
-  const [exportedBlenderCode, setExportedBlenderCode] = useState('');
 
   // Etapa 3: Escultura / Detalhamento
   const [sculptRadius, setSculptRadius] = useState(0.18);
@@ -661,6 +554,42 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
   stateRef.current.cameraLensMm = cameraLensMm;
   stateRef.current.rotationMode = rotationMode;
 
+  const [turntableEnabled, setTurntableEnabled] = useState(false);
+  const turntableRef = useRef(false);
+  turntableRef.current = turntableEnabled;
+  const dropToFloorRef = useRef<(() => void) | null>(null);
+  const bakeAoCurvatureRef = useRef<(() => void) | null>(null);
+  const undoSceneRef = useRef<(() => void) | null>(null);
+  const redoSceneRef = useRef<(() => void) | null>(null);
+  const [mographConfig, setMographConfig] = useState<MoGraphConfig>(DEFAULT_MOGRAPH_CONFIG);
+  const mographConfigRef = useRef<MoGraphConfig>(DEFAULT_MOGRAPH_CONFIG);
+  mographConfigRef.current = mographConfig;
+  const applyMoGraphRef = useRef<(() => void) | null>(null);
+  const clearMoGraphRef = useRef<(() => void) | null>(null);
+  const [morphTargets, setMorphTargets] = useState<{ name: string; value: number }[]>([]);
+  const setMorphTargetWeightRef = useRef<((name: string, value: number) => void) | null>(null);
+  const [animPrinciples, setAnimPrinciples] = useState<AnimationPrinciplesConfig>(
+    DEFAULT_ANIMATION_PRINCIPLES
+  );
+  const animPrinciplesRef = useRef<AnimationPrinciplesConfig>(DEFAULT_ANIMATION_PRINCIPLES);
+  animPrinciplesRef.current = animPrinciples;
+  const runMeshModelingOpRef = useRef<((op: MeshModelingOp) => void) | null>(null);
+  // Etapa 9: Simulação & FX (Vento + Partículas 3D)
+  const [windEnabled, setWindEnabled] = useState(false);
+  const [windStrength, setWindStrength] = useState(0.35);
+  const [particlesEnabled, setParticlesEnabled] = useState(false);
+  const windEnabledRef = useRef(false);
+  windEnabledRef.current = windEnabled;
+  const windStrengthRef = useRef(0.35);
+  windStrengthRef.current = windStrength;
+  const particlesEnabledRef = useRef(false);
+  particlesEnabledRef.current = particlesEnabled;
+  // Etapa 11: Composição & Pós-FX (Color Grading ao vivo)
+  const [gradeContrast, setGradeContrast] = useState(1.0);
+  const [gradeSaturation, setGradeSaturation] = useState(1.0);
+  const [gradeBrightness, setGradeBrightness] = useState(1.0);
+  const [gradeHueDeg, setGradeHueDeg] = useState(0);
+
   const requestRenderRef = useRef<(() => void) | null>(null);
   const applyMaterialsRef = useRef<(() => void) | null>(null);
   const applyFramePoseRef = useRef<((frame: number) => void) | null>(null);
@@ -675,34 +604,6 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
   const clearPaintTexturesRef = useRef<(() => void) | null>(null);
   const undoPaintRef = useRef<(() => void) | null>(null);
   const undoSculptRef = useRef<(() => void) | null>(null);
-
-  useEffect(() => {
-    const handleUndoKeyDown = (e: KeyboardEvent) => {
-      const target = e.target as HTMLElement | null;
-      if (
-        target &&
-        (target.tagName === 'INPUT' ||
-          target.tagName === 'TEXTAREA' ||
-          target.tagName === 'SELECT' ||
-          target.isContentEditable)
-      ) {
-        return;
-      }
-
-      if ((e.ctrlKey || e.metaKey) && !e.shiftKey && !e.altKey && e.key.toLowerCase() === 'z') {
-        if (canUndoSculpt && undoSculptRef.current) {
-          e.preventDefault();
-          undoSculptRef.current();
-        } else if (canUndoPaint && undoPaintRef.current) {
-          e.preventDefault();
-          undoPaintRef.current();
-        }
-      }
-    };
-
-    window.addEventListener('keydown', handleUndoKeyDown);
-    return () => window.removeEventListener('keydown', handleUndoKeyDown);
-  }, [canUndoPaint, canUndoSculpt]);
   const generateRigAndAnimRef = useRef<(() => void) | null>(null);
   const generateAutoUvRef = useRef<(() => void) | null>(null);
   const exportZipRef = useRef<(() => void) | null>(null);
@@ -746,6 +647,8 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
   const deleteSelectedRef = useRef<(() => void) | null>(null);
   const deleteMeshByIdRef = useRef<((id: string | null) => void) | null>(null);
   const saveProjectRef = useRef<((silent?: boolean) => Promise<void>) | null>(null);
+  const exportGlbBlobRef = useRef<(() => Promise<Blob | null>) | null>(null);
+  const [driveModalOpen, setDriveModalOpen] = useState(false);
   const scheduleAutoSaveRef = useRef<(() => void) | null>(null);
   const selectObjectByIdRef = useRef<((id: string | null) => void) | null>(null);
   const selectUploadedRootRef = useRef<(() => void) | null>(null);
@@ -907,8 +810,49 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
     const transformControls = new TransformControls(camera, activeRenderer.domElement);
     const transformHelper = transformControls.getHelper();
     scene.add(transformHelper);
+    const historyManager = new SceneHistoryManager(40);
+    const mographGroup = new THREE.Group();
+    mographGroup.name = 'MoGraph_Cloner';
+    scene.add(mographGroup);
+    let mographEntries: MoGraphCloneEntry[] = [];
+
+    // Etapa 9: Campo de partículas atmosféricas 3D (GPU Points)
+    const particleCount = 240;
+    const particlePositions = new Float32Array(particleCount * 3);
+    for (let i = 0; i < particleCount; i++) {
+      particlePositions[i * 3] = (Math.random() - 0.5) * 6.5;
+      particlePositions[i * 3 + 1] = Math.random() * 3.8 + 0.1;
+      particlePositions[i * 3 + 2] = (Math.random() - 0.5) * 6.5;
+    }
+    const particleGeo = new THREE.BufferGeometry();
+    particleGeo.setAttribute('position', new THREE.BufferAttribute(particlePositions, 3));
+    const particleMat = new THREE.PointsMaterial({
+      color: 0xfdba74,
+      size: 0.032,
+      transparent: true,
+      opacity: 0.72,
+      depthWrite: false,
+    });
+    const fxParticles = new THREE.Points(particleGeo, particleMat);
+    fxParticles.name = 'FX_Particles';
+    fxParticles.visible = false;
+    scene.add(fxParticles);
+    let dragBeforeSnapshot: ObjectTransformSnapshot | null = null;
     transformControls.addEventListener('dragging-changed', (ev) => {
-      controls.enabled = !Boolean((ev as { value?: unknown }).value);
+      const isDraggingNow = Boolean((ev as { value?: unknown }).value);
+      controls.enabled = !isDraggingNow;
+      if (isDraggingNow && transformControls.object) {
+        dragBeforeSnapshot = captureObjectSnapshot(transformControls.object);
+      } else if (!isDraggingNow && transformControls.object && dragBeforeSnapshot) {
+        const afterSnap = captureObjectSnapshot(transformControls.object);
+        historyManager.push({
+          label: `Transformar ${transformControls.object.name || 'Objeto'}`,
+          before: [dragBeforeSnapshot],
+          after: [afterSnap],
+        });
+        dragBeforeSnapshot = null;
+        scheduleAutoSaveRef.current?.();
+      }
       requestRenderRef.current?.();
     });
 
@@ -1530,6 +1474,14 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
     rebuildRefSkeleton(stateRef.current.rigPreset);
 
     const normalMat = new THREE.MeshNormalMaterial();
+    const matcapClayTex = createMatcapTexture('clay');
+    const matcapChromeTex = createMatcapTexture('chrome');
+    const matcapRedwaxTex = createMatcapTexture('redwax');
+    const matcapClayMat = new THREE.MeshMatcapMaterial({ matcap: matcapClayTex });
+    const matcapChromeMat = new THREE.MeshMatcapMaterial({ matcap: matcapChromeTex });
+    const matcapRedwaxMat = new THREE.MeshMatcapMaterial({ matcap: matcapRedwaxTex });
+    const isSharedOverrideMat = (m: THREE.Material | THREE.Material[]) =>
+      m === normalMat || m === matcapClayMat || m === matcapChromeMat || m === matcapRedwaxMat;
     const uvCheckerFallbackMat = new THREE.MeshStandardMaterial({
       map: checkerTex,
       roughness: 0.65,
@@ -1720,8 +1672,23 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
       grid.visible = stateRef.current.showGrid;
       normalMat.side = sideMode;
       normalMat.wireframe = wireMode;
+      matcapClayMat.side = sideMode;
+      matcapClayMat.wireframe = wireMode;
+      matcapChromeMat.side = sideMode;
+      matcapChromeMat.wireframe = wireMode;
+      matcapRedwaxMat.side = sideMode;
+      matcapRedwaxMat.wireframe = wireMode;
       uvCheckerFallbackMat.side = sideMode;
       uvCheckerFallbackMat.wireframe = wireMode;
+
+      const activeMatcapMat =
+        mode === 'matcap_clay'
+          ? matcapClayMat
+          : mode === 'matcap_chrome'
+          ? matcapChromeMat
+          : mode === 'matcap_redwax'
+          ? matcapRedwaxMat
+          : null;
 
       if (!uploadedGroup && !stateRef.current.hideDefaultBase) {
         characterRoot.visible = !isQuad;
@@ -1742,10 +1709,14 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
           p.mesh.material = normalMat;
           continue;
         }
+        if (activeMatcapMat) {
+          p.mesh.material = activeMatcapMat;
+          continue;
+        }
 
         if (mode === 'cel_borde') {
           if (!(p.mesh.material instanceof THREE.MeshToonMaterial)) {
-            if (p.mesh.material !== normalMat && !Array.isArray(p.mesh.material)) {
+            if (!isSharedOverrideMat(p.mesh.material) && !Array.isArray(p.mesh.material)) {
               p.mesh.material.dispose();
             }
             p.mesh.material = new THREE.MeshToonMaterial({
@@ -1766,7 +1737,7 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
         }
 
         if (!(p.mesh.material instanceof THREE.MeshPhysicalMaterial)) {
-          if (p.mesh.material !== normalMat && !Array.isArray(p.mesh.material)) {
+          if (!isSharedOverrideMat(p.mesh.material) && !Array.isArray(p.mesh.material)) {
             p.mesh.material.dispose();
           }
           p.mesh.material = new THREE.MeshPhysicalMaterial({
@@ -1820,6 +1791,8 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
 
         if (mode === 'normals') {
           rec.mesh.material = normalMat;
+        } else if (activeMatcapMat) {
+          rec.mesh.material = activeMatcapMat;
         } else if (mode === 'uv_checker') {
           rec.mesh.material = uvCheckerFallbackMat;
         } else if (mode === 'cel_borde') {
@@ -2891,23 +2864,6 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
       });
       setExportedThreeCode(generateThreeJsSceneCode(specs, loadedAssetNameRef.current, '#0D1017'));
       setExportedReactCode(generateReactThreeFiberCode(specs, '#0D1017'));
-      let currentTris = 0;
-      const triTarget =
-        uploadedGroup ||
-        (stateRef.current.hideDefaultBase && studioObjectsGroup.children.length > 0
-          ? studioObjectsGroup
-          : stateRef.current.rigPreset === 'QUADRUPEDE'
-          ? quadrupedRoot
-          : characterRoot);
-      triTarget.traverse((o) => {
-        if ((o as THREE.Mesh).isMesh) {
-          const g = (o as THREE.Mesh).geometry;
-          currentTris += g?.index
-            ? Math.round(g.index.count / 3)
-            : Math.round((g?.attributes?.position?.count || 0) / 3);
-        }
-      });
-      setExportedBlenderCode('');
       setCodeExportModalOpen(true);
     };
 
@@ -3029,6 +2985,22 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
         }
       });
       staleHelpers.forEach((h) => h.parent?.remove(h));
+
+      const foundMorphMap = new Map<string, number>();
+      for (const mesh of collectedMeshes) {
+        if (mesh.morphTargetDictionary && mesh.morphTargetInfluences) {
+          for (const [mName, mIdx] of Object.entries(mesh.morphTargetDictionary)) {
+            if (!foundMorphMap.has(mName)) {
+              foundMorphMap.set(mName, mesh.morphTargetInfluences[mIdx] ?? 0);
+            }
+          }
+        }
+      }
+      setMorphTargets(
+        Array.from(foundMorphMap.entries())
+          .slice(0, 24)
+          .map(([name, value]) => ({ name, value }))
+      );
 
       for (const mesh of collectedMeshes) {
         meshCount += 1;
@@ -4865,6 +4837,9 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
         uv_checker: 'UV Checker',
         normals: 'Normais',
         cel_borde: 'Cel + Borde',
+        matcap_clay: 'Matcap Argila',
+        matcap_chrome: 'Matcap Cromo',
+        matcap_redwax: 'Matcap RedWax',
       };
 
       try {
@@ -4882,16 +4857,6 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
 
         const assetName =
           loadedAssetNameRef.current || `AlexDesign_${RIG_PRESET_DEFINITIONS[stateRef.current.rigPreset].shortLabel}`;
-        let totalZipTris = 0;
-        target.traverse((o) => {
-          if ((o as THREE.Mesh).isMesh) {
-            const g = (o as THREE.Mesh).geometry;
-            totalZipTris += g?.index
-              ? Math.round(g.index.count / 3)
-              : Math.round((g?.attributes?.position?.count || 0) / 3);
-          }
-        });
-        const blenderPipelinePy = null;
         const zipName = await exportCompleteProjectZip({
           targetRoot: target,
           clips: uploadedGroup ? uploadedClips : [],
@@ -4903,7 +4868,6 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
           resolution: stateRef.current.textureResolution,
           userLights: userLightsGroup,
           studioRenderBlob,
-          blenderPipelinePy,
         });
         restoreMode();
         setIsExporting(false);
@@ -4981,6 +4945,14 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
     };
 
     let elapsedPlaySec = 0;
+    const principlesRuntime = createPrinciplesRuntimeState();
+    const motionTrailLine = createMotionTrailLine();
+    scene.add(motionTrailLine);
+
+    runMeshModelingOpRef.current = (op: MeshModelingOp) => {
+      const targetObj = transformControls.object ?? uploadedGroup ?? refSkeletonGroup;
+      applyMeshModelingOp(targetObj, op, 0.35);
+    };
 
     function tick() {
       if (disposed) return;
@@ -4989,6 +4961,48 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
         const isVisible = syncViewportSize();
 
         if (isVisible) {
+          const nowSec = performance.now() * 0.001;
+          if (mographConfigRef.current.active && mographEntries.length > 0) {
+            updateMoGraphEffectorFrame(mographEntries, mographConfigRef.current, nowSec);
+          }
+          // 12 Princípios da Animação 3D + Ciclos (Caminhar, Correr, Pular, Soco, Acenar)
+          const animTarget = uploadedGroup ?? refSkeletonGroup;
+          applyAnimationPrinciplesFrame(
+            animTarget,
+            animPrinciplesRef.current,
+            principlesRuntime,
+            motionTrailLine,
+            delta
+          );
+          if (animPrinciplesRef.current.stagingMode === 'silhouette') {
+            activeRenderer.domElement.style.filter = 'brightness(0.08) contrast(4.5) grayscale(1)';
+          } else if (animPrinciplesRef.current.stagingMode === 'rim_focus') {
+            activeRenderer.domElement.style.filter = 'contrast(1.35) saturate(1.15) brightness(0.92)';
+          } else {
+            activeRenderer.domElement.style.filter = '';
+          }
+          fxParticles.visible = particlesEnabledRef.current;
+          if (particlesEnabledRef.current) {
+            const pAttr = particleGeo.attributes.position as THREE.BufferAttribute;
+            const wForce = windEnabledRef.current ? windStrengthRef.current * 0.9 : 0.12;
+            for (let i = 0; i < particleCount; i++) {
+              let px = pAttr.getX(i) + delta * wForce;
+              let py = pAttr.getY(i) + delta * 0.18 * Math.sin(nowSec + i);
+              if (px > 3.25) px = -3.25;
+              if (py > 4.0) py = 0.15;
+              if (py < 0.08) py = 3.8;
+              pAttr.setXYZ(i, px, py, pAttr.getZ(i));
+            }
+            pAttr.needsUpdate = true;
+          }
+          if (windEnabledRef.current && uploadedGroup) {
+            uploadedGroup.rotation.z = Math.sin(nowSec * 2.4) * 0.04 * windStrengthRef.current;
+          }
+          controls.autoRotate = turntableRef.current;
+          controls.autoRotateSpeed = 2.4;
+          if (turntableRef.current) {
+            controls.update();
+          }
           if (stateRef.current.camTransitioning) {
             const preset = CAMERA_PRESETS[stateRef.current.camTarget];
             _camTargetPos.set(...preset.pos);
@@ -5113,6 +5127,14 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
 
     requestRenderRef.current = () => {
       if (!disposed) {
+        if (mographConfigRef.current.active && mographEntries.length > 0) {
+          updateMoGraphEffectorFrame(mographEntries, mographConfigRef.current, performance.now() * 0.001);
+        }
+        controls.autoRotate = turntableRef.current;
+        controls.autoRotateSpeed = 2.4;
+        if (turntableRef.current) {
+          controls.update();
+        }
         syncViewportSize();
         if (stateRef.current.bloomEnabled && composer) {
           composer.render();
@@ -5120,6 +5142,127 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
           activeRenderer.render(scene, camera);
         }
       }
+    };
+
+    dropToFloorRef.current = () => {
+      const target = selectedSceneObject || uploadedGroup || studioPrimitives[0]?.mesh;
+      if (!target) return;
+      const beforeSnap = captureObjectSnapshot(target);
+      target.updateWorldMatrix(true, true);
+      const box = new THREE.Box3().setFromObject(target);
+      if (!box.isEmpty()) {
+        target.position.y -= box.min.y;
+        target.updateMatrixWorld(true);
+        const afterSnap = captureObjectSnapshot(target);
+        historyManager.push({
+          label: `Apoiar ${target.name || 'Modelo'} no chão`,
+          before: [beforeSnap],
+          after: [afterSnap],
+        });
+        syncSelectedInspector();
+        scheduleAutoSaveRef.current?.();
+        showBriefStatus(`"${target.name || 'Modelo'}" apoiado no chão (Y = 0)`);
+      }
+    };
+
+    bakeAoCurvatureRef.current = () => {
+      const target = uploadedGroup || (studioObjectsGroup.children.length > 0 ? studioObjectsGroup : null);
+      if (!target) {
+        showBriefStatus('Carregue ou crie um modelo 3D para gerar Bake AO & Curvatura.');
+        return;
+      }
+      if (stateRef.current.shadingMode !== 'pbr') {
+        setShadingMode('pbr');
+        stateRef.current.shadingMode = 'pbr';
+        applyMaterialSettings();
+      }
+      const res = bakeAoAndCurvatureForGroup(target, {
+        textureSize: 512,
+        cavityDarkness: 0.58,
+        edgeWearIntensity: 0.48,
+        applyWearToAlbedo: true,
+      });
+      requestRenderRef.current?.();
+      scheduleAutoSaveRef.current?.();
+      showBriefStatus(
+        `Bake AO & Curvatura aplicado em ${res.meshesBaked} malha(s) (${res.verticesProcessed.toLocaleString('pt-BR')} vértices)`
+      );
+    };
+
+    undoSceneRef.current = () => {
+      const label = historyManager.undo(scene);
+      if (label) {
+        syncSelectedInspector();
+        requestRenderRef.current?.();
+        scheduleAutoSaveRef.current?.();
+        showBriefStatus(`Desfeito: ${label}`);
+      } else {
+        showBriefStatus('Nada para desfazer no histórico');
+      }
+    };
+
+    redoSceneRef.current = () => {
+      const label = historyManager.redo(scene);
+      if (label) {
+        syncSelectedInspector();
+        requestRenderRef.current?.();
+        scheduleAutoSaveRef.current?.();
+        showBriefStatus(`Refeito: ${label}`);
+      } else {
+        showBriefStatus('Nada para refazer no histórico');
+      }
+    };
+
+    applyMoGraphRef.current = () => {
+      let sourceMesh: THREE.Mesh | null = null;
+      if (selectedSceneObject && (selectedSceneObject as THREE.Mesh).isMesh) {
+        sourceMesh = selectedSceneObject as THREE.Mesh;
+      } else if (uploadedRecords.length > 0) {
+        sourceMesh = uploadedRecords[0].mesh;
+      } else if (studioPrimitives.length > 0) {
+        sourceMesh = studioPrimitives[0].mesh;
+      }
+      const nextCfg: MoGraphConfig = { ...mographConfigRef.current, active: true };
+      mographConfigRef.current = nextCfg;
+      setMographConfig(nextCfg);
+      mographEntries = buildMoGraphClones(mographGroup, sourceMesh, nextCfg);
+      requestRenderRef.current?.();
+      showBriefStatus(
+        `MoGraph Cloner ativo (${mographEntries.length} clones · Efetor: ${nextCfg.effector})`
+      );
+    };
+
+    clearMoGraphRef.current = () => {
+      while (mographGroup.children.length > 0) {
+        mographGroup.remove(mographGroup.children[0]);
+      }
+      mographEntries = [];
+      const nextCfg: MoGraphConfig = { ...mographConfigRef.current, active: false };
+      mographConfigRef.current = nextCfg;
+      setMographConfig(nextCfg);
+      requestRenderRef.current?.();
+      showBriefStatus('MoGraph Cloner removido');
+    };
+
+    setMorphTargetWeightRef.current = (morphName: string, weight: number) => {
+      const clamped = THREE.MathUtils.clamp(weight, 0, 1);
+      if (uploadedGroup) {
+        uploadedGroup.traverse((o) => {
+          if ((o as THREE.Mesh).isMesh) {
+            const m = o as THREE.Mesh;
+            if (m.morphTargetDictionary && m.morphTargetInfluences) {
+              const idx = m.morphTargetDictionary[morphName];
+              if (idx !== undefined) {
+                m.morphTargetInfluences[idx] = clamped;
+              }
+            }
+          }
+        });
+      }
+      setMorphTargets((prev) =>
+        prev.map((item) => (item.name === morphName ? { ...item, value: clamped } : item))
+      );
+      requestRenderRef.current?.();
     };
 
     const handleResize = () => {
@@ -5214,6 +5357,33 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
       } finally {
         if (!silent) setIsSavingProject(false);
       }
+    };
+
+    exportGlbBlobRef.current = async () => {
+      if (disposed) return null;
+      const exportTargets: THREE.Object3D[] = [];
+      if (uploadedGroup) exportTargets.push(uploadedGroup);
+      if (studioObjectsGroup.children.length > 0) exportTargets.push(studioObjectsGroup);
+      const exportInput =
+        exportTargets.length === 1
+          ? exportTargets[0]
+          : exportTargets.length > 1
+          ? exportTargets
+          : new THREE.Group();
+      const exporter = new GLTFExporter();
+      const buf = await new Promise<ArrayBuffer>((resolve, reject) => {
+        exporter.parse(
+          exportInput,
+          (res) => resolve(res as ArrayBuffer),
+          (err) => reject(err),
+          {
+            binary: true,
+            onlyVisible: true,
+            animations: uploadedGroup ? uploadedClips : [],
+          }
+        );
+      });
+      return new Blob([buf], { type: 'model/gltf-binary' });
     };
 
     scheduleAutoSaveRef.current = () => {
@@ -5459,6 +5629,12 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
   }, [toolMode, playMode, physicsActive, bloomEnabled, bloomStrength, hideDefaultBase]);
 
   useEffect(() => {
+    if (focusedStage) {
+      setDockExpanded(true);
+    }
+  }, [focusedStage]);
+
+  useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
       const tag = (e.target as HTMLElement | null)?.tagName;
       if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || verificationReport) return;
@@ -5494,12 +5670,20 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
       } else if ((e.ctrlKey || e.metaKey) && e.code === 'KeyD') {
         e.preventDefault();
         duplicateSelectedRef.current?.();
+      } else if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.code === 'KeyZ') {
+        e.preventDefault();
+        redoSceneRef.current?.();
+      } else if ((e.ctrlKey || e.metaKey) && e.code === 'KeyY') {
+        e.preventDefault();
+        redoSceneRef.current?.();
       } else if ((e.ctrlKey || e.metaKey) && e.code === 'KeyZ') {
         e.preventDefault();
         if (stateRef.current.toolMode.startsWith('sculpt_')) {
           undoSculptRef.current?.();
-        } else {
+        } else if (stateRef.current.toolMode === 'paint') {
           undoPaintRef.current?.();
+        } else {
+          undoSceneRef.current?.();
         }
       } else if (e.code === 'Escape') {
         if (window.innerWidth < 768) {
@@ -5650,8 +5834,56 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
         />
       )}
 
-      {/* Collapsible Left Studio Sidebar — Pipeline Completo (Etapas 1–8, 10, 12, 13) */}
-      {dockExpanded && (
+      {/* Slim Icon-Only Vertical Shortcut Rail on Viewport 3D Overview */}
+      {!focusedStage && (
+        <aside
+          aria-label="Atalhos das Etapas do Pipeline"
+          className="w-[58px] shrink-0 h-full border-r border-slate-800/90 bg-[#0D1119] flex flex-col items-center py-2.5 gap-2 overflow-y-auto z-10"
+        >
+          <button
+            type="button"
+            disabled={isSavingProject || isLoadingModel}
+            onClick={() => void saveProjectRef.current?.(false)}
+            title="Salvar projeto (Ctrl+S)"
+            className="w-10 h-10 shrink-0 rounded-xl bg-emerald-600/15 border border-emerald-500/40 hover:bg-emerald-600 text-emerald-300 hover:text-white flex items-center justify-center transition-colors cursor-pointer disabled:opacity-50"
+          >
+            <Save className="w-4 h-4" />
+          </button>
+          <div className="w-7 h-px bg-slate-800/90 shrink-0" />
+          {(
+            [
+              { key: 'stage1', title: '1. Importar GLB / glTF', icon: <Upload className="w-4 h-4 text-orange-400" /> },
+              { key: 'stage2', title: '2. Modelagem 3D (ZBrush)', icon: <Box className="w-4 h-4 text-rose-400" /> },
+              { key: 'stage3', title: '3. Escultura / Detalhamento', icon: <Hammer className="w-4 h-4 text-amber-400" /> },
+              { key: 'stage4', title: '4. Retopologia', icon: <Layers className="w-4 h-4 text-cyan-400" /> },
+              { key: 'stage5', title: '5. UV Unwrapping (Atlas)', icon: <Scissors className="w-4 h-4 text-violet-400" /> },
+              { key: 'stage6', title: '6. Material & Texturing', icon: <Palette className="w-4 h-4 text-orange-400" /> },
+              { key: 'stage7', title: '7. Rigging & Esqueleto', icon: <Bone className="w-4 h-4 text-amber-400" /> },
+              { key: 'stage8', title: '8. Animação & 12 Princípios', icon: <Video className="w-4 h-4 text-emerald-400" /> },
+              { key: 'stage9', title: '9. Simulação & FX', icon: <Wind className="w-4 h-4 text-sky-400" /> },
+              { key: 'stage10', title: '10. Iluminação & Render', icon: <Sun className="w-4 h-4 text-yellow-400" /> },
+              { key: 'stage11', title: '11. Composição & Pós-FX', icon: <Sparkles className="w-4 h-4 text-fuchsia-400" /> },
+              { key: 'stage12', title: '12. Câmera & Enquadramento', icon: <Camera className="w-4 h-4 text-indigo-400" /> },
+              { key: 'stage13', title: '13. Exportar & Publicar', icon: <Download className="w-4 h-4 text-emerald-400" /> },
+              { key: 'stage14', title: '14. MoGraph & Procedural', icon: <Sliders className="w-4 h-4 text-cyan-400" /> },
+            ] as const
+          ).map((item) => (
+            <button
+              key={item.key}
+              type="button"
+              onClick={() => toggleSection(item.key)}
+              title={item.title}
+              aria-label={item.title}
+              className="w-10 h-10 shrink-0 rounded-xl bg-[#131722] border border-slate-800/90 hover:border-slate-500 hover:bg-[#1A2030] flex items-center justify-center transition-colors cursor-pointer"
+            >
+              {item.icon}
+            </button>
+          ))}
+        </aside>
+      )}
+
+      {/* Full Left Studio Sidebar — Shown only when a specific stage page is open */}
+      {focusedStage && dockExpanded && (
         <aside
           aria-label="Comandos do Estúdio"
           className="max-md:absolute max-md:inset-y-0 max-md:left-0 max-md:z-30 max-md:shadow-2xl md:relative w-[min(86vw,312px)] md:w-[292px] lg:w-[308px] shrink-0 h-full border-r border-slate-800/90 bg-[#10141D] flex flex-col md:z-10"
@@ -5659,12 +5891,12 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
           <div className="p-2.5 border-b border-slate-800/80 shrink-0 flex items-center gap-1.5">
             <button
               type="button"
-              onClick={() => setDockExpanded(false)}
+              onClick={() => onOpenTab?.('viewport')}
               className="flex-1 min-w-0 min-h-[40px] inline-flex items-center justify-between gap-2 px-3 py-1.5 rounded-lg bg-[#141923] border border-slate-700/80 hover:border-slate-500 text-xs font-medium text-slate-200 hover:text-white transition-colors cursor-pointer"
             >
               <span className="inline-flex items-center gap-2 truncate">
                 <ChevronLeft className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                <span className="truncate">Ocultar</span>
+                <span className="truncate">Viewport 3D</span>
               </span>
               <X className="w-3.5 h-3.5 text-slate-400 md:hidden shrink-0" />
             </button>
@@ -5686,7 +5918,9 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
               title="1. IMPORTAR GLB / glTF"
               description="Importar modelo .glb, .gltf ou .zip para editar livremente em todo o pipeline."
               icon={<Upload className="w-4 h-4 text-orange-400" />}
-              expanded={openSections.stage1}
+              expanded={focusedStage === 'stage1' || openSections.stage1}
+              hidden={Boolean(focusedStage && focusedStage !== 'stage1')}
+              standalone={focusedStage === 'stage1'}
               onToggle={() => toggleSection('stage1')}
               badgeText={loadedAsset ? `${loadedAsset.meshCount} malha(s)` : undefined}
             >
@@ -5711,6 +5945,15 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
                   <span>Helmet Exemplo</span>
                 </button>
               </div>
+              <button
+                type="button"
+                disabled={isLoadingModel}
+                onClick={() => setDriveModalOpen(true)}
+                className="w-full inline-flex items-center justify-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-sky-600/15 border border-sky-500/40 hover:bg-sky-600 hover:text-white text-sky-200 font-semibold transition-colors cursor-pointer"
+              >
+                <Cloud className="w-3.5 h-3.5 shrink-0" />
+                <span>Abrir / Salvar no Google Drive</span>
+              </button>
 
               {loadError && (
                 <div className="rounded-md bg-red-950/90 border border-red-700/70 px-2 py-1.5 text-[11px] text-red-200 leading-snug">
@@ -5763,15 +6006,230 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
 
             </PipelineStageCard>
 
-            {/* 2. CENA E MODELAGEM */}
+            {/* 2. MODELAGEM 3D (ESTILO ZBRUSH) */}
             <PipelineStageCard
-              title="2. CENA E MODELAGEM"
-              description="Criar a estrutura base do cenário e modelar as formas principais."
-              icon={<Box className="w-4 h-4 text-sky-400" />}
-              expanded={openSections.stage2}
+              title="2. MODELAGEM 3D (ZBRUSH)"
+              description="Escultura digital estilo ZBrush: pincéis orgânicos, RedWax Matcap, simetria X, Divide e deformadores."
+              icon={<Box className="w-4 h-4 text-rose-400" />}
+              expanded={focusedStage === 'stage2' || openSections.stage2}
+              hidden={Boolean(focusedStage && focusedStage !== 'stage2')}
+              standalone={focusedStage === 'stage2'}
               onToggle={() => toggleSection('stage2')}
               badgeText={sceneMetrics.meshes > 0 ? `${sceneMetrics.meshes} malha(s)` : undefined}
             >
+              {/* Painel ZBrush: Pincéis, Matcap RedWax, Draw Size, Z Intensity & Deformation */}
+              <div className="rounded-lg bg-[#140D10] border border-rose-500/35 p-2.5 flex flex-col gap-2 text-[10px]">
+                <div className="flex items-center justify-between gap-1">
+                  <span className="font-semibold text-rose-300 tracking-wide">
+                    ZBrush Sculpt &amp; Deformation
+                  </span>
+                  <div className="flex items-center gap-1">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setShadingMode((m) => (m === 'matcap_redwax' ? 'pbr' : 'matcap_redwax'))
+                      }
+                      className={`px-1.5 py-0.5 rounded border font-semibold cursor-pointer ${
+                        shadingMode === 'matcap_redwax'
+                          ? 'bg-rose-600 border-rose-400 text-white'
+                          : 'bg-[#1C1216] border-rose-900/60 text-rose-200 hover:border-rose-500'
+                      }`}
+                      title="Ativar Matcap RedWax clássico do ZBrush"
+                    >
+                      RedWax
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setShadingMode((m) => (m === 'matcap_clay' ? 'pbr' : 'matcap_clay'))
+                      }
+                      className={`px-1.5 py-0.5 rounded border font-semibold cursor-pointer ${
+                        shadingMode === 'matcap_clay'
+                          ? 'bg-amber-600 border-amber-400 text-white'
+                          : 'bg-[#1C1216] border-slate-700 text-slate-300 hover:border-amber-500'
+                      }`}
+                      title="Ativar Matcap Argila"
+                    >
+                      Argila
+                    </button>
+                  </div>
+                </div>
+
+                {/* Pincéis ZBrush */}
+                <div className="grid grid-cols-4 gap-1">
+                  <button
+                    type="button"
+                    onClick={() => setToolMode('sculpt_push')}
+                    className={`px-1.5 py-1.5 rounded border font-medium cursor-pointer ${
+                      toolMode === 'sculpt_push'
+                        ? 'bg-rose-600 border-rose-400 text-white'
+                        : 'bg-[#1A1215] border-slate-800 text-slate-200 hover:border-rose-500'
+                    }`}
+                    title="Pincel Standard / ClayBuildup (+ Relevo)"
+                  >
+                    Standard
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setToolMode('sculpt_pull')}
+                    className={`px-1.5 py-1.5 rounded border font-medium cursor-pointer ${
+                      toolMode === 'sculpt_pull'
+                        ? 'bg-rose-600 border-rose-400 text-white'
+                        : 'bg-[#1A1215] border-slate-800 text-slate-200 hover:border-rose-500'
+                    }`}
+                    title="Pincel DamStandard / Carve (- Escavar)"
+                  >
+                    Carve
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setToolMode('sculpt_smooth')}
+                    className={`px-1.5 py-1.5 rounded border font-medium cursor-pointer ${
+                      toolMode === 'sculpt_smooth'
+                        ? 'bg-rose-600 border-rose-400 text-white'
+                        : 'bg-[#1A1215] border-slate-800 text-slate-200 hover:border-rose-500'
+                    }`}
+                    title="Pincel Smooth (Suavizar superfície)"
+                  >
+                    Smooth
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setToolMode('orbit')}
+                    className={`px-1.5 py-1.5 rounded border font-medium cursor-pointer ${
+                      toolMode === 'orbit'
+                        ? 'bg-slate-700 border-slate-500 text-white'
+                        : 'bg-[#1A1215] border-slate-800 text-slate-300 hover:text-white'
+                    }`}
+                    title="Voltar para navegação de câmera"
+                  >
+                    Câmera
+                  </button>
+                </div>
+
+                {/* Draw Size & Z Intensity */}
+                <div className="grid grid-cols-2 gap-2">
+                  <label className="flex flex-col gap-0.5">
+                    <span className="flex justify-between text-slate-300">
+                      <span>Draw Size</span>
+                      <span className="font-mono text-rose-300">{sculptRadius.toFixed(2)}</span>
+                    </span>
+                    <input
+                      type="range"
+                      min={0.04}
+                      max={0.8}
+                      step={0.02}
+                      value={sculptRadius}
+                      onChange={(e) => setSculptRadius(Number(e.target.value))}
+                    />
+                  </label>
+                  <label className="flex flex-col gap-0.5">
+                    <span className="flex justify-between text-slate-300">
+                      <span>Z Intensity</span>
+                      <span className="font-mono text-rose-300">
+                        {Math.round(sculptStrength * 1000)}
+                      </span>
+                    </span>
+                    <input
+                      type="range"
+                      min={0.004}
+                      max={0.08}
+                      step={0.002}
+                      value={sculptStrength}
+                      onChange={(e) => setSculptStrength(Number(e.target.value))}
+                    />
+                  </label>
+                </div>
+
+                {/* Symmetry X, Divide (+4x), Undo */}
+                <div className="grid grid-cols-3 gap-1">
+                  <button
+                    type="button"
+                    onClick={() => setSculptMirrorX((v) => !v)}
+                    className={`px-1.5 py-1.5 rounded border font-medium cursor-pointer ${
+                      sculptMirrorX
+                        ? 'bg-rose-600/25 border-rose-400 text-rose-100'
+                        : 'bg-[#1A1215] border-slate-800 text-slate-300'
+                    }`}
+                  >
+                    Simetria X: {sculptMirrorX ? 'ON' : 'OFF'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => subdivideMeshRef.current?.()}
+                    className="px-1.5 py-1.5 rounded bg-rose-600/20 border border-rose-500/40 hover:bg-rose-600 text-rose-200 hover:text-white font-medium cursor-pointer"
+                    title="Divide / DynaMesh (+4x polígonos)"
+                  >
+                    Divide (+4x)
+                  </button>
+                  <button
+                    type="button"
+                    disabled={!canUndoSculpt}
+                    onClick={() => undoSculptRef.current?.()}
+                    className="px-1.5 py-1.5 rounded bg-[#1A1215] border border-slate-800 disabled:opacity-40 text-slate-200 hover:text-white font-medium cursor-pointer"
+                  >
+                    Desfazer
+                  </button>
+                </div>
+
+                {/* Deformation Palette (ZBrush) */}
+                <div className="pt-1 border-t border-rose-900/40 flex flex-col gap-1">
+                  <span className="text-[10px] text-slate-400 font-medium">
+                    Deformation (Malha)
+                  </span>
+                  <div className="grid grid-cols-4 gap-1">
+                    <button
+                      type="button"
+                      onClick={() => runMeshModelingOpRef.current?.('inflate')}
+                      className="px-1.5 py-1 rounded bg-[#1A1215] border border-slate-800 hover:border-rose-400 text-slate-200 cursor-pointer"
+                    >
+                      Inflate +
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => runMeshModelingOpRef.current?.('deflate')}
+                      className="px-1.5 py-1 rounded bg-[#1A1215] border border-slate-800 hover:border-rose-400 text-slate-200 cursor-pointer"
+                    >
+                      Inflate -
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => runMeshModelingOpRef.current?.('smooth')}
+                      className="px-1.5 py-1 rounded bg-[#1A1215] border border-slate-800 hover:border-rose-400 text-slate-200 cursor-pointer"
+                    >
+                      Polish
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => runMeshModelingOpRef.current?.('mirror_x')}
+                      className="px-1.5 py-1 rounded bg-[#1A1215] border border-slate-800 hover:border-rose-400 text-slate-200 cursor-pointer"
+                    >
+                      Mirror X
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => runMeshModelingOpRef.current?.('twist')}
+                      className="px-1.5 py-1 rounded bg-[#1A1215] border border-slate-800 hover:border-rose-400 text-slate-200 cursor-pointer"
+                    >
+                      Twist
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => runMeshModelingOpRef.current?.('bend')}
+                      className="px-1.5 py-1 rounded bg-[#1A1215] border border-slate-800 hover:border-rose-400 text-slate-200 cursor-pointer"
+                    >
+                      Bend
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => runMeshModelingOpRef.current?.('taper')}
+                      className="px-1.5 py-1 rounded bg-[#1A1215] border border-slate-800 hover:border-rose-400 text-slate-200 cursor-pointer col-span-2"
+                    >
+                      Taper (Afunilar)
+                    </button>
+                  </div>
+                </div>
+              </div>
               <SplineDesignPanel
                 section="modeling"
                 wrapperless
@@ -5815,7 +6273,9 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
               title="3. ESCULTURA / DETALHAMENTO"
               description="Adicionar detalhes finos e relevos à malha antes de otimizá-la."
               icon={<Hammer className="w-4 h-4 text-amber-400" />}
-              expanded={openSections.stage3}
+              expanded={focusedStage === 'stage3' || openSections.stage3}
+              hidden={Boolean(focusedStage && focusedStage !== 'stage3')}
+              standalone={focusedStage === 'stage3'}
               onToggle={() => toggleSection('stage3')}
             >
               <div className="grid grid-cols-4 gap-1">
@@ -5954,7 +6414,9 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
               title="4. RETOPOLOGY"
               description="Reorganizar e limpar a malha para ficar leve e deformar corretamente."
               icon={<Layers className="w-4 h-4 text-cyan-400" />}
-              expanded={openSections.stage4}
+              expanded={focusedStage === 'stage4' || openSections.stage4}
+              hidden={Boolean(focusedStage && focusedStage !== 'stage4')}
+              standalone={focusedStage === 'stage4'}
               onToggle={() => toggleSection('stage4')}
               badgeText={
                 sceneMetrics.triangles > 0
@@ -6115,6 +6577,7 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
               description="Abrir a superfície 3D em plano 2D para preparar o modelo para pintura."
               icon={<Scissors className="w-4 h-4 text-violet-400" />}
               expanded={openSections.stage5}
+              hidden={Boolean(focusedStage)}
               onToggle={() => toggleSection('stage5')}
             >
               <label className="flex flex-col gap-1">
@@ -6177,6 +6640,7 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
               description="Aplicar cores, texturas, reflexos e propriedades de superfície PBR."
               icon={<Palette className="w-4 h-4 text-orange-400" />}
               expanded={openSections.stage6}
+              hidden={Boolean(focusedStage)}
               onToggle={() => toggleSection('stage6')}
             >
               <label className="flex flex-col gap-1">
@@ -6538,7 +7002,9 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
               title="7. RIGGING"
               description="Construir o esqueleto interno (armadura) e os controles de movimentação."
               icon={<Bone className="w-4 h-4 text-orange-400" />}
-              expanded={openSections.stage7}
+              expanded={focusedStage === 'stage7' || openSections.stage7}
+              hidden={Boolean(focusedStage && focusedStage !== 'stage7')}
+              standalone={focusedStage === 'stage7'}
               onToggle={() => toggleSection('stage7')}
               badgeText={`${RIG_PRESET_DEFINITIONS[config.rigPreset].boneCount} ossos`}
             >
@@ -6595,10 +7061,56 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
               title="8. ANIMATION"
               description="Dar movimento e vida ao modelo utilizando os controles criados no rigging."
               icon={<Video className="w-4 h-4 text-emerald-400" />}
-              expanded={openSections.stage8}
+              expanded={focusedStage === 'stage8' || openSections.stage8}
+              hidden={Boolean(focusedStage && focusedStage !== 'stage8')}
+              standalone={focusedStage === 'stage8'}
               onToggle={() => toggleSection('stage8')}
               badgeText={`${config.animEndFrame}f`}
             >
+              <AnimationPrinciplesPanel
+                config={animPrinciples}
+                onChange={setAnimPrinciples}
+              />
+              {morphTargets.length > 0 && (
+                <div className="rounded-lg bg-[#0D1017] border border-emerald-500/30 p-2 flex flex-col gap-1.5">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-[11px] font-semibold text-emerald-300">
+                      Pose Morph / Expressões ({morphTargets.length})
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        morphTargets.forEach((mt) => setMorphTargetWeightRef.current?.(mt.name, 0));
+                      }}
+                      className="text-[10px] text-slate-400 hover:text-white cursor-pointer"
+                    >
+                      Zerar
+                    </button>
+                  </div>
+                  <div className="max-h-36 overflow-y-auto flex flex-col gap-1.5 pr-1">
+                    {morphTargets.map((mt) => (
+                      <label key={mt.name} className="flex flex-col gap-0.5">
+                        <span className="flex justify-between text-[10px] text-slate-300">
+                          <span className="truncate max-w-[160px]">{mt.name}</span>
+                          <span className="font-mono text-emerald-300">
+                            {Math.round(mt.value * 100)}%
+                          </span>
+                        </span>
+                        <input
+                          type="range"
+                          min={0}
+                          max={1}
+                          step={0.01}
+                          value={mt.value}
+                          onChange={(e) =>
+                            setMorphTargetWeightRef.current?.(mt.name, Number(e.target.value))
+                          }
+                        />
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              )}
               <div className="grid grid-cols-2 gap-1 p-0.5 rounded-md bg-[#0D1017] border border-slate-800">
                 <button
                   type="button"
@@ -6743,12 +7255,73 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
               )}
             </PipelineStageCard>
 
+            {/* 9. SIMULAÇÃO & FX */}
+            <PipelineStageCard
+              title="9. SIMULAÇÃO & FX"
+              description="Física dinâmica, gravidade, vento procedural e partículas atmosféricas 3D."
+              icon={<Sparkles className="w-4 h-4 text-cyan-400" />}
+              expanded={focusedStage === 'stage9' || openSections.stage9}
+              hidden={Boolean(focusedStage && focusedStage !== 'stage9')}
+              standalone={focusedStage === 'stage9'}
+              onToggle={() => toggleSection('stage9')}
+              badgeText={physicsActive || windEnabled || particlesEnabled ? 'ATIVO' : undefined}
+            >
+              <div className="grid grid-cols-2 gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => setPhysicsActive((v) => !v)}
+                  className={`px-2 py-1.5 rounded-md border text-[11px] font-semibold cursor-pointer transition-colors ${
+                    physicsActive
+                      ? 'bg-cyan-600 border-cyan-500 text-white'
+                      : 'bg-[#0D1017] border-slate-800 text-slate-300 hover:text-white'
+                  }`}
+                >
+                  Gravidade / Física
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setParticlesEnabled((v) => !v)}
+                  className={`px-2 py-1.5 rounded-md border text-[11px] font-semibold cursor-pointer transition-colors ${
+                    particlesEnabled
+                      ? 'bg-amber-600 border-amber-500 text-white'
+                      : 'bg-[#0D1017] border-slate-800 text-slate-300 hover:text-white'
+                  }`}
+                >
+                  Partículas 3D
+                </button>
+              </div>
+              <label className="flex items-center justify-between gap-2 px-2 py-1.5 rounded-md bg-[#0D1017] border border-slate-800 cursor-pointer">
+                <span className="text-slate-200 font-medium">Vento / Turbulência Procedural</span>
+                <input
+                  type="checkbox"
+                  checked={windEnabled}
+                  onChange={(e) => setWindEnabled(e.target.checked)}
+                />
+              </label>
+              <label className="flex flex-col gap-0.5">
+                <span className="flex justify-between text-slate-400">
+                  <span>Intensidade do Vento</span>
+                  <span className="font-mono text-cyan-300">{windStrength.toFixed(2)}</span>
+                </span>
+                <input
+                  type="range"
+                  min={0.05}
+                  max={1.5}
+                  step={0.05}
+                  value={windStrength}
+                  onChange={(e) => setWindStrength(Number(e.target.value))}
+                />
+              </label>
+            </PipelineStageCard>
+
             {/* 10. LIGHTS */}
             <PipelineStageCard
               title="10. LIGHTS"
               description="Configurar iluminação da cena, HDRI e renderização PNG."
               icon={<Sun className="w-4 h-4 text-amber-400" />}
-              expanded={openSections.stage10}
+              expanded={focusedStage === 'stage10' || openSections.stage10}
+              hidden={Boolean(focusedStage && focusedStage !== 'stage10')}
+              standalone={focusedStage === 'stage10'}
               onToggle={() => toggleSection('stage10')}
             >
               <div className="flex items-center justify-between gap-2">
@@ -6893,14 +7466,163 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
               />
             </PipelineStageCard>
 
+            {/* 11. COMPOSIÇÃO & PÓS-FX */}
+            <PipelineStageCard
+              title="11. COMPOSIÇÃO & PÓS-FX"
+              description="Bloom em tempo real, Color Grading cinematográfico e LookDev."
+              icon={<SlidersHorizontal className="w-4 h-4 text-pink-400" />}
+              expanded={focusedStage === 'stage11' || openSections.stage11}
+              hidden={Boolean(focusedStage && focusedStage !== 'stage11')}
+              standalone={focusedStage === 'stage11'}
+              onToggle={() => toggleSection('stage11')}
+              badgeText={bloomEnabled ? 'BLOOM' : undefined}
+            >
+              <div className="grid grid-cols-2 gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => setBloomEnabled((v) => !v)}
+                  className={`px-2 py-1.5 rounded-md border text-[11px] font-semibold cursor-pointer transition-colors ${
+                    bloomEnabled
+                      ? 'bg-pink-600 border-pink-500 text-white'
+                      : 'bg-[#0D1017] border-slate-800 text-slate-300 hover:text-white'
+                  }`}
+                >
+                  Bloom / Glow
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setGradeContrast(1.0);
+                    setGradeSaturation(1.0);
+                    setGradeBrightness(1.0);
+                    setGradeHueDeg(0);
+                  }}
+                  className="px-2 py-1.5 rounded-md bg-[#0D1017] border border-slate-800 hover:border-slate-600 text-[11px] text-slate-300 hover:text-white cursor-pointer"
+                >
+                  Resetar Grading
+                </button>
+              </div>
+              {bloomEnabled && (
+                <label className="flex flex-col gap-0.5">
+                  <span className="flex justify-between text-slate-400">
+                    <span>Força do Bloom</span>
+                    <span className="font-mono text-pink-300">{bloomStrength.toFixed(2)}</span>
+                  </span>
+                  <input
+                    type="range"
+                    min={0.05}
+                    max={2.0}
+                    step={0.05}
+                    value={bloomStrength}
+                    onChange={(e) => setBloomStrength(Number(e.target.value))}
+                  />
+                </label>
+              )}
+              <div className="grid grid-cols-3 gap-1">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setGradeContrast(1.16);
+                    setGradeSaturation(1.22);
+                    setGradeBrightness(1.02);
+                    setGradeHueDeg(-6);
+                  }}
+                  className="px-1.5 py-1 rounded bg-[#0D1017] border border-slate-800 hover:border-orange-500 text-[10px] text-slate-200 cursor-pointer"
+                >
+                  Cinema
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setGradeContrast(1.3);
+                    setGradeSaturation(0);
+                    setGradeBrightness(1.05);
+                    setGradeHueDeg(0);
+                  }}
+                  className="px-1.5 py-1 rounded bg-[#0D1017] border border-slate-800 hover:border-slate-400 text-[10px] text-slate-200 cursor-pointer"
+                >
+                  Noir B&amp;W
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setGradeContrast(1.2);
+                    setGradeSaturation(1.45);
+                    setGradeBrightness(1.04);
+                    setGradeHueDeg(18);
+                  }}
+                  className="px-1.5 py-1 rounded bg-[#0D1017] border border-slate-800 hover:border-pink-500 text-[10px] text-slate-200 cursor-pointer"
+                >
+                  Cyberpunk
+                </button>
+              </div>
+              <label className="flex flex-col gap-0.5">
+                <span className="flex justify-between text-slate-400">
+                  <span>Contraste</span>
+                  <span className="font-mono text-slate-200">{Math.round(gradeContrast * 100)}%</span>
+                </span>
+                <input
+                  type="range"
+                  min={0.6}
+                  max={1.6}
+                  step={0.02}
+                  value={gradeContrast}
+                  onChange={(e) => setGradeContrast(Number(e.target.value))}
+                />
+              </label>
+              <label className="flex flex-col gap-0.5">
+                <span className="flex justify-between text-slate-400">
+                  <span>Saturação</span>
+                  <span className="font-mono text-slate-200">{Math.round(gradeSaturation * 100)}%</span>
+                </span>
+                <input
+                  type="range"
+                  min={0}
+                  max={1.8}
+                  step={0.02}
+                  value={gradeSaturation}
+                  onChange={(e) => setGradeSaturation(Number(e.target.value))}
+                />
+              </label>
+              <label className="flex flex-col gap-0.5">
+                <span className="flex justify-between text-slate-400">
+                  <span>Brilho</span>
+                  <span className="font-mono text-slate-200">{Math.round(gradeBrightness * 100)}%</span>
+                </span>
+                <input
+                  type="range"
+                  min={0.6}
+                  max={1.5}
+                  step={0.02}
+                  value={gradeBrightness}
+                  onChange={(e) => setGradeBrightness(Number(e.target.value))}
+                />
+              </label>
+            </PipelineStageCard>
+
             {/* 12. GEOMETRY NODES */}
             <PipelineStageCard
               title="12. GEOMETRY NODES"
-              description="Criar modelos procedurais, operações booleanas CSG e efeitos."
+              description="MoGraph Cloner, efetores procedurais, operações booleanas CSG e efeitos."
               icon={<Workflow className="w-4 h-4 text-purple-400" />}
-              expanded={openSections.stage12}
+              expanded={focusedStage === 'stage12' || openSections.stage12}
+              hidden={Boolean(focusedStage && focusedStage !== 'stage12')}
+              standalone={focusedStage === 'stage12'}
               onToggle={() => toggleSection('stage12')}
             >
+              <MoGraphPanel
+                config={mographConfig}
+                onChange={(patch) => {
+                  const next = { ...mographConfig, ...patch };
+                  setMographConfig(next);
+                  mographConfigRef.current = next;
+                  if (next.active && (patch.count !== undefined || patch.spacing !== undefined || patch.clonerMode !== undefined)) {
+                    applyMoGraphRef.current?.();
+                  }
+                }}
+                onApply={() => applyMoGraphRef.current?.()}
+                onClear={() => clearMoGraphRef.current?.()}
+              />
               <SplineDesignPanel
                 section="geometry_nodes"
                 wrapperless
@@ -6945,7 +7667,9 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
               title="13. CAMERA SETUP"
               description="Configurar ângulos de câmera, enquadramento e movimento."
               icon={<Camera className="w-4 h-4 text-sky-400" />}
-              expanded={openSections.stage13}
+              expanded={focusedStage === 'stage13' || openSections.stage13}
+              hidden={Boolean(focusedStage && focusedStage !== 'stage13')}
+              standalone={focusedStage === 'stage13'}
               onToggle={() => toggleSection('stage13')}
               badgeText={`${CAMERA_PRESETS[activePreset].label} · ${cameraLensMm}mm`}
             >
@@ -7027,9 +7751,11 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
             {/* 14. EXPORTAR */}
             <PipelineStageCard
               title="14. EXPORTAR"
-              description="Exportar o projeto final em .glb, .gltf, pacote ZIP e código Blender 5.3 / React."
+              description="Exportar o projeto final em .glb, .gltf, pacote ZIP e código Web 3D (React / Three.js)."
               icon={<Archive className="w-4 h-4 text-emerald-400" />}
-              expanded={openSections.stage14}
+              expanded={focusedStage === 'stage14' || openSections.stage14}
+              hidden={Boolean(focusedStage && focusedStage !== 'stage14')}
+              standalone={focusedStage === 'stage14'}
               onToggle={() => toggleSection('stage14')}
               badgeText="GLB · ZIP"
             >
@@ -7052,7 +7778,7 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
                 type="button"
                 disabled={isLoadingModel || isExporting}
                 onClick={() => exportZipRef.current?.()}
-                title="Exportar pacote ZIP completo com GLB, glTF, 5 mapas PBR, UV Layout e script Blender 5.3"
+                title="Exportar pacote ZIP completo com GLB, glTF, 5 mapas PBR e UV Layout"
                 className="w-full inline-flex items-center justify-center gap-1.5 px-2.5 py-2 rounded-md font-semibold bg-emerald-600/20 border border-emerald-500/40 text-emerald-300 hover:bg-emerald-600 hover:text-white disabled:opacity-50 transition-colors cursor-pointer"
               >
                 <Archive className="w-3.5 h-3.5" />
@@ -7080,11 +7806,19 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
               </div>
               <button
                 type="button"
+                onClick={() => setDriveModalOpen(true)}
+                className="w-full inline-flex items-center justify-center gap-1.5 px-2.5 py-1.5 rounded-md bg-sky-600/20 border border-sky-500/40 hover:bg-sky-600 text-sky-200 hover:text-white font-semibold transition-colors cursor-pointer"
+              >
+                <Cloud className="w-3.5 h-3.5" />
+                <span>Sincronizar com Google Drive</span>
+              </button>
+              <button
+                type="button"
                 onClick={() => openCodeExportRef.current?.()}
                 className="w-full inline-flex items-center justify-center gap-1.5 px-2.5 py-1.5 rounded-md bg-[#0D1017] border border-slate-800 hover:border-sky-500 text-slate-200 hover:text-white font-medium transition-colors cursor-pointer"
               >
                 <Code2 className="w-3.5 h-3.5 text-sky-400" />
-                <span>Exportar Código (React / Three / Blender 5.3)</span>
+                <span>Exportar Código Web (React / Three.js)</span>
               </button>
             </PipelineStageCard>
           </div>
@@ -7096,6 +7830,12 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
         {/* Dedicated WebGL Mount Container */}
         <div
           ref={mountRef}
+          style={{
+            filter:
+              gradeContrast !== 1 || gradeSaturation !== 1 || gradeBrightness !== 1 || gradeHueDeg !== 0
+                ? `contrast(${gradeContrast}) saturate(${gradeSaturation}) brightness(${gradeBrightness}) hue-rotate(${gradeHueDeg}deg)`
+                : undefined,
+          }}
           className={`w-full h-full min-h-[360px] touch-none ${
             toolMode === 'paint' ||
             toolMode === 'sculpt_push' ||
@@ -7279,6 +8019,118 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
           </div>
         )}
 
+        {/* Pro Floating 3D Studio Bar (Desktop Bottom-Center) */}
+        {!playMode && (
+          <div
+            role="toolbar"
+            aria-label="Barra Pro da Viewport 3D"
+            className="hidden md:flex items-center gap-1 absolute bottom-4 left-1/2 -translate-x-1/2 z-10 px-2 py-1.5 rounded-xl bg-[#141923]/92 backdrop-blur-md border border-slate-700/85 shadow-2xl text-[11px] max-w-[calc(100%-2rem)] overflow-x-auto no-scrollbar"
+          >
+            {(
+              [
+                { id: 'pbr', label: 'PBR' },
+                { id: 'matcap_clay', label: 'Argila' },
+                { id: 'matcap_redwax', label: 'RedWax' },
+                { id: 'matcap_chrome', label: 'Cromo' },
+                { id: 'normals', label: 'Normais' },
+                { id: 'uv_checker', label: 'UV' },
+                { id: 'cel_borde', label: 'Cel' },
+              ] as const
+            ).map((mode) => (
+              <button
+                key={mode.id}
+                type="button"
+                onClick={() => setShadingMode(mode.id)}
+                className={`px-2 py-1 rounded-md font-medium transition-colors cursor-pointer whitespace-nowrap ${
+                  shadingMode === mode.id
+                    ? 'bg-orange-600 text-white'
+                    : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+                }`}
+              >
+                {mode.label}
+              </button>
+            ))}
+            <span className="h-4 w-px bg-slate-700/80 mx-0.5 shrink-0" />
+            <button
+              type="button"
+              onClick={() => setWireframeMode((v) => !v)}
+              title="Alternar Wireframe"
+              className={`inline-flex items-center gap-1 px-2 py-1 rounded-md font-medium transition-colors cursor-pointer whitespace-nowrap ${
+                wireframeMode
+                  ? 'bg-cyan-600 text-white'
+                  : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+              }`}
+            >
+              <Grid className="w-3.5 h-3.5" />
+              <span>Wire</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => bakeAoCurvatureRef.current?.()}
+              title="Gerar Bake de Ambient Occlusion & Curvatura (desgaste/cavidades)"
+              className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-violet-600/20 border border-violet-500/40 text-violet-200 hover:bg-violet-600 hover:text-white font-medium transition-colors cursor-pointer whitespace-nowrap"
+            >
+              <Sparkles className="w-3.5 h-3.5" />
+              <span>Bake AO</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setTurntableEnabled((v) => !v)}
+              title="Girar modelo 360° (Turntable Showcase)"
+              className={`inline-flex items-center gap-1 px-2 py-1 rounded-md font-medium transition-colors cursor-pointer whitespace-nowrap ${
+                turntableEnabled
+                  ? 'bg-emerald-600 text-white'
+                  : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+              }`}
+            >
+              <RotateCw className={`w-3.5 h-3.5 ${turntableEnabled ? 'animate-spin' : ''}`} />
+              <span>360°</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => dropToFloorRef.current?.()}
+              title="Apoiar modelo/objeto selecionado exatamente no chão (Y = 0)"
+              className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-slate-300 hover:bg-slate-800 hover:text-white font-medium transition-colors cursor-pointer whitespace-nowrap"
+            >
+              <span>Y=0</span>
+            </button>
+            <span className="h-4 w-px bg-slate-700/80 mx-0.5 shrink-0" />
+            <button
+              type="button"
+              onClick={() => undoSceneRef.current?.()}
+              title="Desfazer (Ctrl+Z)"
+              className="inline-flex items-center px-1.5 py-1 rounded-md text-slate-300 hover:bg-slate-800 hover:text-white cursor-pointer"
+            >
+              <Undo2 className="w-3.5 h-3.5" />
+            </button>
+            <button
+              type="button"
+              onClick={() => redoSceneRef.current?.()}
+              title="Refazer (Ctrl+Y)"
+              className="inline-flex items-center px-1.5 py-1 rounded-md text-slate-300 hover:bg-slate-800 hover:text-white cursor-pointer"
+            >
+              <RotateCw className="w-3.5 h-3.5" />
+            </button>
+            <button
+              type="button"
+              onClick={() => frameSceneRef.current?.()}
+              title="Enquadrar modelo (F)"
+              className="inline-flex items-center px-1.5 py-1 rounded-md text-slate-300 hover:bg-slate-800 hover:text-white cursor-pointer"
+            >
+              <Maximize2 className="w-3.5 h-3.5 text-sky-400" />
+            </button>
+            <button
+              type="button"
+              onClick={() => renderStudioPngRef.current?.()}
+              title="Capturar Render PNG de alta resolução"
+              className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-slate-300 hover:bg-slate-800 hover:text-white cursor-pointer whitespace-nowrap"
+            >
+              <Camera className="w-3.5 h-3.5 text-amber-400" />
+              <span>PNG</span>
+            </button>
+          </div>
+        )}
+
         {/* Mobile Bottom Frosted Quick-Action Bar (Thumb Zone) */}
         {!dockExpanded && !showMeshDrawer && (
           <div
@@ -7359,8 +8211,15 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
         open={codeExportModalOpen}
         threeCode={exportedThreeCode}
         reactCode={exportedReactCode}
-        blenderCode={exportedBlenderCode}
         onClose={() => setCodeExportModalOpen(false)}
+      />
+
+      <GoogleDriveModal
+        open={driveModalOpen}
+        onClose={() => setDriveModalOpen(false)}
+        defaultFileName={loadedAsset?.name || 'AlexDesign_Scene.glb'}
+        onImportFileFromDrive={(file) => triggerImportFiles([file])}
+        onExportCurrentGlbBlob={async () => (exportGlbBlobRef.current ? exportGlbBlobRef.current() : null)}
       />
     </div>
   );

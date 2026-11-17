@@ -1,0 +1,15 @@
+{
+  "compilerOptions": {
+    "target": "ES2017",
+    "lib": ["ES2017", "DOM", "DOM.Iterable"],
+    "module": "es2020",
+    "rootDir": "src",
+    "outDir": "public/assets/js",
+    "strict": true,
+    "noEmitOnError": true,
+    "noUnusedLocals": true,
+    "newLine": "lf",
+    "types": []
+  },
+  "files": ["src/site.ts"]
+}

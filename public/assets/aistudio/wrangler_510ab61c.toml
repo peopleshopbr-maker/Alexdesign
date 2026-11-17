@@ -1,0 +1,28 @@
+# Configuracao do Cloudflare Workers/Pages deste site.
+# O upload manual (drag and drop) funciona sem este arquivo: nesse caso, enlace o D1 e o R2 em
+# Cloudflare dashboard > Pages > <projeto> > Settings > Functions, com os nomes de variavel
+# exatamente "DB" (D1) e "ARQUIVOS" (R2).
+#
+# Com wrangler no terminal:
+#   npx wrangler d1 create renderalex-site          (cola o database_id abaixo)
+#   npx wrangler r2 bucket create renderalex-arquivos
+#   npx wrangler d1 execute renderalex-site --remote --file=./db/schema.sql
+#   npx wrangler d1 execute renderalex-site --remote --file=./db/seed.sql
+#   npx wrangler pages secret put TOKEN_RENDER --project-name=renderalex-design
+#   npx wrangler pages deploy public --project-name=renderalex-design
+#
+# TOKEN_RENDER e o segredo compartilhado com a maquina GPU (tools/no_render.py). Sem ele,
+# as rotas /api/no/* respondem 401 e ninguem consegue pegar pedido da fila.
+
+name = "renderalex-site"
+compatibility_date = "2026-10-01"
+pages_build_output_dir = "public"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "renderalex-site"
+database_id = "TROQUE-PELO-ID-DO-SEU-D1"
+
+[[r2_buckets]]
+binding = "ARQUIVOS"
+bucket_name = "renderalex-arquivos"
