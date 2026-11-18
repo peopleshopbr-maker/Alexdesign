@@ -123,6 +123,7 @@ import {
   SceneMeshListItem,
   SceneMetricsSummary,
 } from './MeshHierarchyDrawer';
+import { InspectorTabs } from './InspectorTabs';
 import { LightingRenderPanel } from './LightingRenderPanel';
 import { HdriEnvironmentPanel } from './HdriEnvironmentPanel';
 import { SplineDesignPanel } from './SplineDesignPanel';
@@ -263,6 +264,13 @@ export interface ViewportSceneConfig {
   texelDensity?: number;
 }
 
+export interface ViewportGlobalActions {
+  undo: () => void;
+  redo: () => void;
+  toggleWireframe: () => void;
+  importModel: () => void;
+}
+
 export type ViewportStageKey =
   | 'stage1'
   | 'stage2'
@@ -290,6 +298,9 @@ interface Viewport3DProps {
   onExportStateChange?: (exporting: boolean) => void;
   onOpenTab?: (tab: 'viewport' | 'atlas' | 'ecosystem' | ViewportStageKey) => void;
   focusedStage?: ViewportStageKey | null;
+  /** Expõe ações globais (desfazer/refazer/wireframe) para a barra superior. */
+  onRegisterGlobalActions?: (actions: ViewportGlobalActions | null) => void;
+  onWireframeChange?: (wireframe: boolean) => void;
   onImportedModelFile?: (file: File) => void;
 }
 
@@ -316,6 +327,8 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
   onExportStateChange,
   onOpenTab,
   focusedStage = null,
+  onRegisterGlobalActions,
+  onWireframeChange,
   onImportedModelFile,
 }) => {
   const onImportedUvsRef = useRef(onImportedUvs);
@@ -2329,43 +2342,6 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
       while (studioPrimitives.length > 0) {
         const r = studioPrimitives.pop()!;
         disposePrimitiveRecord(r);
-      }
-
-      // Se houver um personagem/modelo GLB importado, aplicar o template diretamente nele (sem criar objetos extras)
-      if (uploadedGroup) {
-        const templateStyle =
-          templateId === 'glass_neon'
-            ? { color: 0x38bdf8, roughness: 0.08, metalness: 0.15, emissive: 0x0ea5e9, emissiveIntensity: 0.35, opacity: 0.82, transparent: true }
-            : templateId === 'product_showcase'
-              ? { color: 0xe2e8f0, roughness: 0.12, metalness: 0.92, emissive: 0x000000, emissiveIntensity: 0, opacity: 1, transparent: false }
-              : { color: 0xf97316, roughness: 0.25, metalness: 0.35, emissive: 0x000000, emissiveIntensity: 0, opacity: 1, transparent: false };
-
-        uploadedGroup.traverse((obj) => {
-          if (!(obj as THREE.Mesh).isMesh) return;
-          const mesh = obj as THREE.Mesh;
-          const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
-          mats.forEach((m) => {
-            const std = m as THREE.MeshStandardMaterial;
-            if (!std || !std.color) return;
-            std.color.setHex(templateStyle.color);
-            std.roughness = templateStyle.roughness;
-            std.metalness = templateStyle.metalness;
-            if (std.emissive) {
-              std.emissive.setHex(templateStyle.emissive);
-              std.emissiveIntensity = templateStyle.emissiveIntensity;
-            }
-            std.transparent = templateStyle.transparent;
-            std.opacity = templateStyle.opacity;
-            std.needsUpdate = true;
-          });
-        });
-
-        setBloomEnabled(templateId === 'glass_neon');
-        stateRef.current.bloomEnabled = templateId === 'glass_neon';
-        requestRenderRef.current?.();
-        scheduleAutoSaveRef.current?.();
-        showBriefStatus(`Template "${templateId}" aplicado diretamente no personagem GLB!`);
-        return;
       }
 
       setHideDefaultBase(true);
@@ -6114,7 +6090,13 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
           undoSceneRef.current?.();
         }
       } else if (e.code === 'Escape') {
-        if (window.innerWidth < 768) {
+        if (
+          stateRef.current.toolMode === 'paint' ||
+          stateRef.current.toolMode === 'assign_mat' ||
+          stateRef.current.toolMode.startsWith('sculpt_')
+        ) {
+          setToolMode('orbit');
+        } else if (window.innerWidth < 768) {
           setDockExpanded(false);
         } else {
           selectObjectByIdRef.current?.(null);
@@ -6124,6 +6106,29 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
   }, [verificationReport]);
+
+  useEffect(() => {
+    onRegisterGlobalActions?.({
+      undo: () => {
+        if (stateRef.current.toolMode.startsWith('sculpt_')) undoSculptRef.current?.();
+        else if (stateRef.current.toolMode === 'paint') undoPaintRef.current?.();
+        else undoSceneRef.current?.();
+      },
+      redo: () => redoSceneRef.current?.(),
+      toggleWireframe: () => setWireframeMode((v) => !v),
+      importModel: () => fileInputRef.current?.click(),
+    });
+    return () => onRegisterGlobalActions?.(null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    onWireframeChange?.(wireframeMode);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [wireframeMode]);
+
+  const isEditModeActive =
+    toolMode === 'paint' || toolMode === 'assign_mat' || toolMode.startsWith('sculpt_');
 
   const handleSelectPreset = (preset: CameraPreset) => {
     setActivePreset(preset);
@@ -6279,117 +6284,79 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
         />
       )}
 
-      {/* Slim Icon-Only Vertical Shortcut Rail on Viewport 3D Overview */}
-      {!focusedStage && (
-        <aside
-          aria-label="Atalhos das Etapas do Pipeline"
-          className="w-[58px] shrink-0 h-full border-r border-slate-800/90 bg-[#0D1119] flex flex-col items-center py-2.5 gap-2 overflow-y-auto z-10"
-        >
-          <button
-            type="button"
-            disabled={isSavingProject || isLoadingModel}
-            onClick={() => void saveProjectRef.current?.(false)}
-            title="Salvar projeto (Ctrl+S)"
-            className="w-10 h-10 shrink-0 rounded-xl bg-emerald-600/15 border border-emerald-500/40 hover:bg-emerald-600 text-emerald-300 hover:text-white flex items-center justify-center transition-colors cursor-pointer disabled:opacity-50"
-          >
-            <Save className="w-4 h-4" />
-          </button>
-          <button
-            type="button"
-            disabled={isLoadingModel}
-            onClick={() => autoSetupPipelineRef.current?.()}
-            title="Automatizar Tudo (UV Abaixo + Chão + PBR + Câmera)"
-            aria-label="Automatizar Tudo"
-            className="w-10 h-10 shrink-0 rounded-xl bg-orange-500/15 border border-orange-500/40 hover:bg-orange-500 text-orange-300 hover:text-slate-950 flex items-center justify-center transition-colors cursor-pointer disabled:opacity-50"
-          >
-            <Wand2 className="w-4 h-4" />
-          </button>
+      {/* Left Sidebar — Hierarquia da Cena (desktop, sempre visível) */}
+      <MeshHierarchyDrawer
+        docked
+        open
+        onClose={() => undefined}
+        meshes={meshList}
+        selectedMeshId={selectedMeshId}
+        metrics={sceneMetrics}
+        onSelectMesh={(id) => {
+          setSelectedMeshId(id);
+          selectObjectByIdRef.current?.(id);
+        }}
+        onFocusMesh={(id) => focusMeshByIdRef.current?.(id)}
+        onToggleMeshVisibility={(id) => toggleMeshVisibilityRef.current?.(id)}
+        onShowAllMeshes={() => showAllMeshesRef.current?.()}
+        onDeleteMesh={(id) => deleteMeshByIdRef.current?.(id)}
+      />
 
-          {(
-            [
-              // Grupo 1: Cena & Malha
-              {
-                group: 'cena',
-                items: [
-                  { key: 'stage1' as const, title: '1. Importar & Exemplos 3D', icon: <Upload className="w-4 h-4 text-orange-400" /> },
-                  { key: 'stage2' as const, title: '2. Editar Cena & Objetos', icon: <Box className="w-4 h-4 text-rose-400" /> },
-                  { key: 'stage4' as const, title: '3. Retopology', icon: <Layers className="w-4 h-4 text-cyan-400" /> },
-                ],
-              },
-              // Grupo 2: LookDev, UV, PBR & HDRI (Direto na Viewport 3D)
-              {
-                group: 'lookdev',
-                items: [
-                  { key: 'stage5' as const, title: '4. PBR, UV & HDRI (Ao Vivo)', icon: <Palette className="w-4 h-4 text-violet-400" /> },
-                ],
-              },
-              // Grupo 3: Rigging & Animação (Unificado), Simulação & Nodes
-              {
-                group: 'motion',
-                items: [
-                  { key: 'stage7' as const, title: '5. Rigging & Animação 3D (ActionForge)', icon: <Bone className="w-4 h-4 text-amber-400" /> },
-                  { key: 'stage9' as const, title: '6. Simulação, FX & Pós-FX', icon: <Wind className="w-4 h-4 text-sky-400" /> },
-                  { key: 'stage12' as const, title: '7. Geometry Nodes & MoGraph', icon: <Sliders className="w-4 h-4 text-purple-400" /> },
-                ],
-              },
-              // Grupo 4: Câmera & Entrega
-              {
-                group: 'output',
-                items: [
-                  { key: 'stage13' as const, title: '9. Câmera & Enquadramento', icon: <Camera className="w-4 h-4 text-indigo-400" /> },
-                  { key: 'stage14' as const, title: '10. Exportar & Publicar', icon: <Download className="w-4 h-4 text-emerald-400" /> },
-                ],
-              },
-            ]
-          ).map((section) => (
-            <React.Fragment key={section.group}>
-              <div className="w-7 h-px bg-slate-800/90 shrink-0" />
-              {section.items.map((item) => (
-                <button
-                  key={item.key}
-                  type="button"
-                  onClick={() => toggleSection(item.key)}
-                  title={item.title}
-                  aria-label={item.title}
-                  className="w-10 h-10 shrink-0 rounded-xl bg-[#131722] border border-slate-800/90 hover:border-slate-500 hover:bg-[#1A2030] flex items-center justify-center transition-colors cursor-pointer"
-                >
-                  {item.icon}
-                </button>
-              ))}
-            </React.Fragment>
-          ))}
-        </aside>
-      )}
-
-      {/* Full Left Studio Sidebar — Shown only when a specific stage page is open */}
-      {focusedStage && dockExpanded && (
+      {/* Right Inspector — Pipeline contextual (abas por etapa) */}
+      {dockExpanded && (
         <aside
-          aria-label="Comandos do Estúdio"
-          className="max-md:absolute max-md:inset-y-0 max-md:left-0 max-md:z-30 max-md:shadow-2xl md:relative w-[min(86vw,312px)] md:w-[292px] lg:w-[308px] shrink-0 h-full border-r border-slate-800/90 bg-[#10141D] flex flex-col md:z-10"
+          aria-label="Inspetor do Estúdio"
+          className="order-3 max-md:absolute max-md:inset-y-0 max-md:right-0 max-md:z-30 max-md:shadow-2xl md:relative w-[min(88vw,340px)] md:w-[300px] lg:w-[320px] xl:w-[340px] shrink-0 h-full border-l border-slate-800/90 bg-[#10141D] flex flex-col md:z-10"
         >
-          <div className="p-2.5 border-b border-slate-800/80 shrink-0 flex items-center gap-1.5">
-            <button
-              type="button"
-              onClick={() => onOpenTab?.('viewport')}
-              className="flex-1 min-w-0 min-h-[40px] inline-flex items-center justify-between gap-2 px-3 py-1.5 rounded-lg bg-[#141923] border border-slate-700/80 hover:border-slate-500 text-xs font-medium text-slate-200 hover:text-white transition-colors cursor-pointer"
-            >
-              <span className="inline-flex items-center gap-2 truncate">
-                <ChevronLeft className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                <span className="truncate">Viewport 3D</span>
-              </span>
-              <X className="w-3.5 h-3.5 text-slate-400 md:hidden shrink-0" />
-            </button>
-            <button
-              type="button"
-              disabled={isSavingProject || isLoadingModel}
-              onClick={() => void saveProjectRef.current?.(false)}
-              title="Salvar estado atual do projeto no navegador (Ctrl+S)"
-              className="min-h-[40px] inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-emerald-600/20 border border-emerald-500/40 hover:bg-emerald-600 text-xs font-semibold text-emerald-300 hover:text-white disabled:opacity-50 transition-colors cursor-pointer shrink-0"
-            >
-              <Save className="w-3.5 h-3.5 shrink-0" />
-              <span>{isSavingProject ? '...' : 'Salvar'}</span>
-            </button>
+          <div className="px-2.5 pt-2 pb-1.5 border-b border-slate-800/80 shrink-0 flex flex-col gap-1.5">
+            <div className="flex items-center gap-1.5">
+              <div className="flex-1 min-w-0 text-[11px] font-semibold uppercase tracking-wider text-slate-400 px-1">
+                Inspetor
+              </div>
+              <button
+                type="button"
+                disabled={isSavingProject || isLoadingModel}
+                onClick={() => void saveProjectRef.current?.(false)}
+                title="Salvar estado atual do projeto no navegador (Ctrl+S)"
+                className="min-h-[32px] inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-600/20 border border-emerald-500/40 hover:bg-emerald-600 text-xs font-semibold text-emerald-300 hover:text-white disabled:opacity-50 transition-colors cursor-pointer shrink-0"
+              >
+                <Save className="w-3.5 h-3.5 shrink-0" />
+                <span>{isSavingProject ? '...' : 'Salvar'}</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setDockExpanded(false)}
+                aria-label="Fechar inspetor"
+                className="md:hidden min-w-[32px] min-h-[32px] inline-flex items-center justify-center rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            <InspectorTabs activeStage={focusedStage} onSelectStage={(k) => onOpenTab?.(k)} />
           </div>
+          {focusedStage === 'stage5' && (
+            <div className="px-2.5 py-2 border-b border-slate-800/80 shrink-0 grid grid-cols-2 gap-1.5 text-[11px]">
+              <button
+                type="button"
+                onClick={() => onOpenTab?.('atlas')}
+                className="min-h-[32px] px-2 py-1 rounded-md bg-[#0D1017] border border-slate-700 hover:border-violet-500 text-slate-200 cursor-pointer"
+              >
+                Abrir Editor de UV
+              </button>
+              <button
+                type="button"
+                onClick={() => onOpenTab?.('ecosystem')}
+                className="min-h-[32px] px-2 py-1 rounded-md bg-[#0D1017] border border-slate-700 hover:border-violet-500 text-slate-200 cursor-pointer"
+              >
+                Abrir Hub PBR
+              </button>
+            </div>
+          )}
+          {focusedStage === 'stage7' && loadedAsset && !loadedAsset.hasSkeleton && (
+            <div className="mx-2.5 mt-2 rounded-lg border border-amber-500/30 bg-amber-500/10 p-2.5 text-[11px] text-amber-100 leading-relaxed shrink-0">
+              Nenhuma animação ou esqueleto detectado neste modelo. Use &ldquo;Gerar Rig Automático&rdquo; abaixo para criar um.
+            </div>
+          )}
 
           <div className="flex-1 min-h-0 overflow-y-auto overscroll-y-contain p-2.5 flex flex-col gap-2 text-xs">
             {/* 1. IMPORTAR GLB / glTF (Edição livre em todo o pipeline) */}
@@ -6905,8 +6872,9 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
               title="5. UV UNWRAPPING"
               description="Abrir a superfície 3D em plano 2D para preparar o modelo para pintura."
               icon={<Scissors className="w-4 h-4 text-violet-400" />}
-              expanded={openSections.stage5}
-              hidden={Boolean(focusedStage)}
+              expanded={focusedStage === 'stage5' || openSections.stage5}
+              hidden={Boolean(focusedStage && focusedStage !== 'stage5')}
+              standalone={focusedStage === 'stage5'}
               onToggle={() => toggleSection('stage5')}
             >
               <label className="flex flex-col gap-1">
@@ -6968,8 +6936,9 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
               title="6. MATERIAL & TEXTURING"
               description="Aplicar cores, texturas, reflexos e propriedades de superfície PBR."
               icon={<Palette className="w-4 h-4 text-orange-400" />}
-              expanded={openSections.stage6}
-              hidden={Boolean(focusedStage)}
+              expanded={focusedStage === 'stage5' || openSections.stage6}
+              hidden={Boolean(focusedStage && focusedStage !== 'stage5')}
+              standalone={focusedStage === 'stage5'}
               onToggle={() => toggleSection('stage6')}
             >
               <label className="flex flex-col gap-1">
@@ -8600,7 +8569,7 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
       )}
 
       {/* Right Column: 3D Viewport Area + Docked ActionForge Timeline Below */}
-      <div className="flex-1 min-w-0 h-full flex flex-col overflow-hidden">
+      <div className="order-2 flex-1 min-w-0 h-full flex flex-col overflow-hidden">
       <div className="relative flex-1 min-h-0 overflow-hidden">
         {/* Dedicated WebGL Mount Container */}
         <div
@@ -8622,6 +8591,15 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
               : ''
           }`}
         />
+
+        {isEditModeActive && (
+          <div
+            role="status"
+            className="pointer-events-none absolute top-3 left-1/2 -translate-x-1/2 z-20 px-3 py-1.5 rounded-full bg-orange-500/90 text-slate-950 text-[11px] font-semibold shadow-lg whitespace-nowrap"
+          >
+            Modo de Edição Ativo — Pressione ESC para voltar à câmera
+          </div>
+        )}
 
         {/* 3D Interactive Camera Orientation Gizmo (Top-Right, below floating toolbar) */}
         {!webglError && (
@@ -8676,8 +8654,8 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
                 onClick={() => setDockExpanded(true)}
                 className="inline-flex items-center gap-1.5 min-h-[40px] sm:min-h-0 px-3.5 py-2 sm:px-3 sm:py-1.5 rounded-lg bg-[#141923]/92 backdrop-blur-md border border-slate-700/80 hover:border-slate-500 text-xs font-medium text-slate-200 hover:text-white transition-colors cursor-pointer shadow-lg"
               >
-                <ChevronRight className="w-3.5 h-3.5 text-orange-400 shrink-0" />
-                <span>Mostrar Controles</span>
+                <ChevronLeft className="w-3.5 h-3.5 text-orange-400 shrink-0" />
+                <span>Mostrar Inspetor</span>
               </button>
             </div>
           )}

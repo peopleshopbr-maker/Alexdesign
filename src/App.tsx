@@ -1,31 +1,15 @@
 import { Component, ReactNode, useEffect, useRef, useState } from 'react';
 import gsap from 'gsap';
-import {
-  Archive,
-  Bone,
-  Box,
-  Camera,
-  Compass,
-  Grid,
-  Hammer,
-  Palette,
-  Play,
-  RotateCcw,
-  Scissors,
-  Search,
-  SlidersHorizontal,
-  Sparkles,
-  Sun,
-  Upload,
-  Workflow,
-} from 'lucide-react';
+import { Archive, Box, Redo2, RotateCcw, Search, Undo2, Upload } from 'lucide-react';
 import { DEFAULT_STUDIO_CONFIG, StudioConfig } from './types/studioConfig';
 import {
   ImportedUvMesh,
   Viewport3D,
+  ViewportGlobalActions,
   ViewportSceneConfig,
   ViewportStageKey,
 } from './components/Viewport3D';
+import { INSPECTOR_TABS, findInspectorTab } from './components/InspectorTabs';
 import { AtlasUvInspector } from './components/AtlasUvInspector';
 import { MaterialEcosystemView } from './components/MaterialEcosystemView';
 import { PbrUvHubView } from './components/PbrUvHubView';
@@ -39,19 +23,6 @@ import {
 } from './utils/substanceImporter';
 
 type WorkspaceTab = 'viewport' | 'atlas' | 'ecosystem' | ViewportStageKey;
-
-const NAV_TABS: { id: WorkspaceTab; label: string; mobileLabel: string; icon: ReactNode }[] = [
-  { id: 'viewport', label: 'Viewport 3D', mobileLabel: '3D', icon: <Box className="w-4 h-4" /> },
-  { id: 'stage1', label: '1. Importar', mobileLabel: '1. Import', icon: <Upload className="w-4 h-4" /> },
-  { id: 'stage2', label: '2. Editar Cena', mobileLabel: '2. Editar', icon: <Box className="w-4 h-4" /> },
-  { id: 'stage4', label: '3. Retopology', mobileLabel: '3. Retopo', icon: <Grid className="w-4 h-4" /> },
-  { id: 'stage5', label: '4. PBR, UV & HDRI', mobileLabel: '4. PBR', icon: <Palette className="w-4 h-4" /> },
-  { id: 'stage7', label: '5. Rigging & Animação', mobileLabel: '5. Rig/Anim', icon: <Bone className="w-4 h-4" /> },
-  { id: 'stage9', label: '6. Simulação & Pós-FX', mobileLabel: '6. FX', icon: <Sparkles className="w-4 h-4" /> },
-  { id: 'stage12', label: '7. Geometry Nodes', mobileLabel: '7. Nodes', icon: <Workflow className="w-4 h-4" /> },
-  { id: 'stage13', label: '8. Câmera', mobileLabel: '8. Cam', icon: <Camera className="w-4 h-4" /> },
-  { id: 'stage14', label: '9. Exportar', mobileLabel: '9. Export', icon: <Archive className="w-4 h-4" /> },
-];
 
 interface ErrorBoundaryState {
   errorMessage: string | null;
@@ -87,6 +58,15 @@ class ViewportErrorBoundary extends Component<{ children: ReactNode }, ErrorBoun
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<WorkspaceTab>('viewport');
+  const globalActionsRef = useRef<ViewportGlobalActions | null>(null);
+  const [wireframe, setWireframe] = useState(false);
+  const isHubTab = activeTab === 'atlas' || activeTab === 'ecosystem';
+  // 'viewport' = visão geral do estúdio, que abre na primeira etapa do pipeline.
+  const inspectorStage: ViewportStageKey | null = isHubTab
+    ? null
+    : activeTab === 'viewport'
+    ? 'stage1'
+    : activeTab;
   const [importedModelFile, setImportedModelFile] = useState<File | null>(null);
   const [pendingImportFiles, setPendingImportFiles] = useState<File[] | null>(null);
   const [config, setConfig] = useState<StudioConfig>(DEFAULT_STUDIO_CONFIG);
@@ -288,73 +268,118 @@ export default function App() {
         highContrast ? 'contrast-125' : ''
       } ${largeText ? 'text-[15px]' : ''}`}
     >
-      {/* Top Bar */}
+      {/* Top Bar — apenas ações globais do projeto */}
       <header
         ref={headerRef}
-        className="h-12 sm:h-14 px-3 sm:px-4 border-b border-slate-800/90 bg-[#0D1017] flex items-center gap-3 sm:gap-4 shrink-0"
+        className="h-12 sm:h-14 px-3 sm:px-4 border-b border-slate-800/90 bg-[#0D1017] flex items-center gap-2 sm:gap-3 shrink-0"
       >
-        {/* Brand Wordmark */}
         <a
           href="#top"
           onClick={(e) => {
             e.preventDefault();
             setActiveTab('viewport');
           }}
-          className="font-display text-base sm:text-lg font-bold tracking-tight text-white whitespace-nowrap shrink-0"
+          className="gsap-nav-item font-display text-base sm:text-lg font-bold tracking-tight text-white whitespace-nowrap shrink-0 mr-1 sm:mr-3"
         >
           Alex<span className="text-orange-500">Design</span>
         </a>
 
-        {/* Clean Unified Studio Navigation */}
-        <nav
-          aria-label="Navegação principal"
-          className="hidden sm:flex flex-1 min-w-0 h-full items-center gap-5"
-        >
+        <div className="gsap-nav-item flex items-center gap-1 shrink-0" role="group" aria-label="Histórico">
           <button
             type="button"
-            onClick={() => handleSelectWorkspaceTab('viewport')}
-            className={`gsap-nav-item relative h-full inline-flex items-center gap-1.5 text-xs font-semibold whitespace-nowrap shrink-0 cursor-pointer transition-colors ${
-              activeTab !== 'stage7' && activeTab !== 'stage8'
-                ? 'text-white'
-                : 'text-slate-400 hover:text-slate-200'
-            }`}
+            onClick={() => globalActionsRef.current?.undo()}
+            disabled={isHubTab}
+            title="Desfazer (Ctrl+Z)"
+            aria-label="Desfazer"
+            className="w-8 h-8 inline-flex items-center justify-center rounded-lg text-slate-300 hover:text-white hover:bg-slate-800 disabled:opacity-40 cursor-pointer"
+          >
+            <Undo2 className="w-4 h-4" />
+          </button>
+          <button
+            type="button"
+            onClick={() => globalActionsRef.current?.redo()}
+            disabled={isHubTab}
+            title="Refazer (Ctrl+Shift+Z)"
+            aria-label="Refazer"
+            className="w-8 h-8 inline-flex items-center justify-center rounded-lg text-slate-300 hover:text-white hover:bg-slate-800 disabled:opacity-40 cursor-pointer"
+          >
+            <Redo2 className="w-4 h-4" />
+          </button>
+        </div>
+
+        <div
+          role="group"
+          aria-label="Modo de visualização"
+          className="gsap-nav-item hidden sm:flex items-center rounded-lg border border-slate-800 bg-slate-900/70 p-0.5 shrink-0"
+        >
+          {[
+            { label: 'Sólido', value: false },
+            { label: 'Wireframe', value: true },
+          ].map((m) => (
+            <button
+              key={m.label}
+              type="button"
+              disabled={isHubTab}
+              aria-pressed={wireframe === m.value}
+              onClick={() => {
+                if (wireframe !== m.value) globalActionsRef.current?.toggleWireframe();
+              }}
+              className={`h-7 px-2.5 rounded-md text-[11px] font-medium cursor-pointer disabled:opacity-40 ${
+                wireframe === m.value ? 'bg-slate-700 text-white' : 'text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              {m.label}
+            </button>
+          ))}
+        </div>
+
+        {isHubTab && (
+          <button
+            type="button"
+            onClick={() => setActiveTab('viewport')}
+            className="gsap-nav-item inline-flex items-center gap-1.5 h-8 px-2.5 rounded-lg border border-slate-700 text-slate-200 hover:text-white text-[11px] font-medium cursor-pointer shrink-0"
           >
             <Box className="w-3.5 h-3.5 text-orange-400" />
-            <span>Viewport 3D Studio</span>
-            {activeTab !== 'stage7' && activeTab !== 'stage8' && (
-              <span className="absolute left-0 right-0 bottom-0 h-0.5 bg-orange-500" />
-            )}
+            <span>Voltar ao Viewport</span>
           </button>
+        )}
 
-          <button
-            type="button"
-            onClick={() => handleSelectWorkspaceTab('stage7')}
-            className={`gsap-nav-item relative h-full inline-flex items-center gap-1.5 text-xs font-semibold whitespace-nowrap shrink-0 cursor-pointer transition-colors ${
-              activeTab === 'stage7' || activeTab === 'stage8'
-                ? 'text-white'
-                : 'text-slate-400 hover:text-slate-200'
-            }`}
-          >
-            <Bone className="w-3.5 h-3.5 text-amber-400" />
-            <span>Animação Studio</span>
-            {(activeTab === 'stage7' || activeTab === 'stage8') && (
-              <span className="absolute left-0 right-0 bottom-0 h-0.5 bg-orange-500" />
-            )}
-          </button>
-        </nav>
+        <div className="flex-1 min-w-0" />
 
-        {/* Semantic Search & Adaptive Accessibility Trigger (Ctrl+K) */}
+        <button
+          type="button"
+          onClick={() => {
+            setActiveTab('stage1');
+            globalActionsRef.current?.importModel();
+          }}
+          disabled={isHubTab}
+          title="Importar .glb / .gltf / .zip"
+          className="gsap-nav-item inline-flex items-center gap-1.5 h-8 px-2.5 rounded-lg border border-slate-800 bg-slate-900/70 text-slate-200 hover:border-slate-600 hover:text-white text-[11px] font-medium shrink-0 cursor-pointer disabled:opacity-40"
+        >
+          <Upload className="w-3.5 h-3.5 text-sky-400" />
+          <span className="hidden md:inline">Importar</span>
+        </button>
+
         <button
           type="button"
           onClick={() => setSearchOpen(true)}
           title="Busca Semântica e Acessibilidade (Ctrl+K)"
-          className="inline-flex items-center gap-1.5 h-8 px-2.5 rounded-lg border border-slate-800 bg-slate-900/70 text-slate-300 hover:border-slate-700 hover:text-white text-[11px] font-medium transition-colors shrink-0 cursor-pointer"
+          className="gsap-nav-item inline-flex items-center gap-1.5 h-8 px-2.5 rounded-lg border border-slate-800 bg-slate-900/70 text-slate-300 hover:border-slate-700 hover:text-white text-[11px] font-medium transition-colors shrink-0 cursor-pointer"
         >
           <Search className="w-3.5 h-3.5 text-orange-400" />
-          <span className="hidden md:inline">Busca IA</span>
+          <span className="hidden lg:inline">Busca IA</span>
           <kbd className="hidden sm:inline text-[9px] font-mono px-1 py-0.5 rounded bg-slate-800 text-slate-400">
             Ctrl+K
           </kbd>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => handleSelectWorkspaceTab('stage14')}
+          className="gsap-nav-item inline-flex items-center gap-1.5 h-8 px-3 rounded-lg bg-orange-600 hover:bg-orange-500 text-white text-xs font-semibold shrink-0 cursor-pointer"
+        >
+          <Archive className="w-3.5 h-3.5" />
+          <span>Exportar</span>
         </button>
       </header>
 
@@ -377,15 +402,15 @@ export default function App() {
               onConfigChange={handleConfigChange}
               onImportedUvs={handleImportedUvsChange}
               substanceTextureRequest={substanceRequest}
-              onOpenTab={setActiveTab}
+              onOpenTab={handleSelectWorkspaceTab}
               onImportedModelFile={setImportedModelFile}
               pendingImportFiles={pendingImportFiles}
               onConsumedPendingImport={() => setPendingImportFiles(null)}
-              focusedStage={
-                activeTab === 'viewport' || activeTab === 'atlas' || activeTab === 'ecosystem'
-                  ? null
-                  : activeTab
-              }
+              focusedStage={inspectorStage}
+              onRegisterGlobalActions={(a) => {
+                globalActionsRef.current = a;
+              }}
+              onWireframeChange={setWireframe}
             />
           </ViewportErrorBoundary>
         </div>
@@ -433,14 +458,14 @@ export default function App() {
         className="sm:hidden fixed bottom-0 left-0 right-0 z-40 bg-[#0D1017]/95 backdrop-blur-md border-t border-slate-800/90 pb-safe"
       >
         <div className="flex items-center gap-1 h-12 px-1.5 overflow-x-auto no-scrollbar">
-          {NAV_TABS.map((tab) => {
-            const isActive = activeTab === tab.id;
+          {INSPECTOR_TABS.map((tab) => {
+            const isActive = findInspectorTab(inspectorStage)?.id === tab.id;
             return (
               <button
                 key={tab.id}
                 type="button"
-                onClick={() => setActiveTab(tab.id)}
-                className={`h-11 px-2.5 shrink-0 flex flex-col items-center justify-center gap-0.5 rounded-lg transition-colors cursor-pointer ${
+                onClick={() => handleSelectWorkspaceTab(tab.stages[0].stage)}
+                className={`h-11 flex-1 min-w-[56px] px-1.5 flex flex-col items-center justify-center gap-0.5 rounded-lg transition-colors cursor-pointer ${
                   isActive ? 'text-orange-400 bg-orange-500/10' : 'text-slate-400 hover:text-slate-200'
                 }`}
               >

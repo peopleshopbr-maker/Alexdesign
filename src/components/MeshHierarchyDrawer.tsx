@@ -30,6 +30,8 @@ interface MeshHierarchyDrawerProps {
   onToggleMeshVisibility: (id: string) => void;
   onShowAllMeshes: () => void;
   onDeleteMesh?: (id: string | null) => void;
+  /** Painel fixo (coluna esquerda no desktop) em vez de gaveta flutuante. */
+  docked?: boolean;
 }
 
 export const MeshHierarchyDrawer: React.FC<MeshHierarchyDrawerProps> = ({
@@ -43,6 +45,7 @@ export const MeshHierarchyDrawer: React.FC<MeshHierarchyDrawerProps> = ({
   onToggleMeshVisibility,
   onShowAllMeshes,
   onDeleteMesh,
+  docked = false,
 }) => {
   if (!open) return null;
 
@@ -51,9 +54,13 @@ export const MeshHierarchyDrawer: React.FC<MeshHierarchyDrawerProps> = ({
   return (
     <aside
       aria-label="Hierarquia de malhas da cena"
-      className="max-sm:fixed max-sm:inset-x-2 max-sm:bottom-16 max-sm:z-30 max-sm:max-h-[56dvh] sm:absolute sm:top-4 sm:right-4 sm:z-10 sm:w-72 md:w-80 sm:max-h-[calc(100dvh-7rem)] rounded-t-2xl sm:rounded-xl bg-[#141923]/96 backdrop-blur-md border border-slate-700/80 shadow-2xl flex flex-col overflow-hidden text-xs"
+      className={
+        docked
+          ? 'order-1 hidden md:flex w-[240px] lg:w-[260px] xl:w-[280px] shrink-0 h-full border-r border-slate-800/90 bg-[#10141D] flex-col overflow-hidden text-xs'
+          : 'md:hidden max-sm:fixed max-sm:inset-x-2 max-sm:bottom-16 max-sm:z-30 max-sm:max-h-[56dvh] sm:absolute sm:top-4 sm:right-4 sm:z-10 sm:w-72 sm:max-h-[calc(100dvh-7rem)] rounded-t-2xl sm:rounded-xl bg-[#141923]/96 backdrop-blur-md border border-slate-700/80 shadow-2xl flex flex-col overflow-hidden text-xs'
+      }
     >
-      <div className="sm:hidden w-10 h-1 bg-slate-600 rounded-full mx-auto mt-2 shrink-0" />
+      {!docked && <div className="sm:hidden w-10 h-1 bg-slate-600 rounded-full mx-auto mt-2 shrink-0" />}
       <div className="px-3.5 py-2.5 border-b border-slate-800 flex items-center justify-between gap-2">
         <div className="flex items-center gap-2 font-semibold text-slate-100 min-w-0">
           <Layers className="w-3.5 h-3.5 text-orange-400 shrink-0" />
@@ -69,6 +76,7 @@ export const MeshHierarchyDrawer: React.FC<MeshHierarchyDrawerProps> = ({
               Mostrar todas
             </button>
           )}
+          {!docked && (
           <button
             type="button"
             onClick={onClose}
@@ -77,6 +85,7 @@ export const MeshHierarchyDrawer: React.FC<MeshHierarchyDrawerProps> = ({
           >
             <X className="w-4 h-4 sm:w-3.5 sm:h-3.5" />
           </button>
+          )}
         </div>
       </div>
 
