@@ -46,12 +46,11 @@ const NAV_TABS: { id: WorkspaceTab; label: string; mobileLabel: string; icon: Re
   { id: 'stage2', label: '2. Editar Cena', mobileLabel: '2. Editar', icon: <Box className="w-4 h-4" /> },
   { id: 'stage4', label: '3. Retopology', mobileLabel: '3. Retopo', icon: <Grid className="w-4 h-4" /> },
   { id: 'stage5', label: '4. PBR, UV & HDRI', mobileLabel: '4. PBR', icon: <Palette className="w-4 h-4" /> },
-  { id: 'stage7', label: '5. Rigging', mobileLabel: '5. Rig', icon: <Bone className="w-4 h-4" /> },
-  { id: 'stage8', label: '6. Animação', mobileLabel: '6. Anim', icon: <Play className="w-4 h-4" /> },
-  { id: 'stage9', label: '7. Simulação & Pós-FX', mobileLabel: '7. FX', icon: <Sparkles className="w-4 h-4" /> },
-  { id: 'stage12', label: '8. Geometry Nodes', mobileLabel: '8. Nodes', icon: <Workflow className="w-4 h-4" /> },
-  { id: 'stage13', label: '9. Câmera', mobileLabel: '9. Cam', icon: <Camera className="w-4 h-4" /> },
-  { id: 'stage14', label: '10. Exportar', mobileLabel: '10. Export', icon: <Archive className="w-4 h-4" /> },
+  { id: 'stage7', label: '5. Rigging & Animação', mobileLabel: '5. Rig/Anim', icon: <Bone className="w-4 h-4" /> },
+  { id: 'stage9', label: '6. Simulação & Pós-FX', mobileLabel: '6. FX', icon: <Sparkles className="w-4 h-4" /> },
+  { id: 'stage12', label: '7. Geometry Nodes', mobileLabel: '7. Nodes', icon: <Workflow className="w-4 h-4" /> },
+  { id: 'stage13', label: '8. Câmera', mobileLabel: '8. Cam', icon: <Camera className="w-4 h-4" /> },
+  { id: 'stage14', label: '9. Exportar', mobileLabel: '9. Export', icon: <Archive className="w-4 h-4" /> },
 ];
 
 interface ErrorBoundaryState {
@@ -309,16 +308,38 @@ export default function App() {
         {/* Clean Unified Studio Navigation */}
         <nav
           aria-label="Navegação principal"
-          className="hidden sm:flex flex-1 min-w-0 h-full items-center gap-4"
+          className="hidden sm:flex flex-1 min-w-0 h-full items-center gap-5"
         >
           <button
             type="button"
-            onClick={() => setActiveTab('viewport')}
-            className="gsap-nav-item relative h-full inline-flex items-center gap-1.5 text-xs font-semibold text-white whitespace-nowrap shrink-0 cursor-pointer"
+            onClick={() => handleSelectWorkspaceTab('viewport')}
+            className={`gsap-nav-item relative h-full inline-flex items-center gap-1.5 text-xs font-semibold whitespace-nowrap shrink-0 cursor-pointer transition-colors ${
+              activeTab !== 'stage7' && activeTab !== 'stage8'
+                ? 'text-white'
+                : 'text-slate-400 hover:text-slate-200'
+            }`}
           >
             <Box className="w-3.5 h-3.5 text-orange-400" />
             <span>Viewport 3D Studio</span>
-            <span className="absolute left-0 right-0 bottom-0 h-0.5 bg-orange-500" />
+            {activeTab !== 'stage7' && activeTab !== 'stage8' && (
+              <span className="absolute left-0 right-0 bottom-0 h-0.5 bg-orange-500" />
+            )}
+          </button>
+
+          <button
+            type="button"
+            onClick={() => handleSelectWorkspaceTab('stage7')}
+            className={`gsap-nav-item relative h-full inline-flex items-center gap-1.5 text-xs font-semibold whitespace-nowrap shrink-0 cursor-pointer transition-colors ${
+              activeTab === 'stage7' || activeTab === 'stage8'
+                ? 'text-white'
+                : 'text-slate-400 hover:text-slate-200'
+            }`}
+          >
+            <Bone className="w-3.5 h-3.5 text-amber-400" />
+            <span>Animação Studio</span>
+            {(activeTab === 'stage7' || activeTab === 'stage8') && (
+              <span className="absolute left-0 right-0 bottom-0 h-0.5 bg-orange-500" />
+            )}
           </button>
         </nav>
 
@@ -333,30 +354,6 @@ export default function App() {
           <span className="hidden md:inline">Busca IA</span>
           <kbd className="hidden sm:inline text-[9px] font-mono px-1 py-0.5 rounded bg-slate-800 text-slate-400">
             Ctrl+K
-          </kbd>
-        </button>
-
-        {/* Quick Radial Pie Menu Trigger */}
-        <button
-          type="button"
-          onClick={() => {
-            setPiePos({
-              x: Math.round(window.innerWidth / 2),
-              y: Math.round(window.innerHeight / 2),
-            });
-            setPieOpen((prev) => !prev);
-          }}
-          title="Menu Radial Rápido (Espaço)"
-          className={`hidden sm:inline-flex items-center gap-1.5 h-8 px-2.5 rounded-lg border text-[11px] font-medium transition-colors shrink-0 cursor-pointer ${
-            pieOpen
-              ? 'border-orange-500/70 bg-orange-500/15 text-orange-300'
-              : 'border-slate-800 bg-slate-900/70 text-slate-300 hover:border-slate-700 hover:text-white'
-          }`}
-        >
-          <Compass className="w-3.5 h-3.5 text-orange-400" />
-          <span className="hidden lg:inline">Menu Radial</span>
-          <kbd className="text-[9px] font-mono px-1 py-0.5 rounded bg-slate-800 text-slate-400">
-            Espaço
           </kbd>
         </button>
       </header>
@@ -456,14 +453,6 @@ export default function App() {
           })}
         </div>
       </nav>
-
-      <RadialPieMenu
-        open={pieOpen}
-        position={piePos}
-        activeTab={activeTab}
-        onSelect={(id: RadialPieActionId) => handleSelectWorkspaceTab(id)}
-        onClose={() => setPieOpen(false)}
-      />
 
       <SmartCommandPalette
         open={searchOpen}

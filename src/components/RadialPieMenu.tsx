@@ -17,9 +17,9 @@ export type RadialPieActionId =
   | 'stage2'
   | 'stage5'
   | 'stage7'
-  | 'stage8'
   | 'stage9'
   | 'stage12'
+  | 'stage13'
   | 'stage14';
 
 interface RadialPieMenuProps {
@@ -39,11 +39,11 @@ const PIE_ITEMS: Array<{
   { id: 'stage1', label: '1. Importar', angleDeg: -90, icon: Upload },
   { id: 'stage2', label: '2. Editar', angleDeg: -45, icon: Box },
   { id: 'stage5', label: '4. PBR & HDRI', angleDeg: 0, icon: Palette },
-  { id: 'stage7', label: '5. Rigging', angleDeg: 45, icon: Bone },
-  { id: 'stage8', label: '6. Animação', angleDeg: 90, icon: Play },
-  { id: 'stage9', label: '7. Simulação', angleDeg: 135, icon: Sparkles },
-  { id: 'stage12', label: '8. Nodes', angleDeg: 180, icon: Workflow },
-  { id: 'stage14', label: '10. Exportar', angleDeg: -135, icon: Archive },
+  { id: 'stage7', label: '5. Rig & Anim', angleDeg: 45, icon: Bone },
+  { id: 'stage9', label: '6. Simulação', angleDeg: 90, icon: Sparkles },
+  { id: 'stage12', label: '7. Nodes', angleDeg: 135, icon: Workflow },
+  { id: 'stage13', label: '8. Câmera', angleDeg: 180, icon: Play },
+  { id: 'stage14', label: '9. Exportar', angleDeg: -135, icon: Archive },
 ];
 
 export function RadialPieMenu({

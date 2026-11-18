@@ -59,17 +59,10 @@ const SMART_COMMANDS: SmartCommandItem[] = [
   },
   {
     id: 'stage7',
-    title: '5. Rigging & Esqueleto',
-    subtitle: 'Auto-Rig, ossos, skinning e pose do personagem 3D',
-    keywords: ['rig', 'rigging', 'osso', 'esqueleto', 'personagem', 'pose', 'articulacao'],
+    title: '5. Rigging & Animação (ActionForge)',
+    subtitle: 'Auto-Rig, esqueleto, ciclos de ação (Caminhar, Correr, Pular, Soco), 12 princípios e timeline',
+    keywords: ['rig', 'rigging', 'osso', 'esqueleto', 'personagem', 'pose', 'animacao', 'animar', 'caminhar', 'correr', 'pular', 'soco', 'acenar', 'timeline', 'loop'],
     icon: Bone,
-  },
-  {
-    id: 'stage8',
-    title: '6. Animação & 12 Princípios',
-    subtitle: 'Timeline, keyframes, loop e controle de movimento',
-    keywords: ['animacao', 'animar', 'movimento', 'play', 'timeline', 'keyframe', 'gsap', 'loop'],
-    icon: Play,
   },
   {
     id: 'stage9',

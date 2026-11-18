@@ -158,13 +158,27 @@ import {
 } from '../engine/mographEngine';
 import { MoGraphPanel } from './MoGraphPanel';
 import { AnimationPrinciplesPanel } from './AnimationPrinciplesPanel';
+import { RigBonePicker, RigJointSpec } from './RigBonePicker';
+import { ACTIONFORGE_CLIPS, type ActionForgeClipItem } from '../data/actionForgeClips';
+import { ActionForgeTimeline } from './ActionForgeTimeline';
 import {
   type AnimationPrinciplesConfig,
   DEFAULT_ANIMATION_PRINCIPLES,
   applyAnimationPrinciplesFrame,
   createMotionTrailLine,
   createPrinciplesRuntimeState,
+  syncActionForgeRigRings,
 } from '../engine/animationPrinciplesEngine';
+import {
+  RapierSceneWorld,
+  DEFAULT_RAPIER_PHYSICS,
+  type RapierPhysicsConfig,
+} from '../engine/rapierPhysicsEngine';
+import {
+  applyProceduralIkFrame,
+  DEFAULT_PROCEDURAL_IK,
+  type ProceduralIkConfig,
+} from '../engine/proceduralIkEngine';
 import {
   type MeshModelingOp,
   applyMeshModelingOp,
@@ -317,6 +331,76 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
   const mountRef = useRef<HTMLDivElement>(null);
   const tweenCameraPresetRef = useRef<((preset: CameraPreset) => void) | null>(null);
   const autoSetupPipelineRef = useRef<(() => void) | null>(null);
+  const autoRigCurrentCharacterRef = useRef<(() => void) | null>(null);
+  const rotateBoneJointRef = useRef<((joint: RigJointSpec, axis: 'x' | 'y' | 'z', deg: number) => void) | null>(null);
+  const resetRigPoseRef = useRef<(() => void) | null>(null);
+  const [selectedRigJointId, setSelectedRigJointId] = useState<string | null>('hips');
+  const [activeClipId, setActiveClipId] = useState<string | null>(null);
+  const [clipSearch, setClipSearch] = useState('');
+  const [clipTagFilter, setClipTagFilter] = useState<string>('Todos');
+  const [onlyRootMotion, setOnlyRootMotion] = useState(false);
+  const [clipViewMode, setClipViewMode] = useState<'grid' | 'list'>('grid');
+  const [isAutoTestingAnims, setIsAutoTestingAnims] = useState(false);
+  const [rapierConfig, setRapierConfig] = useState<RapierPhysicsConfig>(DEFAULT_RAPIER_PHYSICS);
+  const rapierConfigRef = useRef<RapierPhysicsConfig>(DEFAULT_RAPIER_PHYSICS);
+  rapierConfigRef.current = rapierConfig;
+  const rapierWorldRef = useRef<RapierSceneWorld>(new RapierSceneWorld());
+  const rapierToggleRef = useRef<((enabled: boolean) => Promise<void>) | null>(null);
+  const rapierDropRef = useRef<(() => Promise<void>) | null>(null);
+  const rapierImpulseRef = useRef<(() => void) | null>(null);
+  const rapierSpawnRef = useRef<((kind: 'sphere' | 'box') => Promise<void>) | null>(null);
+  const rapierResetRef = useRef<(() => void) | null>(null);
+  const [ikConfig, setIkConfig] = useState<ProceduralIkConfig>(DEFAULT_PROCEDURAL_IK);
+  const ikConfigRef = useRef<ProceduralIkConfig>(DEFAULT_PROCEDURAL_IK);
+  ikConfigRef.current = ikConfig;
+
+  useEffect(() => {
+    if (!isAutoTestingAnims) return;
+    const testLabels = [
+      'Walk Loop',
+      'Sprint Loop',
+      'Jump Start',
+      'Sword Attack',
+      'Pistol Shoot',
+      'Dance Loop',
+      'Crouch Fwd Loop',
+      'Zombie Walk Fwd',
+      'Idle Loop',
+    ];
+    const clips = testLabels
+      .map((lbl) => ACTIONFORGE_CLIPS.find((c) => c.label === lbl))
+      .filter((c): c is ActionForgeClipItem => Boolean(c));
+    if (clips.length === 0) return;
+
+    let idx = 0;
+    const applyClip = (clip: ActionForgeClipItem) => {
+      const next = {
+        ...DEFAULT_ANIMATION_PRINCIPLES,
+        enabled: true,
+        actionCycle: clip.cycle,
+        timingSpeed: clip.speed,
+        exaggeration: clip.exag,
+        rootMotion: true,
+        physicsEnabled: true,
+        physicsStrength: 0.95,
+        squashStretch: 0,
+        anticipation: 0,
+        arcsStrength: 0,
+        solidAsymmetry: 0,
+      };
+      setAnimPrinciples(next);
+      animPrinciplesRef.current = next;
+      setActiveClipId(clip.id);
+    };
+
+    applyClip(clips[0]);
+    const timer = window.setInterval(() => {
+      idx = (idx + 1) % clips.length;
+      applyClip(clips[idx]);
+    }, 2400);
+
+    return () => window.clearInterval(timer);
+  }, [isAutoTestingAnims]);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const textureFileInputRef = useRef<HTMLInputElement>(null);
   const pbrChannelInputRef = useRef<HTMLInputElement>(null);
@@ -2245,6 +2329,43 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
       while (studioPrimitives.length > 0) {
         const r = studioPrimitives.pop()!;
         disposePrimitiveRecord(r);
+      }
+
+      // Se houver um personagem/modelo GLB importado, aplicar o template diretamente nele (sem criar objetos extras)
+      if (uploadedGroup) {
+        const templateStyle =
+          templateId === 'glass_neon'
+            ? { color: 0x38bdf8, roughness: 0.08, metalness: 0.15, emissive: 0x0ea5e9, emissiveIntensity: 0.35, opacity: 0.82, transparent: true }
+            : templateId === 'product_showcase'
+              ? { color: 0xe2e8f0, roughness: 0.12, metalness: 0.92, emissive: 0x000000, emissiveIntensity: 0, opacity: 1, transparent: false }
+              : { color: 0xf97316, roughness: 0.25, metalness: 0.35, emissive: 0x000000, emissiveIntensity: 0, opacity: 1, transparent: false };
+
+        uploadedGroup.traverse((obj) => {
+          if (!(obj as THREE.Mesh).isMesh) return;
+          const mesh = obj as THREE.Mesh;
+          const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+          mats.forEach((m) => {
+            const std = m as THREE.MeshStandardMaterial;
+            if (!std || !std.color) return;
+            std.color.setHex(templateStyle.color);
+            std.roughness = templateStyle.roughness;
+            std.metalness = templateStyle.metalness;
+            if (std.emissive) {
+              std.emissive.setHex(templateStyle.emissive);
+              std.emissiveIntensity = templateStyle.emissiveIntensity;
+            }
+            std.transparent = templateStyle.transparent;
+            std.opacity = templateStyle.opacity;
+            std.needsUpdate = true;
+          });
+        });
+
+        setBloomEnabled(templateId === 'glass_neon');
+        stateRef.current.bloomEnabled = templateId === 'glass_neon';
+        requestRenderRef.current?.();
+        scheduleAutoSaveRef.current?.();
+        showBriefStatus(`Template "${templateId}" aplicado diretamente no personagem GLB!`);
+        return;
       }
 
       setHideDefaultBase(true);
@@ -4983,14 +5104,78 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
           if (mographConfigRef.current.active && mographEntries.length > 0) {
             updateMoGraphEffectorFrame(mographEntries, mographConfigRef.current, nowSec);
           }
-          // 12 Princípios da Animação 3D + Ciclos (Caminhar, Correr, Pular, Soco, Acenar)
-          const animTarget = uploadedGroup ?? refSkeletonGroup;
-          applyAnimationPrinciplesFrame(
+          // 12 Princípios da Animação 3D + Ciclos + Física Real Rapier3D (Rust/WASM)
+          const animTarget =
+            uploadedGroup ??
+            (studioObjectsGroup.children.length > 0 ? studioObjectsGroup : refSkeletonGroup);
+
+          rapierToggleRef.current = async (enabled: boolean) => {
+            const nextCfg = { ...rapierConfigRef.current, enabled };
+            setRapierConfig(nextCfg);
+            rapierConfigRef.current = nextCfg;
+            if (enabled) {
+              await rapierWorldRef.current.ensureReady(nextCfg);
+              rapierWorldRef.current.updateConfig(nextCfg);
+              if (animTarget) rapierWorldRef.current.attachPrimaryObject(animTarget, 0);
+            } else {
+              rapierWorldRef.current.resetAll(scene);
+            }
+          };
+          rapierDropRef.current = async () => {
+            const nextCfg = { ...rapierConfigRef.current, enabled: true };
+            setRapierConfig(nextCfg);
+            rapierConfigRef.current = nextCfg;
+            await rapierWorldRef.current.ensureReady(nextCfg);
+            rapierWorldRef.current.updateConfig(nextCfg);
+            if (animTarget) {
+              rapierWorldRef.current.attachPrimaryObject(animTarget, 2.4);
+              rapierWorldRef.current.dropPrimary(2.4);
+            }
+          };
+          rapierImpulseRef.current = () => {
+            rapierWorldRef.current.impulsePrimary(
+              (Math.random() - 0.5) * 6,
+              18,
+              (Math.random() - 0.5) * 6
+            );
+          };
+          rapierSpawnRef.current = async (kind: 'sphere' | 'box') => {
+            const nextCfg = { ...rapierConfigRef.current, enabled: true };
+            setRapierConfig(nextCfg);
+            rapierConfigRef.current = nextCfg;
+            await rapierWorldRef.current.ensureReady(nextCfg);
+            rapierWorldRef.current.updateConfig(nextCfg);
+            rapierWorldRef.current.spawnCollidingProp(scene, kind);
+          };
+          rapierResetRef.current = () => {
+            rapierWorldRef.current.resetAll(scene);
+            const nextCfg = { ...rapierConfigRef.current, enabled: false };
+            setRapierConfig(nextCfg);
+            rapierConfigRef.current = nextCfg;
+          };
+
+          if (rapierConfigRef.current.enabled) {
+            rapierWorldRef.current.step(delta);
+          } else {
+            applyAnimationPrinciplesFrame(
+              animTarget,
+              animPrinciplesRef.current,
+              principlesRuntime,
+              motionTrailLine,
+              delta
+            );
+            applyProceduralIkFrame(
+              animTarget,
+              camera,
+              scene,
+              ikConfigRef.current,
+              animPrinciplesRef.current.enabled
+            );
+          }
+          syncActionForgeRigRings(
+            scene,
             animTarget,
-            animPrinciplesRef.current,
-            principlesRuntime,
-            motionTrailLine,
-            delta
+            animPrinciplesRef.current.enabled || stateRef.current.showSkeleton
           );
           if (animPrinciplesRef.current.stagingMode === 'silhouette') {
             activeRenderer.domElement.style.filter = 'brightness(0.08) contrast(4.5) grayscale(1)';
@@ -5037,7 +5222,12 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
 
           const endFrame = Math.max(1, stateRef.current.animEndFrame);
           if (uploadedGroup) {
-            if (uploadedMixer && uploadedClips.length > 0 && stateRef.current.isPlaying) {
+            if (
+              uploadedMixer &&
+              uploadedClips.length > 0 &&
+              stateRef.current.isPlaying &&
+              !animPrinciplesRef.current.enabled
+            ) {
               if (endFrame <= 1) {
                 uploadedMixer.setTime(0);
                 if (lastReportedFrame !== 1) {
@@ -5221,6 +5411,67 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
       }
     };
 
+    rotateBoneJointRef.current = (joint: RigJointSpec, axis: 'x' | 'y' | 'z', deg: number) => {
+      const target = uploadedGroup ?? refSkeletonGroup;
+      if (!target) return;
+      let matchedBone: THREE.Bone | null = null;
+      target.traverse((o) => {
+        if (matchedBone || !(o as THREE.Bone).isBone) return;
+        const n = o.name.toLowerCase();
+        if (joint.matchTerms.some((term) => n.includes(term))) {
+          matchedBone = o as THREE.Bone;
+        }
+      });
+      if (matchedBone) {
+        (matchedBone as THREE.Bone).rotation[axis] = THREE.MathUtils.degToRad(deg);
+        setShowSkeleton(true);
+        requestRenderRef.current?.();
+      } else {
+        target.rotation[axis] = THREE.MathUtils.degToRad(deg * 0.5);
+        requestRenderRef.current?.();
+      }
+    };
+
+    resetRigPoseRef.current = () => {
+      const target = uploadedGroup ?? refSkeletonGroup;
+      if (!target) return;
+      target.traverse((o) => {
+        if ((o as THREE.Bone).isBone) {
+          o.rotation.set(0, 0, 0);
+        }
+      });
+      requestRenderRef.current?.();
+      showBriefStatus('Pose dos ossos resetada.');
+    };
+
+    autoRigCurrentCharacterRef.current = () => {
+      const target = uploadedGroup || (studioObjectsGroup.children.length > 0 ? studioObjectsGroup : null);
+      if (!target) {
+        showBriefStatus('Importe um personagem 3D para gerar o Auto-Rig.');
+        return;
+      }
+      let hasBones = false;
+      target.traverse((o) => {
+        if ((o as THREE.Bone).isBone || (o as THREE.SkinnedMesh).isSkinnedMesh) {
+          hasBones = true;
+        }
+      });
+      if (!hasBones) {
+        try {
+          autoRigAndAnimateGroup(target, latestConfigRef.current.rigPreset);
+        } catch {
+          // non-blocking fallback
+        }
+      }
+      setShowSkeleton(true);
+      requestRenderRef.current?.();
+      showBriefStatus(
+        hasBones
+          ? 'Esqueleto detectado no personagem: Anéis 3D e Picker ativados.'
+          : 'Auto-Rig humanoide gerado automaticamente conforme as proporções do personagem!'
+      );
+    };
+
     autoSetupPipelineRef.current = () => {
       const target = uploadedGroup || (studioObjectsGroup.children.length > 0 ? studioObjectsGroup : null);
       if (!target) {
@@ -5235,6 +5486,9 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
         target.position.y -= box.min.y;
         target.updateMatrixWorld(true);
       }
+
+      // 1b. Auto-Rig automático se o personagem importado ainda não possuir esqueleto
+      autoRigCurrentCharacterRef.current?.();
 
       // 2. Gerar UV automático nas malhas do objeto
       autoGenerateUvsForGroup(target);
@@ -5355,9 +5609,24 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
         requestRenderRef.current?.();
         scheduleAutoSaveRef.current?.();
         showBriefStatus(`Desfeito: ${label}`);
-      } else {
-        showBriefStatus('Nada para desfazer no histórico');
+        return;
       }
+      // Fallback 1: desfazer MoGraph Cloner ativo
+      if (mographGroup.children.length > 0) {
+        clearMoGraphRef.current?.();
+        showBriefStatus('Desfeito: MoGraph Cloner');
+        return;
+      }
+      // Fallback 2: desfazer último objeto/template procedural adicionado (ex: Vidro & Neon)
+      if (studioPrimitives.length > 0) {
+        const last = studioPrimitives[studioPrimitives.length - 1];
+        deleteMeshByIdRef.current?.(last.mesh.uuid);
+        requestRenderRef.current?.();
+        scheduleAutoSaveRef.current?.();
+        showBriefStatus(`Desfeito: ${last.mesh.name || 'Objeto 3D'}`);
+        return;
+      }
+      showBriefStatus('Nada para desfazer no histórico');
     };
 
     redoSceneRef.current = () => {
@@ -5835,7 +6104,7 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
       } else if ((e.ctrlKey || e.metaKey) && e.code === 'KeyY') {
         e.preventDefault();
         redoSceneRef.current?.();
-      } else if ((e.ctrlKey || e.metaKey) && e.code === 'KeyZ') {
+      } else if ((e.ctrlKey || e.metaKey) && (e.code === 'KeyZ' || e.key.toLowerCase() === 'z')) {
         e.preventDefault();
         if (stateRef.current.toolMode.startsWith('sculpt_')) {
           undoSculptRef.current?.();
@@ -6054,14 +6323,13 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
                   { key: 'stage5' as const, title: '4. PBR, UV & HDRI (Ao Vivo)', icon: <Palette className="w-4 h-4 text-violet-400" /> },
                 ],
               },
-              // Grupo 3: Rigging, Animação, Simulação & Nodes
+              // Grupo 3: Rigging & Animação (Unificado), Simulação & Nodes
               {
                 group: 'motion',
                 items: [
-                  { key: 'stage7' as const, title: '5. Rigging & Esqueleto', icon: <Bone className="w-4 h-4 text-amber-400" /> },
-                  { key: 'stage8' as const, title: '6. Animação & 12 Princípios', icon: <Video className="w-4 h-4 text-emerald-400" /> },
-                  { key: 'stage9' as const, title: '7. Simulação, FX & Pós-FX', icon: <Wind className="w-4 h-4 text-sky-400" /> },
-                  { key: 'stage12' as const, title: '8. Geometry Nodes & MoGraph', icon: <Sliders className="w-4 h-4 text-purple-400" /> },
+                  { key: 'stage7' as const, title: '5. Rigging & Animação 3D (ActionForge)', icon: <Bone className="w-4 h-4 text-amber-400" /> },
+                  { key: 'stage9' as const, title: '6. Simulação, FX & Pós-FX', icon: <Wind className="w-4 h-4 text-sky-400" /> },
+                  { key: 'stage12' as const, title: '7. Geometry Nodes & MoGraph', icon: <Sliders className="w-4 h-4 text-purple-400" /> },
                 ],
               },
               // Grupo 4: Câmera & Entrega
@@ -7060,15 +7328,460 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
 
             {/* 7. RIGGING */}
             <PipelineStageCard
-              title="5. RIGGING"
-              description="Construir o esqueleto interno (armadura) e os controles de movimentação."
+              title="5. RIGGING & ANIMAÇÃO"
+              description="Seletor visual de ossos (Picker), anéis 3D de controle, ações articuladas e 12 Princípios da Animação."
               icon={<Bone className="w-4 h-4 text-orange-400" />}
               expanded={focusedStage === 'stage7' || openSections.stage7}
-              hidden={Boolean(focusedStage && focusedStage !== 'stage7')}
-              standalone={focusedStage === 'stage7'}
+              hidden={Boolean(focusedStage && focusedStage !== 'stage7' && focusedStage !== 'stage8')}
+              standalone={focusedStage === 'stage7' || focusedStage === 'stage8'}
               onToggle={() => toggleSection('stage7')}
               badgeText={`${RIG_PRESET_DEFINITIONS[config.rigPreset].boneCount} ossos`}
             >
+              <div className="grid grid-cols-2 gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => autoRigCurrentCharacterRef.current?.()}
+                  className="inline-flex items-center justify-center gap-1.5 px-2 py-2 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 text-[10px] font-bold transition-colors cursor-pointer"
+                >
+                  <Wand2 className="w-3.5 h-3.5 shrink-0" />
+                  <span>Auto-Rig</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (isAutoTestingAnims) {
+                      setIsAutoTestingAnims(false);
+                      return;
+                    }
+                    setShowSkeleton(true);
+                    autoRigCurrentCharacterRef.current?.();
+                    setIsAutoTestingAnims(true);
+                  }}
+                  className={`inline-flex items-center justify-center gap-1.5 px-2 py-2 rounded-lg text-[10px] font-bold transition-colors cursor-pointer ${
+                    isAutoTestingAnims
+                      ? 'bg-rose-500 hover:bg-rose-400 text-white'
+                      : 'bg-cyan-500 hover:bg-cyan-400 text-slate-950'
+                  }`}
+                >
+                  <Play className="w-3.5 h-3.5 shrink-0" />
+                  <span>{isAutoTestingAnims ? 'Parar Teste' : 'Testar Rig + Tudo'}</span>
+                </button>
+              </div>
+              <RigBonePicker
+                selectedJointId={selectedRigJointId}
+                onSelectJoint={(joint) => {
+                  setSelectedRigJointId(joint.id);
+                  setShowSkeleton(true);
+                }}
+                onRotateJoint={(joint, axis, deg) => rotateBoneJointRef.current?.(joint, axis, deg)}
+                onResetPose={() => resetRigPoseRef.current?.()}
+              />
+              {/* Biblioteca de Ações — Padrão ActionForge (85 Clipes) */}
+              <div className="rounded-lg bg-[#0D1017] border border-cyan-500/30 p-2.5 flex flex-col gap-2 text-[10px]">
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-1.5">
+                    <span className="font-semibold text-cyan-300 tracking-wide uppercase">
+                      Library · {ACTIONFORGE_CLIPS.length} Clips
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <button
+                      type="button"
+                      onClick={() => setClipViewMode('grid')}
+                      className={`px-1.5 py-0.5 rounded text-[9px] font-semibold cursor-pointer ${
+                        clipViewMode === 'grid'
+                          ? 'bg-cyan-500/25 text-cyan-200 border border-cyan-400/60'
+                          : 'bg-[#121621] text-slate-400 border border-slate-800'
+                      }`}
+                    >
+                      Thumbnails
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setClipViewMode('list')}
+                      className={`px-1.5 py-0.5 rounded text-[9px] font-semibold cursor-pointer ${
+                        clipViewMode === 'list'
+                          ? 'bg-cyan-500/25 text-cyan-200 border border-cyan-400/60'
+                          : 'bg-[#121621] text-slate-400 border border-slate-800'
+                      }`}
+                    >
+                      List
+                    </button>
+                    {animPrinciples.enabled && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const next = { ...animPrinciples, enabled: false };
+                          setAnimPrinciples(next);
+                          animPrinciplesRef.current = next;
+                          setActiveClipId(null);
+                        }}
+                        className="px-1.5 py-0.5 rounded bg-rose-500/20 border border-rose-500/40 text-rose-200 hover:bg-rose-500 hover:text-white font-semibold cursor-pointer"
+                      >
+                        Parar
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                <input
+                  type="text"
+                  value={clipSearch}
+                  onChange={(e) => setClipSearch(e.target.value)}
+                  placeholder="Buscar entre 85 clipes (Walk, Sword, Pistol, Zombie)..."
+                  className="w-full px-2 py-1 rounded bg-[#121621] border border-slate-800 text-[10px] text-slate-200 placeholder:text-slate-500 focus:outline-none focus:border-cyan-500"
+                />
+
+                {/* Filtros por Tag / Categoria + Root Motion na Cena */}
+                <div className="flex flex-wrap items-center gap-1">
+                  {['Todos', 'Move', 'Combat', 'Sword', 'Idle', 'Shooter', 'Air', 'Action', 'Work', 'Magic', 'Zombie'].map((tag) => (
+                    <button
+                      key={tag}
+                      type="button"
+                      onClick={() => setClipTagFilter(tag)}
+                      className={`px-1.5 py-0.5 rounded text-[9px] font-medium cursor-pointer transition-colors ${
+                        clipTagFilter === tag
+                          ? 'bg-cyan-500/25 text-cyan-200 border border-cyan-400/60'
+                          : 'bg-[#121621] text-slate-400 border border-slate-800 hover:text-white'
+                      }`}
+                    >
+                      {tag}
+                    </button>
+                  ))}
+                  <button
+                    type="button"
+                    onClick={() => setOnlyRootMotion((v) => !v)}
+                    title="Filtrar apenas clipes com deslocamento (→)"
+                    className={`px-1.5 py-0.5 rounded text-[9px] font-semibold cursor-pointer ${
+                      onlyRootMotion
+                        ? 'bg-amber-500/25 text-amber-200 border border-amber-400/60'
+                        : 'bg-[#121621] text-slate-400 border border-slate-800 hover:text-white'
+                    }`}
+                  >
+                    → Move
+                  </button>
+                </div>
+
+                {/* Toggle Andar/Correr Real na Cena (Root Motion) + Física */}
+                <div className="grid grid-cols-2 gap-1">
+                  <label className="flex items-center justify-between gap-1.5 px-2 py-1 rounded bg-[#121621] border border-slate-800 cursor-pointer">
+                    <span className="text-[9px] text-slate-200 font-medium truncate">
+                      Andar na Cena
+                    </span>
+                    <input
+                      type="checkbox"
+                      checked={animPrinciples.rootMotion !== false}
+                      onChange={(e) => {
+                        const next = { ...animPrinciples, rootMotion: e.target.checked };
+                        setAnimPrinciples(next);
+                        animPrinciplesRef.current = next;
+                      }}
+                      className="accent-cyan-400 cursor-pointer"
+                    />
+                  </label>
+                  <label className="flex items-center justify-between gap-1.5 px-2 py-1 rounded bg-[#121621] border border-slate-800 cursor-pointer">
+                    <span className="text-[9px] text-emerald-300 font-medium truncate">
+                      Física (Inércia)
+                    </span>
+                    <input
+                      type="checkbox"
+                      checked={animPrinciples.physicsEnabled !== false}
+                      onChange={(e) => {
+                        const next = { ...animPrinciples, physicsEnabled: e.target.checked };
+                        setAnimPrinciples(next);
+                        animPrinciplesRef.current = next;
+                      }}
+                      className="accent-emerald-400 cursor-pointer"
+                    />
+                  </label>
+                </div>
+
+                <div
+                  className={
+                    clipViewMode === 'grid'
+                      ? 'grid grid-cols-2 gap-1 max-h-60 overflow-y-auto pr-0.5'
+                      : 'flex flex-col gap-1 max-h-60 overflow-y-auto pr-0.5'
+                  }
+                >
+                  {ACTIONFORGE_CLIPS.filter((c) => {
+                    if (clipTagFilter !== 'Todos' && c.tag !== clipTagFilter) return false;
+                    if (onlyRootMotion && !c.rootMotion) return false;
+                    const q = clipSearch.trim().toLowerCase();
+                    return !q || c.label.toLowerCase().includes(q) || c.tag.toLowerCase().includes(q);
+                  }).map((clip) => {
+                    const isActive = animPrinciples.enabled && activeClipId === clip.id;
+                    return (
+                      <button
+                        key={clip.id}
+                        type="button"
+                        onClick={() => {
+                          const nextEnabled = !isActive;
+                          const next = {
+                            ...DEFAULT_ANIMATION_PRINCIPLES,
+                            enabled: nextEnabled,
+                            actionCycle: clip.cycle,
+                            timingSpeed: clip.speed,
+                            exaggeration: clip.exag,
+                            rootMotion: animPrinciples.rootMotion !== false,
+                            squashStretch: 0,
+                            anticipation: 0,
+                            arcsStrength: 0,
+                            solidAsymmetry: 0,
+                          };
+                          setAnimPrinciples(next);
+                          animPrinciplesRef.current = next;
+                          setActiveClipId(nextEnabled ? clip.id : null);
+                        }}
+                        className={`px-2 py-1.5 rounded border text-left transition-colors cursor-pointer ${
+                          clipViewMode === 'list'
+                            ? 'flex items-center justify-between gap-2'
+                            : 'flex flex-col gap-0.5'
+                        } ${
+                          isActive
+                            ? 'bg-cyan-500/20 border-cyan-400 text-cyan-100'
+                            : 'bg-[#121621] border-slate-800 text-slate-300 hover:border-cyan-500/50 hover:text-white'
+                        }`}
+                      >
+                        <span className="text-[10px] font-semibold truncate">{clip.label}</span>
+                        <span className="flex items-center gap-1 text-[8px] font-mono uppercase text-slate-500 shrink-0">
+                          <span>{clip.tag}</span>
+                          {clip.rootMotion && <span className="text-cyan-400">→</span>}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                <label className="flex items-center gap-2 pt-1 border-t border-slate-800/80">
+                  <span className="text-slate-400 shrink-0">Velocidade</span>
+                  <input
+                    type="range"
+                    min={0.4}
+                    max={2.0}
+                    step={0.1}
+                    value={animPrinciples.timingSpeed}
+                    onChange={(e) => {
+                      const next = { ...animPrinciples, timingSpeed: Number(e.target.value) };
+                      setAnimPrinciples(next);
+                      animPrinciplesRef.current = next;
+                    }}
+                    className="flex-1"
+                  />
+                  <span className="font-mono text-cyan-300 w-8 text-right">
+                    {animPrinciples.timingSpeed.toFixed(1)}x
+                  </span>
+                </label>
+              </div>
+
+              {/* Física Real em Tempo Real — Rapier3D (Rust / WebAssembly) */}
+              <div className="rounded-lg bg-[#0D1017] border border-emerald-500/35 p-2.5 flex flex-col gap-2 text-[10px]">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="font-semibold text-emerald-300 uppercase tracking-wide">
+                    Física Real · Rapier3D (Rust/WASM)
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => void rapierToggleRef.current?.(!rapierConfig.enabled)}
+                    className={`px-2 py-0.5 rounded text-[9px] font-bold cursor-pointer ${
+                      rapierConfig.enabled
+                        ? 'bg-emerald-500 text-slate-950'
+                        : 'bg-[#121621] text-slate-300 border border-slate-700 hover:border-emerald-400'
+                    }`}
+                  >
+                    {rapierConfig.enabled ? 'Ativo' : 'Ativar'}
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-2 gap-1">
+                  <button
+                    type="button"
+                    onClick={() => void rapierDropRef.current?.()}
+                    className="px-2 py-1.5 rounded bg-emerald-500/20 border border-emerald-500/40 text-emerald-200 hover:bg-emerald-500 hover:text-slate-950 font-semibold cursor-pointer"
+                  >
+                    Queda Livre
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => rapierImpulseRef.current?.()}
+                    className="px-2 py-1.5 rounded bg-[#121621] border border-slate-800 text-slate-200 hover:border-cyan-400 font-semibold cursor-pointer"
+                  >
+                    Impulso / Pulo
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => void rapierSpawnRef.current?.('sphere')}
+                    className="px-2 py-1 rounded bg-[#121621] border border-slate-800 text-cyan-300 hover:border-cyan-400 font-medium cursor-pointer"
+                  >
+                    + Esfera Colisão
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => void rapierSpawnRef.current?.('box')}
+                    className="px-2 py-1 rounded bg-[#121621] border border-slate-800 text-amber-300 hover:border-amber-400 font-medium cursor-pointer"
+                  >
+                    + Caixa Colisão
+                  </button>
+                </div>
+
+                <label className="flex items-center gap-2">
+                  <span className="text-slate-400 w-16 shrink-0">Gravidade</span>
+                  <input
+                    type="range"
+                    min={-25}
+                    max={-1}
+                    step={0.5}
+                    value={rapierConfig.gravityY}
+                    onChange={(e) => {
+                      const next = { ...rapierConfig, gravityY: Number(e.target.value) };
+                      setRapierConfig(next);
+                      rapierConfigRef.current = next;
+                      rapierWorldRef.current.updateConfig(next);
+                    }}
+                    className="flex-1"
+                  />
+                  <span className="font-mono text-emerald-300 w-12 text-right">
+                    {rapierConfig.gravityY.toFixed(1)}
+                  </span>
+                </label>
+
+                <label className="flex items-center gap-2">
+                  <span className="text-slate-400 w-16 shrink-0">Peso (kg)</span>
+                  <input
+                    type="range"
+                    min={0.5}
+                    max={30}
+                    step={0.5}
+                    value={rapierConfig.mass}
+                    onChange={(e) => {
+                      const next = { ...rapierConfig, mass: Number(e.target.value) };
+                      setRapierConfig(next);
+                      rapierConfigRef.current = next;
+                      rapierWorldRef.current.updateConfig(next);
+                    }}
+                    className="flex-1"
+                  />
+                  <span className="font-mono text-emerald-300 w-12 text-right">
+                    {rapierConfig.mass.toFixed(1)}kg
+                  </span>
+                </label>
+
+                <label className="flex items-center gap-2">
+                  <span className="text-slate-400 w-16 shrink-0">Elasticid.</span>
+                  <input
+                    type="range"
+                    min={0}
+                    max={1}
+                    step={0.05}
+                    value={rapierConfig.restitution}
+                    onChange={(e) => {
+                      const next = { ...rapierConfig, restitution: Number(e.target.value) };
+                      setRapierConfig(next);
+                      rapierConfigRef.current = next;
+                      rapierWorldRef.current.updateConfig(next);
+                    }}
+                    className="flex-1"
+                  />
+                  <span className="font-mono text-emerald-300 w-12 text-right">
+                    {Math.round(rapierConfig.restitution * 100)}%
+                  </span>
+                </label>
+
+                {rapierConfig.enabled && (
+                  <button
+                    type="button"
+                    onClick={() => rapierResetRef.current?.()}
+                    className="w-full py-1 rounded bg-rose-500/20 border border-rose-500/40 text-rose-200 hover:bg-rose-500 hover:text-white font-semibold cursor-pointer"
+                  >
+                    Resetar Física &amp; Posição
+                  </button>
+                )}
+              </div>
+
+              {/* IK Procedural — Adaptação ao Ambiente (Cabeça/Olhos + Pés no Terreno) */}
+              <div className="rounded-lg bg-[#0D1017] border border-sky-500/35 p-2.5 flex flex-col gap-2 text-[10px]">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="font-semibold text-sky-300 uppercase tracking-wide">
+                    IK Procedural · Ambiente
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const next = { ...ikConfig, enabled: !ikConfig.enabled };
+                      setIkConfig(next);
+                      ikConfigRef.current = next;
+                    }}
+                    className={`px-2 py-0.5 rounded text-[9px] font-bold cursor-pointer ${
+                      ikConfig.enabled
+                        ? 'bg-sky-500 text-slate-950'
+                        : 'bg-[#121621] text-slate-300 border border-slate-700 hover:border-sky-400'
+                    }`}
+                  >
+                    {ikConfig.enabled ? 'Ativo' : 'Ativar'}
+                  </button>
+                </div>
+
+                <label className="flex items-center justify-between gap-2 px-2 py-1 rounded bg-[#121621] border border-slate-800 cursor-pointer">
+                  <span className="text-slate-200">Cabeça &amp; Olhos (Look-At Câmera)</span>
+                  <input
+                    type="checkbox"
+                    checked={ikConfig.headLookAtCamera}
+                    onChange={(e) => {
+                      const next = { ...ikConfig, enabled: true, headLookAtCamera: e.target.checked };
+                      setIkConfig(next);
+                      ikConfigRef.current = next;
+                    }}
+                    className="accent-sky-400 cursor-pointer"
+                  />
+                </label>
+
+                <label className="flex items-center justify-between gap-2 px-2 py-1 rounded bg-[#121621] border border-slate-800 cursor-pointer">
+                  <span className="text-slate-200">Pés no Terreno (2-Bone Foot IK)</span>
+                  <input
+                    type="checkbox"
+                    checked={ikConfig.footGroundIk}
+                    onChange={(e) => {
+                      const next = { ...ikConfig, enabled: true, footGroundIk: e.target.checked };
+                      setIkConfig(next);
+                      ikConfigRef.current = next;
+                    }}
+                    className="accent-sky-400 cursor-pointer"
+                  />
+                </label>
+
+                <label className="flex items-center justify-between gap-2 px-2 py-1 rounded bg-[#121621] border border-slate-800 cursor-pointer">
+                  <span className="text-amber-300 font-medium">Gerar Terreno Irregular 3D</span>
+                  <input
+                    type="checkbox"
+                    checked={ikConfig.unevenTerrain}
+                    onChange={(e) => {
+                      const next = { ...ikConfig, enabled: true, unevenTerrain: e.target.checked };
+                      setIkConfig(next);
+                      ikConfigRef.current = next;
+                    }}
+                    className="accent-amber-400 cursor-pointer"
+                  />
+                </label>
+
+                <label className="flex items-center gap-2">
+                  <span className="text-slate-400 w-16 shrink-0">Peso IK</span>
+                  <input
+                    type="range"
+                    min={0}
+                    max={1}
+                    step={0.05}
+                    value={ikConfig.ikWeight}
+                    onChange={(e) => {
+                      const next = { ...ikConfig, ikWeight: Number(e.target.value) };
+                      setIkConfig(next);
+                      ikConfigRef.current = next;
+                    }}
+                    className="flex-1"
+                  />
+                  <span className="font-mono text-sky-300 w-10 text-right">
+                    {Math.round(ikConfig.ikWeight * 100)}%
+                  </span>
+                </label>
+              </div>
               <label className="flex flex-col gap-1">
                 <span className="text-slate-400">Preset de Armadura (Rig)</span>
                 <div className="relative">
@@ -7886,8 +8599,9 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
         </aside>
       )}
 
-      {/* Unobstructed 3D Viewport Area */}
-      <div className="relative flex-1 min-w-0 h-full min-h-[360px] overflow-hidden">
+      {/* Right Column: 3D Viewport Area + Docked ActionForge Timeline Below */}
+      <div className="flex-1 min-w-0 h-full flex flex-col overflow-hidden">
+      <div className="relative flex-1 min-h-0 overflow-hidden">
         {/* Dedicated WebGL Mount Container */}
         <div
           ref={mountRef}
@@ -8267,6 +8981,59 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
           onShowAllMeshes={() => showAllMeshesRef.current?.()}
           onDeleteMesh={(id) => deleteMeshByIdRef.current?.(id)}
         />
+      </div>
+
+      {/* ActionForge Bottom Timeline Docked Below the 3D Scene (Strips | Graph | Keys) */}
+      {(focusedStage === 'stage7' || focusedStage === 'stage8' || animPrinciples.enabled) && (
+        <ActionForgeTimeline
+          activeClip={ACTIONFORGE_CLIPS.find((c) => c.id === activeClipId) || null}
+          isPlaying={animPrinciples.enabled}
+          speed={animPrinciples.timingSpeed}
+          onTogglePlay={() => {
+            const nextEnabled = !animPrinciples.enabled;
+            const fallbackClip: ActionForgeClipItem =
+              ACTIONFORGE_CLIPS.find((c) => c.id === activeClipId) ||
+              ACTIONFORGE_CLIPS.find((c) => c.label === 'Walk Loop') ||
+              ACTIONFORGE_CLIPS[0];
+            const next = {
+              ...animPrinciples,
+              enabled: nextEnabled,
+              actionCycle: fallbackClip.cycle,
+              rootMotion: animPrinciples.rootMotion !== false,
+            };
+            setAnimPrinciples(next);
+            animPrinciplesRef.current = next;
+            if (nextEnabled && !activeClipId) setActiveClipId(fallbackClip.id);
+          }}
+          onStop={() => {
+            const next = { ...animPrinciples, enabled: false };
+            setAnimPrinciples(next);
+            animPrinciplesRef.current = next;
+          }}
+          onSelectClip={(clip) => {
+            const next = {
+              ...DEFAULT_ANIMATION_PRINCIPLES,
+              enabled: true,
+              actionCycle: clip.cycle,
+              timingSpeed: clip.speed,
+              exaggeration: clip.exag,
+              rootMotion: animPrinciples.rootMotion !== false,
+              squashStretch: 0,
+              anticipation: 0,
+              arcsStrength: 0,
+              solidAsymmetry: 0,
+            };
+            setAnimPrinciples(next);
+            animPrinciplesRef.current = next;
+            setActiveClipId(clip.id);
+          }}
+          onSpeedChange={(spd) => {
+            const next = { ...animPrinciples, timingSpeed: spd };
+            setAnimPrinciples(next);
+            animPrinciplesRef.current = next;
+          }}
+        />
+      )}
       </div>
 
       {verificationReport && (
