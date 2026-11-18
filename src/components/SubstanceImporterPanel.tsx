@@ -47,7 +47,7 @@ export const SubstanceImporterPanel: React.FC<SubstanceImporterPanelProps> = ({
   const [mode, setMode] = useState<ImporterMode>('auto');
   const [localMaterialName, setLocalMaterialName] = useState('Substance_Material');
   const [localSlots, setLocalSlots] = useState<Partial<Record<SubstanceChannelId, SubstanceTextureSlot>>>({});
-  const [applyToAllGlbMeshes, setApplyToAllGlbMeshes] = useState(true);
+  const [applyToAllGlbMeshes, setApplyToAllGlbMeshes] = useState(false);
   const [normalDirectXToOpenGL, setNormalDirectXToOpenGL] = useState(false);
   const [useBumpConversion, setUseBumpConversion] = useState(true);
   const [uvScale, setUvScale] = useState(1.0);
@@ -230,7 +230,7 @@ export const SubstanceImporterPanel: React.FC<SubstanceImporterPanelProps> = ({
                 onChange={(e) => setApplyToAllGlbMeshes(e.target.checked)}
                 className="accent-orange-500 w-4 h-4 cursor-pointer"
               />
-              <span>Aplicar alterações em todas as malhas do GLB</span>
+              <span>Aplicar em todas as malhas (desmarcado = material separado)</span>
             </label>
           </div>
           <div className="flex flex-wrap gap-1.5">

@@ -1,15 +1,18 @@
-import { Component, ReactNode, useRef, useState } from 'react';
+import { Component, ReactNode, useEffect, useRef, useState } from 'react';
+import gsap from 'gsap';
 import {
   Archive,
   Bone,
   Box,
   Camera,
+  Compass,
   Grid,
   Hammer,
   Palette,
   Play,
   RotateCcw,
   Scissors,
+  Search,
   SlidersHorizontal,
   Sparkles,
   Sun,
@@ -25,6 +28,9 @@ import {
 } from './components/Viewport3D';
 import { AtlasUvInspector } from './components/AtlasUvInspector';
 import { MaterialEcosystemView } from './components/MaterialEcosystemView';
+import { PbrUvHubView } from './components/PbrUvHubView';
+import { RadialPieMenu, RadialPieActionId } from './components/RadialPieMenu';
+import { SmartCommandPalette, SmartCommandTarget } from './components/SmartCommandPalette';
 import {
   SubstanceChannelId,
   SubstanceTextureSetRequest,
@@ -37,19 +43,15 @@ type WorkspaceTab = 'viewport' | 'atlas' | 'ecosystem' | ViewportStageKey;
 const NAV_TABS: { id: WorkspaceTab; label: string; mobileLabel: string; icon: ReactNode }[] = [
   { id: 'viewport', label: 'Viewport 3D', mobileLabel: '3D', icon: <Box className="w-4 h-4" /> },
   { id: 'stage1', label: '1. Importar', mobileLabel: '1. Import', icon: <Upload className="w-4 h-4" /> },
-  { id: 'stage2', label: '2. Modelagem', mobileLabel: '2. Model', icon: <Box className="w-4 h-4" /> },
-  { id: 'stage3', label: '3. Escultura', mobileLabel: '3. Escult', icon: <Hammer className="w-4 h-4" /> },
-  { id: 'stage4', label: '4. Retopology', mobileLabel: '4. Retopo', icon: <Grid className="w-4 h-4" /> },
-  { id: 'atlas', label: '5. UV Unwrapping', mobileLabel: '5. UV', icon: <Scissors className="w-4 h-4" /> },
-  { id: 'ecosystem', label: '6. Material & Texturing', mobileLabel: '6. Mat', icon: <Palette className="w-4 h-4" /> },
-  { id: 'stage7', label: '7. Rigging', mobileLabel: '7. Rig', icon: <Bone className="w-4 h-4" /> },
-  { id: 'stage8', label: '8. Animação', mobileLabel: '8. Anim', icon: <Play className="w-4 h-4" /> },
-  { id: 'stage9', label: '9. Simulação & FX', mobileLabel: '9. FX', icon: <Sparkles className="w-4 h-4" /> },
-  { id: 'stage10', label: '10. Luzes & HDRI', mobileLabel: '10. Luz', icon: <Sun className="w-4 h-4" /> },
-  { id: 'stage11', label: '11. Pós-FX', mobileLabel: '11. Pós', icon: <SlidersHorizontal className="w-4 h-4" /> },
-  { id: 'stage12', label: '12. Geometry Nodes', mobileLabel: '12. Nodes', icon: <Workflow className="w-4 h-4" /> },
-  { id: 'stage13', label: '13. Câmera', mobileLabel: '13. Cam', icon: <Camera className="w-4 h-4" /> },
-  { id: 'stage14', label: '14. Exportar', mobileLabel: '14. Export', icon: <Archive className="w-4 h-4" /> },
+  { id: 'stage2', label: '2. Editar Cena', mobileLabel: '2. Editar', icon: <Box className="w-4 h-4" /> },
+  { id: 'stage4', label: '3. Retopology', mobileLabel: '3. Retopo', icon: <Grid className="w-4 h-4" /> },
+  { id: 'stage5', label: '4. PBR, UV & HDRI', mobileLabel: '4. PBR', icon: <Palette className="w-4 h-4" /> },
+  { id: 'stage7', label: '5. Rigging', mobileLabel: '5. Rig', icon: <Bone className="w-4 h-4" /> },
+  { id: 'stage8', label: '6. Animação', mobileLabel: '6. Anim', icon: <Play className="w-4 h-4" /> },
+  { id: 'stage9', label: '7. Simulação & Pós-FX', mobileLabel: '7. FX', icon: <Sparkles className="w-4 h-4" /> },
+  { id: 'stage12', label: '8. Geometry Nodes', mobileLabel: '8. Nodes', icon: <Workflow className="w-4 h-4" /> },
+  { id: 'stage13', label: '9. Câmera', mobileLabel: '9. Cam', icon: <Camera className="w-4 h-4" /> },
+  { id: 'stage14', label: '10. Exportar', mobileLabel: '10. Export', icon: <Archive className="w-4 h-4" /> },
 ];
 
 interface ErrorBoundaryState {
@@ -86,6 +88,8 @@ class ViewportErrorBoundary extends Component<{ children: ReactNode }, ErrorBoun
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<WorkspaceTab>('viewport');
+  const [importedModelFile, setImportedModelFile] = useState<File | null>(null);
+  const [pendingImportFiles, setPendingImportFiles] = useState<File[] | null>(null);
   const [config, setConfig] = useState<StudioConfig>(DEFAULT_STUDIO_CONFIG);
   const [importedUvs, setImportedUvs] = useState<ImportedUvMesh[] | null>(null);
   const [substanceSlots, setSubstanceSlots] = useState<
@@ -96,6 +100,126 @@ export default function App() {
   const lastGlbImportSerialRef = useRef<number>(0);
 
   const [substanceRequest, setSubstanceRequest] = useState<SubstanceTextureSetRequest | null>(null);
+  const [pieOpen, setPieOpen] = useState(false);
+  const [piePos, setPiePos] = useState({ x: 360, y: 260 });
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [highContrast, setHighContrast] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem('alexdesign_high_contrast') === '1';
+    } catch {
+      return false;
+    }
+  });
+  const [largeText, setLargeText] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem('alexdesign_large_text') === '1';
+    } catch {
+      return false;
+    }
+  });
+  const [recentTargets, setRecentTargets] = useState<SmartCommandTarget[]>(() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem('alexdesign_recent_targets') || '[]');
+      return Array.isArray(saved) ? saved.slice(0, 4) : [];
+    } catch {
+      return [];
+    }
+  });
+  const pointerPosRef = useRef({ x: 360, y: 260 });
+
+  const handleSelectWorkspaceTab = (tab: WorkspaceTab) => {
+    setActiveTab(tab);
+    if (tab !== 'atlas' && tab !== 'ecosystem') {
+      setRecentTargets((prev) => {
+        const next = [tab, ...prev.filter((t) => t !== tab)].slice(0, 4);
+        try {
+          localStorage.setItem('alexdesign_recent_targets', JSON.stringify(next));
+        } catch {
+          // ignore storage quota errors
+        }
+        return next;
+      });
+    }
+  };
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('alexdesign_high_contrast', highContrast ? '1' : '0');
+    } catch {
+      // ignore
+    }
+  }, [highContrast]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('alexdesign_large_text', largeText ? '1' : '0');
+    } catch {
+      // ignore
+    }
+  }, [largeText]);
+  const headerRef = useRef<HTMLElement>(null);
+  const hubContainerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!headerRef.current) return;
+    const ctx = gsap.context(() => {
+      gsap.fromTo(
+        '.gsap-nav-item',
+        { y: -8, opacity: 0 },
+        { y: 0, opacity: 1, duration: 0.36, stagger: 0.028, ease: 'power2.out', clearProps: 'transform' }
+      );
+    }, headerRef);
+    return () => ctx.revert();
+  }, []);
+
+  useEffect(() => {
+    if ((activeTab !== 'atlas' && activeTab !== 'ecosystem') || !hubContainerRef.current) return;
+    const ctx = gsap.context(() => {
+      gsap.fromTo(
+        hubContainerRef.current,
+        { opacity: 0, y: 12 },
+        { opacity: 1, y: 0, duration: 0.34, ease: 'power3.out', clearProps: 'transform' }
+      );
+    }, hubContainerRef);
+    return () => ctx.revert();
+  }, [activeTab]);
+
+  useEffect(() => {
+    const onPointerMove = (e: MouseEvent) => {
+      pointerPosRef.current = { x: e.clientX, y: e.clientY };
+    };
+    const onKeyDown = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement | null;
+      if (
+        target &&
+        (target.tagName === 'INPUT' ||
+          target.tagName === 'TEXTAREA' ||
+          target.tagName === 'SELECT' ||
+          target.isContentEditable)
+      ) {
+        return;
+      }
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        setSearchOpen((prev) => !prev);
+        return;
+      }
+      if (e.code === 'Space' && !e.repeat) {
+        e.preventDefault();
+        setPiePos({
+          x: Math.min(Math.max(pointerPosRef.current.x, 160), window.innerWidth - 160),
+          y: Math.min(Math.max(pointerPosRef.current.y, 160), window.innerHeight - 160),
+        });
+        setPieOpen((prev) => !prev);
+      }
+    };
+    window.addEventListener('mousemove', onPointerMove, { passive: true });
+    window.addEventListener('keydown', onKeyDown);
+    return () => {
+      window.removeEventListener('mousemove', onPointerMove);
+      window.removeEventListener('keydown', onKeyDown);
+    };
+  }, []);
 
   const handleConfigChange = (patch: Partial<StudioConfig> | Partial<ViewportSceneConfig>) => {
     setConfig((prev) => ({ ...prev, ...patch }));
@@ -160,9 +284,16 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-dvh flex flex-col bg-[#0D1017] text-slate-100">
+    <div
+      className={`min-h-dvh flex flex-col bg-[#0D1017] text-slate-100 ${
+        highContrast ? 'contrast-125' : ''
+      } ${largeText ? 'text-[15px]' : ''}`}
+    >
       {/* Top Bar */}
-      <header className="h-12 sm:h-14 px-3 sm:px-4 border-b border-slate-800/90 bg-[#0D1017] flex items-center gap-3 sm:gap-4 shrink-0">
+      <header
+        ref={headerRef}
+        className="h-12 sm:h-14 px-3 sm:px-4 border-b border-slate-800/90 bg-[#0D1017] flex items-center gap-3 sm:gap-4 shrink-0"
+      >
         {/* Brand Wordmark */}
         <a
           href="#top"
@@ -175,30 +306,59 @@ export default function App() {
           Alex<span className="text-orange-500">Design</span>
         </a>
 
-        {/* Full Pipeline Navigation (Desktop & Tablet) */}
+        {/* Clean Unified Studio Navigation */}
         <nav
           aria-label="Navegação principal"
-          className="hidden sm:flex flex-1 min-w-0 h-full items-center gap-3 lg:gap-4 overflow-x-auto overflow-y-hidden no-scrollbar"
+          className="hidden sm:flex flex-1 min-w-0 h-full items-center gap-4"
         >
-          {NAV_TABS.map((tab) => {
-            const isActive = activeTab === tab.id;
-            return (
-              <button
-                key={tab.id}
-                type="button"
-                onClick={() => setActiveTab(tab.id)}
-                className={`relative h-full inline-flex items-center text-[11px] lg:text-xs font-medium transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
-                  isActive ? 'text-white' : 'text-slate-400 hover:text-slate-200'
-                }`}
-              >
-                {tab.label}
-                {isActive && (
-                  <span className="absolute left-0 right-0 bottom-0 h-0.5 bg-orange-500" />
-                )}
-              </button>
-            );
-          })}
+          <button
+            type="button"
+            onClick={() => setActiveTab('viewport')}
+            className="gsap-nav-item relative h-full inline-flex items-center gap-1.5 text-xs font-semibold text-white whitespace-nowrap shrink-0 cursor-pointer"
+          >
+            <Box className="w-3.5 h-3.5 text-orange-400" />
+            <span>Viewport 3D Studio</span>
+            <span className="absolute left-0 right-0 bottom-0 h-0.5 bg-orange-500" />
+          </button>
         </nav>
+
+        {/* Semantic Search & Adaptive Accessibility Trigger (Ctrl+K) */}
+        <button
+          type="button"
+          onClick={() => setSearchOpen(true)}
+          title="Busca Semântica e Acessibilidade (Ctrl+K)"
+          className="inline-flex items-center gap-1.5 h-8 px-2.5 rounded-lg border border-slate-800 bg-slate-900/70 text-slate-300 hover:border-slate-700 hover:text-white text-[11px] font-medium transition-colors shrink-0 cursor-pointer"
+        >
+          <Search className="w-3.5 h-3.5 text-orange-400" />
+          <span className="hidden md:inline">Busca IA</span>
+          <kbd className="hidden sm:inline text-[9px] font-mono px-1 py-0.5 rounded bg-slate-800 text-slate-400">
+            Ctrl+K
+          </kbd>
+        </button>
+
+        {/* Quick Radial Pie Menu Trigger */}
+        <button
+          type="button"
+          onClick={() => {
+            setPiePos({
+              x: Math.round(window.innerWidth / 2),
+              y: Math.round(window.innerHeight / 2),
+            });
+            setPieOpen((prev) => !prev);
+          }}
+          title="Menu Radial Rápido (Espaço)"
+          className={`hidden sm:inline-flex items-center gap-1.5 h-8 px-2.5 rounded-lg border text-[11px] font-medium transition-colors shrink-0 cursor-pointer ${
+            pieOpen
+              ? 'border-orange-500/70 bg-orange-500/15 text-orange-300'
+              : 'border-slate-800 bg-slate-900/70 text-slate-300 hover:border-slate-700 hover:text-white'
+          }`}
+        >
+          <Compass className="w-3.5 h-3.5 text-orange-400" />
+          <span className="hidden lg:inline">Menu Radial</span>
+          <kbd className="text-[9px] font-mono px-1 py-0.5 rounded bg-slate-800 text-slate-400">
+            Espaço
+          </kbd>
+        </button>
       </header>
 
       {/* Main Content Area (Viewport3D remains mounted and is the primary view) */}
@@ -221,6 +381,9 @@ export default function App() {
               onImportedUvs={handleImportedUvsChange}
               substanceTextureRequest={substanceRequest}
               onOpenTab={setActiveTab}
+              onImportedModelFile={setImportedModelFile}
+              pendingImportFiles={pendingImportFiles}
+              onConsumedPendingImport={() => setPendingImportFiles(null)}
               focusedStage={
                 activeTab === 'viewport' || activeTab === 'atlas' || activeTab === 'ecosystem'
                   ? null
@@ -230,28 +393,38 @@ export default function App() {
           </ViewportErrorBoundary>
         </div>
 
-        {activeTab === 'atlas' && (
-          <div className="pb-14 sm:pb-0">
-            <AtlasUvInspector
-              config={config}
-              onConfigChange={handleConfigChange}
+        {(activeTab === 'atlas' || activeTab === 'ecosystem') && (
+          <div ref={hubContainerRef} className="pb-14 sm:pb-0">
+            <PbrUvHubView
+              key={activeTab}
               importedUvs={importedUvs}
-            />
-          </div>
-        )}
-
-        {activeTab === 'ecosystem' && (
-          <div className="pb-14 sm:pb-0">
-            <MaterialEcosystemView
-              config={config}
-              importedUvs={importedUvs}
-              onApplySubstanceToViewport={handleApplySubstanceToViewport}
-              substanceSlots={substanceSlots}
-              onSubstanceSlotsChange={setSubstanceSlots}
-              substanceMaterialName={substanceMaterialName}
-              onSubstanceMaterialNameChange={setSubstanceMaterialName}
-              selectedGlbMeshIdx={selectedGlbMeshIdx}
-              onSelectGlbMeshIdx={handleSelectGlbMeshIdx}
+              syncedModelFile={importedModelFile}
+              onImportFileToViewport={(file) => {
+                setImportedModelFile(file);
+                setPendingImportFiles([file]);
+              }}
+              onOpenViewport={() => setActiveTab('viewport')}
+              initialTool={activeTab === 'ecosystem' ? 'pbr_materials' : 'model_inspector'}
+              atlasContent={
+                <AtlasUvInspector
+                  config={config}
+                  onConfigChange={handleConfigChange}
+                  importedUvs={importedUvs}
+                />
+              }
+              materialContent={
+                <MaterialEcosystemView
+                  config={config}
+                  importedUvs={importedUvs}
+                  onApplySubstanceToViewport={handleApplySubstanceToViewport}
+                  substanceSlots={substanceSlots}
+                  onSubstanceSlotsChange={setSubstanceSlots}
+                  substanceMaterialName={substanceMaterialName}
+                  onSubstanceMaterialNameChange={setSubstanceMaterialName}
+                  selectedGlbMeshIdx={selectedGlbMeshIdx}
+                  onSelectGlbMeshIdx={handleSelectGlbMeshIdx}
+                />
+              }
             />
           </div>
         )}
@@ -283,6 +456,25 @@ export default function App() {
           })}
         </div>
       </nav>
+
+      <RadialPieMenu
+        open={pieOpen}
+        position={piePos}
+        activeTab={activeTab}
+        onSelect={(id: RadialPieActionId) => handleSelectWorkspaceTab(id)}
+        onClose={() => setPieOpen(false)}
+      />
+
+      <SmartCommandPalette
+        open={searchOpen}
+        onClose={() => setSearchOpen(false)}
+        onSelect={(target) => handleSelectWorkspaceTab(target)}
+        highContrast={highContrast}
+        onToggleHighContrast={() => setHighContrast((v) => !v)}
+        largeText={largeText}
+        onToggleLargeText={() => setLargeText((v) => !v)}
+        recentTargets={recentTargets}
+      />
     </div>
   );
 }
