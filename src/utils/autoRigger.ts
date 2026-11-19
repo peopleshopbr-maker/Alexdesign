@@ -313,9 +313,48 @@ function buildClipsForPreset(
     quatTrack('thigh_R', t5, [[0, 0, 0], [0.35, 0, 0], [-0.35, 0, 0], [0.15, 0, 0], [0, 0, 0]]),
   ]);
 
+  // Movimentos essenciais do bípede: Correr, Pular e Acenar
+  const t5Fast = [0, 0.3125, 0.625, 0.9375, 1.25];
+  const runTracks = compact([
+    posTrack('pelvis', t5Fast, [[0, 0.05, 0], [0, -0.02, 0], [0, 0.05, 0], [0, -0.02, 0], [0, 0.05, 0]]),
+    quatTrack(spineBone, t5Fast, [[0.18, -0.14, 0], [0.18, 0, 0], [0.18, 0.14, 0], [0.18, 0, 0], [0.18, -0.14, 0]]),
+    quatTrack('head', t5Fast, [[-0.12, 0.06, 0], [-0.1, 0, 0], [-0.12, -0.06, 0], [-0.1, 0, 0], [-0.12, 0.06, 0]]),
+    quatTrack('upper_arm_L', t5Fast, [[0.7, 0, -0.18], [0, 0, -0.18], [-0.7, 0, -0.18], [0, 0, -0.18], [0.7, 0, -0.18]]),
+    quatTrack('forearm_L', t5Fast, [[-1.0, 0, 0], [-1.2, 0, 0], [-0.6, 0, 0], [-1.2, 0, 0], [-1.0, 0, 0]]),
+    quatTrack('upper_arm_R', t5Fast, [[-0.7, 0, 0.18], [0, 0, 0.18], [0.7, 0, 0.18], [0, 0, 0.18], [-0.7, 0, 0.18]]),
+    quatTrack('forearm_R', t5Fast, [[-0.6, 0, 0], [-1.2, 0, 0], [-1.0, 0, 0], [-1.2, 0, 0], [-0.6, 0, 0]]),
+    quatTrack('thigh_L', t5Fast, [[-0.7, 0, 0], [0, 0, 0], [0.7, 0, 0], [0, 0, 0], [-0.7, 0, 0]]),
+    quatTrack('shin_L', t5Fast, [[0.3, 0, 0], [1.0, 0, 0], [0.1, 0, 0], [0.5, 0, 0], [0.3, 0, 0]]),
+    quatTrack('thigh_R', t5Fast, [[0.7, 0, 0], [0, 0, 0], [-0.7, 0, 0], [0, 0, 0], [0.7, 0, 0]]),
+    quatTrack('shin_R', t5Fast, [[0.1, 0, 0], [0.5, 0, 0], [0.3, 0, 0], [1.0, 0, 0], [0.1, 0, 0]]),
+  ]);
+
+  // Pular: agachar -> impulso -> ar -> aterrissar -> recuperar
+  const tJump = [0, 0.3, 0.6, 0.9, 1.2];
+  const jumpTracks = compact([
+    posTrack('pelvis', tJump, [[0, 0, 0], [0, -0.14, 0], [0, 0.4, 0], [0, -0.1, 0], [0, 0, 0]]),
+    quatTrack(spineBone, tJump, [[0, 0, 0], [0.3, 0, 0], [-0.1, 0, 0], [0.25, 0, 0], [0, 0, 0]]),
+    quatTrack('upper_arm_L', tJump, [[0, 0, -0.15], [-0.5, 0, -0.15], [0.3, 0, -1.2], [-0.3, 0, -0.3], [0, 0, -0.15]]),
+    quatTrack('upper_arm_R', tJump, [[0, 0, 0.15], [-0.5, 0, 0.15], [0.3, 0, 1.2], [-0.3, 0, 0.3], [0, 0, 0.15]]),
+    quatTrack('thigh_L', tJump, [[0, 0, 0], [-0.8, 0, 0], [-0.3, 0, 0], [-0.7, 0, 0], [0, 0, 0]]),
+    quatTrack('shin_L', tJump, [[0, 0, 0], [1.3, 0, 0], [0.5, 0, 0], [1.1, 0, 0], [0, 0, 0]]),
+    quatTrack('thigh_R', tJump, [[0, 0, 0], [-0.8, 0, 0], [-0.3, 0, 0], [-0.7, 0, 0], [0, 0, 0]]),
+    quatTrack('shin_R', tJump, [[0, 0, 0], [1.3, 0, 0], [0.5, 0, 0], [1.1, 0, 0], [0, 0, 0]]),
+  ]);
+
+  // Acenar com o braço direito
+  const waveTracks = compact([
+    quatTrack('upper_arm_R', t5, [[0, 0, 0.15], [0, 0, 2.2], [0, 0, 2.2], [0, 0, 2.2], [0, 0, 0.15]]),
+    quatTrack('forearm_R', t5, [[0, 0, 0], [0, 0, 0.5], [0, 0, -0.5], [0, 0, 0.5], [0, 0, 0]]),
+    quatTrack('head', t5, [[0, 0, 0], [0, -0.15, 0.05], [0, -0.15, -0.05], [0, -0.15, 0.05], [0, 0, 0]]),
+  ]);
+
   return [
-    new THREE.AnimationClip('Walk_Cycle', 2.5, walkTracks),
     new THREE.AnimationClip('Idle_Breathing', 2.5, idleTracks),
+    new THREE.AnimationClip('Walk_Cycle', 2.5, walkTracks),
+    new THREE.AnimationClip('Run_Cycle', 1.25, runTracks),
+    new THREE.AnimationClip('Jump', 1.2, jumpTracks),
+    new THREE.AnimationClip('Wave', 2.5, waveTracks),
     new THREE.AnimationClip('Test_Rig_Animation', 2.5, testTracks),
   ];
 }

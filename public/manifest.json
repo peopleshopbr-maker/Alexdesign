@@ -1,0 +1,11 @@
+{
+  "name": "AlexDesign 3D Studio",
+  "short_name": "AlexDesign 3D",
+  "description": "Estúdio 3D Web profissional para Rigging, Animação ActionForge, Física Rapier3D, VFX, MoGraph e Exportação Blender 5.3+ / PNG 4K Alfa.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0A0D13",
+  "theme_color": "#f97316",
+  "orientation": "landscape",
+  "categories": ["graphics", "design", "productivity"]
+}

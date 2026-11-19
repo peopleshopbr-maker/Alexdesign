@@ -429,12 +429,12 @@ function generateAutoLoadBlenderMaterialPy(
   return `import os
 import bpy
 
-# Compativel com Blender 4.2 - 5.3+ (Principled BSDF + BLENDER_EEVEE / Cycles + interop_id)
+# Compativel com Blender 3.5 ou superior (3.x / 4.x / 5.x)
 def create_blender_substance_material():
     base_dir = os.path.dirname(bpy.data.filepath) if bpy.data.filepath else os.path.dirname(__file__)
     mat = bpy.data.materials.get("${safeName}") or bpy.data.materials.new(name="${safeName}")
-    # Blender 5.0+: material.use_nodes foi descontinuado; materiais ja usam nos nativamente
-    if bpy.app.version < (5, 0, 0) and hasattr(mat, "use_nodes"):
+    # Blender < 5.0 exige use_nodes; em 5.0+ o atributo e legado
+    if bpy.app.version < (5, 0, 0):
         mat.use_nodes = True
     nt = mat.node_tree
     nt.nodes.clear()
@@ -479,7 +479,7 @@ def create_blender_substance_material():
         mix = nt.nodes.new("ShaderNodeMix")
         mix.data_type = "RGBA"
         mix.blend_type = "MULTIPLY"
-        mix.inputs["Factor"].default_value = 1.0
+        mix.inputs[0].default_value = 1.0
         mix.location = (-40, 260)
         nt.links.new(tex_nodes["baseColor"].outputs["Color"], mix.inputs[6])
         nt.links.new(tex_nodes["ao"].outputs["Color"], mix.inputs[7])
@@ -525,8 +525,10 @@ def create_blender_substance_material():
 
     if "opacity" in tex_nodes:
         nt.links.new(tex_nodes["opacity"].outputs["Color"], bsdf.inputs["Alpha"])
-        if hasattr(mat, "surface_render_method"):
+        if hasattr(mat, "surface_render_method"):  # 4.2+
             mat.surface_render_method = "BLENDED"
+        elif hasattr(mat, "blend_method"):  # 3.5 - 4.1
+            mat.blend_method = "BLEND"
 
     obj = bpy.context.active_object
     if obj and obj.type == "MESH":
@@ -549,7 +551,7 @@ name = "Substance Textures Importer (STM)"
 tagline = "Importa conjuntos PBR Substance (BaseColor, ORM, Normal, Height, AO, Emissive, Alpha) no Principled BSDF"
 maintainer = "AlexDesign Studio"
 type = "add-on"
-blender_version_min = "4.2.0"
+blender_version_min = "4.2.0"  # Extensions Platform existe a partir do 4.2; em 3.5-4.1 instale como add-on (.zip)
 license = ["SPDX:GPL-3.0-or-later"]
 `;
 }
@@ -627,9 +629,9 @@ export function generateBlenderSubstanceImporterAddonPy(): string {
     "name": "Substance Textures Importer (STM)",
     "author": "Kos-Design / AlexDesign Studio",
     "version": (1, 4, 0),
-    "blender": (4, 2, 0),
+    "blender": (3, 5, 0),
     "location": "File > Import > Substance textures | Shader Editor (N) > STM | Properties > Material",
-    "description": "Compativel com Blender 4.2 - 5.3+. Importa pacotes PBR Substance (BaseColor, Roughness, Metallic, ORM, Normal, Height, AO, Emissive, Opacity).",
+    "description": "Compativel com Blender 3.5 ou superior. Importa pacotes PBR Substance (BaseColor, Roughness, Metallic, ORM, Normal, Height, AO, Emissive, Opacity).",
     "category": "Import-Export",
 }
 
@@ -674,8 +676,8 @@ class STM_OT_import_substance_textures(bpy.types.Operator, ImportHelper):
     def execute(self, context):
         folder = os.path.dirname(self.filepath)
         mat = context.material or bpy.data.materials.new(name=self.material_name)
-        # Blender 5.0+: material.use_nodes foi descontinuado; todos materiais usam nos nativamente
-        if bpy.app.version < (5, 0, 0) and hasattr(mat, "use_nodes"):
+        # Blender < 5.0 exige use_nodes; em 5.0+ o atributo e legado
+        if bpy.app.version < (5, 0, 0):
             mat.use_nodes = True
         nt = mat.node_tree
         nt.nodes.clear()
@@ -734,7 +736,7 @@ class STM_OT_import_substance_textures(bpy.types.Operator, ImportHelper):
             mix = nt.nodes.new("ShaderNodeMix")
             mix.data_type = "RGBA"
             mix.blend_type = "MULTIPLY"
-            mix.inputs["Factor"].default_value = 1.0
+            mix.inputs[0].default_value = 1.0
             mix.location = (-40, 260)
             nt.links.new(tex_nodes["base_color"].outputs["Color"], mix.inputs[6])
             nt.links.new(ao_socket, mix.inputs[7])
@@ -796,8 +798,10 @@ class STM_OT_import_substance_textures(bpy.types.Operator, ImportHelper):
 
         if "opacity" in tex_nodes:
             nt.links.new(tex_nodes["opacity"].outputs["Color"], bsdf.inputs["Alpha"])
-            if hasattr(mat, "surface_render_method"):
+            if hasattr(mat, "surface_render_method"):  # 4.2+
                 mat.surface_render_method = "BLENDED"
+            elif hasattr(mat, "blend_method"):  # 3.5 - 4.1
+                mat.blend_method = "BLEND"
 
         if context.active_object and context.active_object.active_material is None:
             context.active_object.active_material = mat

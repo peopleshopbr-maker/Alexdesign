@@ -47,7 +47,7 @@ export const SubstanceImporterPanel: React.FC<SubstanceImporterPanelProps> = ({
   const [mode, setMode] = useState<ImporterMode>('auto');
   const [localMaterialName, setLocalMaterialName] = useState('Substance_Material');
   const [localSlots, setLocalSlots] = useState<Partial<Record<SubstanceChannelId, SubstanceTextureSlot>>>({});
-  const [applyToAllGlbMeshes, setApplyToAllGlbMeshes] = useState(false);
+  const [applyToAllGlbMeshes, setApplyToAllGlbMeshes] = useState(true);
   const [normalDirectXToOpenGL, setNormalDirectXToOpenGL] = useState(false);
   const [useBumpConversion, setUseBumpConversion] = useState(true);
   const [uvScale, setUvScale] = useState(1.0);
@@ -230,7 +230,7 @@ export const SubstanceImporterPanel: React.FC<SubstanceImporterPanelProps> = ({
                 onChange={(e) => setApplyToAllGlbMeshes(e.target.checked)}
                 className="accent-orange-500 w-4 h-4 cursor-pointer"
               />
-              <span>Aplicar em todas as malhas (desmarcado = material separado)</span>
+              <span>Aplicar alterações em todas as malhas do GLB</span>
             </label>
           </div>
           <div className="flex flex-wrap gap-1.5">
@@ -478,11 +478,11 @@ export const SubstanceImporterPanel: React.FC<SubstanceImporterPanelProps> = ({
             );
           })}
 
-          {/* Live Blender 5.3+ & WebGL Shader Node Status Card */}
+          {/* Live Blender 3.5+ & WebGL Shader Node Status Card */}
           <div className="rounded-xl bg-[#0D1017] border border-slate-800 p-3 flex flex-col justify-between gap-2">
             <div>
               <div className="text-xs font-semibold text-white">
-                Grafo Principled BSDF (5.3+)
+                Grafo Principled BSDF (Blender 3.5+)
               </div>
               <div className="mt-1.5 flex flex-col gap-1 text-[11px] font-mono text-slate-400">
                 <div className="flex justify-between gap-2">

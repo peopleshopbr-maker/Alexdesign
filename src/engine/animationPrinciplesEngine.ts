@@ -5,26 +5,7 @@ export type WorkflowMode = 'pose_to_pose' | 'straight_ahead';
 export type EasingCurve = 'linear' | 'ease_in_out' | 'snap_out' | 'elastic';
 export type SecondaryActionType = 'none' | 'breathing' | 'head_look' | 'sway_gesture';
 export type AppealPreset = 'neutral' | 'hero' | 'cartoon' | 'villain';
-export type ActionCycleType =
-  | 'walk'
-  | 'run'
-  | 'jump'
-  | 'punch'
-  | 'wave'
-  | 'idle'
-  | 'bounce'
-  | 'crouch'
-  | 'slide'
-  | 'climb'
-  | 'roll'
-  | 'dance'
-  | 'sword'
-  | 'pistol'
-  | 'swim'
-  | 'sit'
-  | 'zombie'
-  | 'death'
-  | 'carry';
+export type ActionCycleType = 'walk' | 'run' | 'jump' | 'punch' | 'wave' | 'idle' | 'bounce';
 
 export interface AnimationPrinciplesConfig {
   enabled: boolean;
@@ -55,19 +36,11 @@ export interface AnimationPrinciplesConfig {
   solidAsymmetry: number; // 0..1
   // 12. Appeal (charisma preset)
   appealPreset: AppealPreset;
-  // Real Root Motion locomotion across the 3D scene floor
-  rootMotion?: boolean;
-  // Physical inertia, spring-damper ground impact & centrifugal banking
-  physicsEnabled?: boolean;
-  physicsStrength?: number; // 0..1.5
 }
 
 export const DEFAULT_ANIMATION_PRINCIPLES: AnimationPrinciplesConfig = {
   enabled: false,
   actionCycle: 'walk',
-  rootMotion: true,
-  physicsEnabled: true,
-  physicsStrength: 0.85,
   squashStretch: 0.35,
   anticipation: 0.3,
   stagingMode: 'none',
@@ -164,25 +137,12 @@ export interface PrinciplesRuntimeState {
   baseRot: THREE.Euler;
   baseScale: THREE.Vector3;
   lastTargetUuid: string | null;
-  boneRestQuaternions: Map<string, THREE.Quaternion>;
   trailPoints: Float32Array;
   trailHead: number;
   trailFilled: number;
-  locomotionPos: THREE.Vector3;
-  locomotionYaw: number;
-  // Physics spring-damper & inertia state
-  physVelX: number;
-  physVelZ: number;
-  physBankZ: number;
-  physPitchX: number;
-  physImpactY: number;
-  physImpactVelY: number;
-  prevActionY: number;
 }
 
 const TRAIL_CAPACITY = 64;
-const _tmpEuler = new THREE.Euler(0, 0, 0, 'XYZ');
-const _deltaQuat = new THREE.Quaternion();
 
 export function createPrinciplesRuntimeState(): PrinciplesRuntimeState {
   return {
@@ -194,19 +154,9 @@ export function createPrinciplesRuntimeState(): PrinciplesRuntimeState {
     baseRot: new THREE.Euler(),
     baseScale: new THREE.Vector3(1, 1, 1),
     lastTargetUuid: null,
-    boneRestQuaternions: new Map<string, THREE.Quaternion>(),
     trailPoints: new Float32Array(TRAIL_CAPACITY * 3),
     trailHead: 0,
     trailFilled: 0,
-    locomotionPos: new THREE.Vector3(),
-    locomotionYaw: 0,
-    physVelX: 0,
-    physVelZ: 0,
-    physBankZ: 0,
-    physPitchX: 0,
-    physImpactY: 0,
-    physImpactVelY: 0,
-    prevActionY: 0,
   };
 }
 
@@ -236,27 +186,11 @@ export function resetTargetFromPrinciples(
     target.position.copy(runtime.basePos);
     target.rotation.copy(runtime.baseRot);
     target.scale.copy(runtime.baseScale);
-    target.traverse((o) => {
-      if ((o as THREE.Bone).isBone) {
-        const restQ = runtime.boneRestQuaternions.get(o.uuid);
-        if (restQ) o.quaternion.copy(restQ);
-      }
-    });
   }
   runtime.baseCaptured = false;
   runtime.lastTargetUuid = null;
-  runtime.boneRestQuaternions.clear();
   runtime.trailFilled = 0;
   runtime.trailHead = 0;
-  runtime.locomotionPos.set(0, 0, 0);
-  runtime.locomotionYaw = 0;
-  runtime.physVelX = 0;
-  runtime.physVelZ = 0;
-  runtime.physBankZ = 0;
-  runtime.physPitchX = 0;
-  runtime.physImpactY = 0;
-  runtime.physImpactVelY = 0;
-  runtime.prevActionY = 0;
   trailLine.visible = false;
 }
 
@@ -276,23 +210,15 @@ export function applyAnimationPrinciplesFrame(
     return;
   }
 
-  // Capture base transform & bone bind-pose rest quaternions when first enabled or when target changes
+  // Capture base transform when first enabled or when target changes
   if (!runtime.baseCaptured || runtime.lastTargetUuid !== target.uuid) {
     runtime.basePos.copy(target.position);
     runtime.baseRot.copy(target.rotation);
     runtime.baseScale.copy(target.scale);
-    runtime.boneRestQuaternions.clear();
-    target.traverse((o) => {
-      if ((o as THREE.Bone).isBone) {
-        runtime.boneRestQuaternions.set(o.uuid, o.quaternion.clone());
-      }
-    });
     runtime.baseCaptured = true;
     runtime.lastTargetUuid = target.uuid;
     runtime.trailFilled = 0;
     runtime.trailHead = 0;
-    runtime.locomotionPos.set(0, 0, 0);
-    runtime.locomotionYaw = 0;
   }
 
   // 9. Timing: speed & stepped FPS quantization
@@ -406,126 +332,6 @@ export function applyAnimationPrinciplesFrame(
       verticalVel = Math.cos(angle) * 0.25;
       break;
     }
-    case 'crouch': {
-      // Low stealth crouch walk
-      actionY = -0.32 + Math.abs(Math.sin(angle)) * 0.06 * exag;
-      actionX = Math.sin(angle) * 0.05 * exag;
-      actionRotX = 0.28 * exag;
-      actionRotY = Math.cos(angle) * 0.1 * exag;
-      verticalVel = Math.cos(angle * 2) * 0.4;
-      break;
-    }
-    case 'slide': {
-      // Fast low ground slide leaning backward
-      actionY = -0.45 + Math.sin(angle) * 0.03;
-      actionRotX = -0.58 * exag;
-      actionRotZ = 0.14 * exag;
-      verticalVel = 0;
-      break;
-    }
-    case 'climb': {
-      // Climbing upward with alternating reach
-      actionY = (t * 0.85) * exag;
-      actionX = Math.sin(angle) * 0.08 * exag;
-      actionRotZ = -Math.sin(angle) * 0.12 * exag;
-      actionRotX = -0.08 * exag;
-      verticalVel = 0.8;
-      break;
-    }
-    case 'roll': {
-      // Full 360-degree forward somersault roll
-      actionY = -0.22 + Math.sin(t * Math.PI) * 0.35 * exag;
-      actionRotX = t * Math.PI * 2;
-      verticalVel = Math.cos(t * Math.PI);
-      break;
-    }
-    case 'dance': {
-      // Energetic rhythmic groove & hip sway
-      actionY = Math.abs(Math.sin(angle * 2)) * 0.14 * exag;
-      actionX = Math.sin(angle) * 0.16 * exag;
-      actionRotZ = Math.sin(angle) * 0.18 * exag;
-      actionRotY = Math.sin(angle * 2) * 0.35 * exag;
-      verticalVel = Math.cos(angle * 4);
-      break;
-    }
-    case 'sword': {
-      // Wide diagonal sword slash with torso wind-up and follow-through
-      if (t < 0.3) {
-        const k = t / 0.3;
-        actionRotY = -0.75 * k * exag;
-        actionRotZ = -0.18 * k * exag;
-        actionZ = -0.12 * k * exag;
-      } else if (t < 0.6) {
-        const k = (t - 0.3) / 0.3;
-        actionRotY = (-0.75 + k * 1.65) * exag;
-        actionRotZ = (-0.18 + k * 0.4) * exag;
-        actionZ = (-0.12 + k * 0.45) * exag;
-        actionRotX = 0.2 * k * exag;
-      } else {
-        const k = 1 - (t - 0.6) / 0.4;
-        actionRotY = 0.9 * k * exag;
-        actionRotZ = 0.22 * k * exag;
-        actionZ = 0.33 * k * exag;
-      }
-      verticalVel = Math.cos(angle * 2) * 0.6;
-      break;
-    }
-    case 'pistol': {
-      // Tactical aiming stance + sharp recoil kick
-      const recoil = t > 0.45 && t < 0.6 ? Math.sin(((t - 0.45) / 0.15) * Math.PI) : 0;
-      actionY = -0.06 + Math.sin(angle) * 0.02;
-      actionZ = -recoil * 0.12 * exag;
-      actionRotX = -recoil * 0.18 * exag;
-      actionRotY = 0.28;
-      verticalVel = 0;
-      break;
-    }
-    case 'swim': {
-      // Horizontal swimming stroke
-      actionY = 0.32 + Math.sin(angle * 2) * 0.08 * exag;
-      actionRotX = 1.15;
-      actionRotZ = Math.sin(angle) * 0.22 * exag;
-      verticalVel = Math.cos(angle * 2) * 0.3;
-      break;
-    }
-    case 'sit': {
-      // Seated pose with subtle breathing
-      actionY = -0.38 + Math.sin(angle) * 0.015;
-      actionRotX = -0.05;
-      actionRotY = Math.sin(angle) * 0.08;
-      verticalVel = 0;
-      break;
-    }
-    case 'zombie': {
-      // Limping dragging zombie walk
-      actionY = Math.abs(Math.sin(angle)) * 0.07 * exag;
-      actionX = Math.sin(angle) * 0.1 * exag;
-      actionRotZ = 0.18 + Math.sin(angle) * 0.14 * exag;
-      actionRotX = 0.2 * exag;
-      actionRotY = Math.cos(angle) * 0.16 * exag;
-      verticalVel = Math.cos(angle * 2) * 0.3;
-      break;
-    }
-    case 'death': {
-      // Dramatic fall backward to the floor
-      const fall = Math.min(1, t * 1.45);
-      const eased = fall * fall;
-      actionY = -0.58 * eased;
-      actionZ = -0.45 * eased;
-      actionRotX = -1.48 * eased;
-      actionRotZ = 0.15 * eased;
-      verticalVel = -eased;
-      break;
-    }
-    case 'carry': {
-      // Heavy box-carrying walk leaning slightly back
-      actionY = Math.abs(Math.sin(angle)) * 0.08 * exag;
-      actionX = Math.sin(angle) * 0.08 * exag;
-      actionRotX = -0.1 * exag;
-      actionRotZ = -Math.sin(angle) * 0.09 * exag;
-      verticalVel = Math.cos(angle * 2) * 0.5;
-      break;
-    }
     case 'bounce':
     default: {
       actionY = Math.max(0, Math.sin(angle)) * 0.34 * exag;
@@ -580,106 +386,17 @@ export function applyAnimationPrinciplesFrame(
   const asymTurnY = cfg.solidAsymmetry * 0.2;
   const asymShiftX = cfg.solidAsymmetry * 0.05;
 
-  // Real Root Motion locomotion across the 3D scene floor + Spring-Damper Physics
-  const dt = Math.min(delta, 0.05);
-  const physOn = cfg.physicsEnabled !== false;
-  const physStr = Math.max(0, Math.min(1.5, cfg.physicsStrength ?? 0.85));
-  const isLocomotionCycle =
-    cfg.actionCycle === 'walk' ||
-    cfg.actionCycle === 'run' ||
-    cfg.actionCycle === 'crouch' ||
-    cfg.actionCycle === 'slide' ||
-    cfg.actionCycle === 'roll' ||
-    cfg.actionCycle === 'swim' ||
-    cfg.actionCycle === 'zombie' ||
-    cfg.actionCycle === 'carry';
-  const useRootMotion = cfg.rootMotion !== false && isLocomotionCycle;
-
-  let yawRate = 0;
-  if (useRootMotion) {
-    const baseMoveSpeed =
-      cfg.actionCycle === 'run' || cfg.actionCycle === 'slide'
-        ? 2.75
-        : cfg.actionCycle === 'roll'
-          ? 2.1
-          : cfg.actionCycle === 'crouch' || cfg.actionCycle === 'zombie'
-            ? 0.72
-            : 1.25;
-    const targetSpeed = baseMoveSpeed * speed;
-    const heading = runtime.baseRot.y + runtime.locomotionYaw;
-    const desiredVx = Math.sin(heading) * targetSpeed;
-    const desiredVz = Math.cos(heading) * targetSpeed;
-
-    if (physOn) {
-      // Inertial acceleration/deceleration (mass & friction)
-      const accel = 1 - Math.exp(-6.5 * dt);
-      runtime.physVelX += (desiredVx - runtime.physVelX) * accel;
-      runtime.physVelZ += (desiredVz - runtime.physVelZ) * accel;
-      runtime.locomotionPos.x += runtime.physVelX * dt;
-      runtime.locomotionPos.z += runtime.physVelZ * dt;
-    } else {
-      runtime.locomotionPos.x += desiredVx * dt;
-      runtime.locomotionPos.z += desiredVz * dt;
-    }
-
-    // Smoothly steer along a studio loop so the character stays on the stage floor
-    const distFromOrigin = Math.hypot(runtime.locomotionPos.x, runtime.locomotionPos.z);
-    if (distFromOrigin > 3.6) {
-      const targetAngle = Math.atan2(-runtime.locomotionPos.x, -runtime.locomotionPos.z);
-      let diff = targetAngle - heading;
-      while (diff > Math.PI) diff -= Math.PI * 2;
-      while (diff < -Math.PI) diff += Math.PI * 2;
-      const turnStep = diff * Math.min(1, dt * 3.2);
-      runtime.locomotionYaw += turnStep;
-      yawRate = turnStep / Math.max(dt, 0.008);
-    }
-  } else if (physOn) {
-    // Friction decay when stopping
-    const decay = Math.exp(-8 * dt);
-    runtime.physVelX *= decay;
-    runtime.physVelZ *= decay;
-  }
-
-  // Physical banking (centrifugal lean on turns), acceleration pitch, and ground impact spring
-  if (physOn) {
-    const horizSpeed = Math.hypot(runtime.physVelX, runtime.physVelZ);
-    const targetBank = Math.max(-0.28, Math.min(0.28, -yawRate * horizSpeed * 0.045 * physStr));
-    const targetPitch = Math.max(-0.18, Math.min(0.22, horizSpeed * 0.045 * physStr));
-    const springRot = 1 - Math.exp(-8 * dt);
-    runtime.physBankZ += (targetBank - runtime.physBankZ) * springRot;
-    runtime.physPitchX += (targetPitch - runtime.physPitchX) * springRot;
-
-    // Detect downward landing impulse and compress knees/hips via damped harmonic spring
-    const verticalDelta = actionY - runtime.prevActionY;
-    if (runtime.prevActionY > 0.05 && actionY <= 0.05 && verticalDelta < -0.01) {
-      runtime.physImpactVelY -= Math.min(1.8, Math.abs(verticalDelta) * 14) * physStr;
-    }
-    runtime.prevActionY = actionY;
-
-    const kSpring = 95;
-    const cDamp = 14;
-    const accY = -kSpring * runtime.physImpactY - cDamp * runtime.physImpactVelY;
-    runtime.physImpactVelY += accY * dt;
-    runtime.physImpactY += runtime.physImpactVelY * dt;
-    runtime.physImpactY = Math.max(-0.18, Math.min(0.08, runtime.physImpactY));
-  } else {
-    runtime.physBankZ = 0;
-    runtime.physPitchX = 0;
-    runtime.physImpactY = 0;
-    runtime.physImpactVelY = 0;
-  }
-
-  // Apply composed transform relative to captured base + real floor locomotion + physics
+  // Apply composed transform relative to captured base
   target.position.set(
-    runtime.basePos.x + runtime.locomotionPos.x + actionX + arcX + asymShiftX,
-    runtime.basePos.y + Math.max(-0.18 * exag, actionY + anticipationWave + straightAheadNoise + runtime.physImpactY),
-    runtime.basePos.z + runtime.locomotionPos.z + actionZ + arcZ
+    runtime.basePos.x + actionX + arcX + asymShiftX,
+    runtime.basePos.y + Math.max(-0.16 * exag, actionY + anticipationWave + straightAheadNoise),
+    runtime.basePos.z + actionZ + arcZ
   );
 
   target.rotation.set(
-    runtime.baseRot.x + runtime.followLagRotX * (0.55 + cfg.followThrough * 0.65) + runtime.physPitchX,
-    runtime.baseRot.y + runtime.locomotionYaw + actionRotY + secRotY + asymTurnY,
-    runtime.baseRot.z + runtime.followLagRotZ * (0.55 + cfg.followThrough * 0.65) + secRotZ + asymTiltZ + runtime.physBankZ
+    runtime.baseRot.x + runtime.followLagRotX * (0.55 + cfg.followThrough * 0.65),
+    runtime.baseRot.y + actionRotY + secRotY + asymTurnY,
+    runtime.baseRot.z + runtime.followLagRotZ * (0.55 + cfg.followThrough * 0.65) + secRotZ + asymTiltZ
   );
 
   target.scale.set(
@@ -688,156 +405,39 @@ export function applyAnimationPrinciplesFrame(
     runtime.baseScale.z * invRoot * secScaleBreath
   );
 
-  // ActionForge-style full articulated humanoid bone solver (Mixamo / Rigify / Unity / VRM / GLB)
+  // Procedural skeleton bone swing for rigged characters (Walk / Run / Jump / Punch / Wave)
   const limbAmp =
     cfg.actionCycle === 'run'
-      ? 0.92 * exag
+      ? 0.85 * exag
       : cfg.actionCycle === 'walk'
-        ? 0.52 * exag
+        ? 0.48 * exag
         : cfg.actionCycle === 'jump'
-          ? 0.6 * exag
+          ? 0.55 * exag
           : cfg.actionCycle === 'punch'
-            ? 0.95 * exag
+            ? 0.9 * exag
             : cfg.actionCycle === 'wave'
-              ? 0.72 * exag
+              ? 0.7 * exag
               : 0.08 * exag;
 
-  const isLeft = (n: string) =>
-    /(^|[^a-z])(left|l_|_l|\.l|l$)/.test(n) || n.includes('left') || n.includes('_l_') || n.includes('l_');
-  const isRight = (n: string) =>
-    /(^|[^a-z])(right|r_|_r|\.r|r$)/.test(n) || n.includes('right') || n.includes('_r_') || n.includes('r_');
-
-  const applyBoneDelta = (bone: THREE.Bone, restQ: THREE.Quaternion, dx: number, dy: number, dz: number) => {
-    _tmpEuler.set(dx, dy, dz, 'XYZ');
-    _deltaQuat.setFromEuler(_tmpEuler);
-    bone.quaternion.copy(restQ).multiply(_deltaQuat);
-  };
-
   target.traverse((obj) => {
-    if (!(obj as THREE.Bone).isBone) return;
-    const bone = obj as THREE.Bone;
-    const restQ = runtime.boneRestQuaternions.get(bone.uuid);
-    if (!restQ) return;
-    const n = bone.name.toLowerCase();
-
-    // Spine / Chest torso counter-twist & breathing (conflict-free quaternion delta)
-    if (n.includes('spine') || n.includes('chest') || n.includes('torso')) {
-      const dY =
-        cfg.actionCycle === 'punch'
-          ? Math.sin(angle) * 0.32 * exag
-          : -Math.cos(angle) * 0.1 * exag;
-      const dX =
-        cfg.actionCycle === 'run'
-          ? 0.12 * exag
-          : cfg.actionCycle === 'idle'
-            ? Math.sin(angle * 2) * 0.03 * exag
-            : 0.03 * exag;
-      applyBoneDelta(bone, restQ, dX, dY, 0);
-      return;
-    }
-
-    // Neck / Head stabilization & secondary look
-    if (n.includes('head') || n.includes('neck')) {
-      const dY =
-        cfg.secondaryAction === 'head_look'
-          ? Math.sin(angle * 1.5) * 0.28 * exag
-          : Math.cos(angle) * 0.05 * exag;
-      const dX = cfg.actionCycle === 'run' ? -0.06 * exag : Math.sin(angle * 2) * 0.025 * exag;
-      applyBoneDelta(bone, restQ, dX, dY, 0);
-      return;
-    }
-
-    // Thighs / Upper Legs
-    if (n.includes('upleg') || n.includes('thigh') || (n.includes('leg') && !n.includes('lower') && !n.includes('shin') && !n.includes('calf'))) {
-      const sign = isLeft(n) ? 1 : isRight(n) ? -1 : 0;
-      if (sign !== 0) {
-        let dX = sign * Math.sin(angle) * limbAmp * 0.6;
-        if (cfg.actionCycle === 'jump') {
-          dX = -Math.max(0, Math.sin(angle)) * 0.4 * exag;
-        } else if (cfg.actionCycle === 'crouch') {
-          dX = -0.55 + sign * Math.sin(angle) * 0.32 * exag;
-        } else if (cfg.actionCycle === 'sit') {
-          dX = -1.25;
-        } else if (cfg.actionCycle === 'slide') {
-          dX = sign > 0 ? -0.85 : -0.15;
-        } else if (cfg.actionCycle === 'climb') {
-          dX = -0.45 + sign * Math.sin(angle) * 0.55 * exag;
-        } else if (cfg.actionCycle === 'swim') {
-          dX = sign * Math.sin(angle * 2) * 0.45 * exag;
-        } else if (cfg.actionCycle === 'dance') {
-          dX = -0.15 + sign * Math.sin(angle * 2) * 0.25 * exag;
-        } else if (cfg.actionCycle === 'zombie') {
-          dX = sign * Math.sin(angle) * 0.35 * exag;
-        } else if (cfg.actionCycle === 'carry') {
-          dX = sign * Math.sin(angle) * 0.42 * exag;
-        } else if (cfg.actionCycle === 'punch' || cfg.actionCycle === 'sword') {
-          dX = sign * 0.22 * exag;
-        }
-        applyBoneDelta(bone, restQ, dX, 0, 0);
-      }
-      return;
-    }
-
-    // Knees / Lower Legs / Shins / Calves
-    if (n.includes('shin') || n.includes('calf') || n.includes('lowerleg') || n.includes('knee') || n.includes('leftleg') || n.includes('rightleg')) {
-      const sign = isLeft(n) ? 1 : isRight(n) ? -1 : 0;
-      if (sign !== 0) {
-        const kneeBend =
-          cfg.actionCycle === 'run'
-            ? Math.max(0, -sign * Math.sin(angle)) * 0.72 * exag
-            : cfg.actionCycle === 'walk' || cfg.actionCycle === 'carry'
-              ? Math.max(0, -sign * Math.sin(angle)) * 0.38 * exag
-              : cfg.actionCycle === 'crouch'
-                ? 0.85 + Math.max(0, -sign * Math.sin(angle)) * 0.25
-                : cfg.actionCycle === 'sit'
-                  ? 1.25
-                  : cfg.actionCycle === 'slide'
-                    ? (sign > 0 ? 0.12 : 1.05)
-                    : cfg.actionCycle === 'climb'
-                      ? 0.45 + Math.max(0, sign * Math.sin(angle)) * 0.65
-                      : cfg.actionCycle === 'jump'
-                        ? Math.max(0, Math.sin(angle)) * 0.55 * exag
-                        : 0.04 * exag;
-        applyBoneDelta(bone, restQ, kneeBend, 0, 0);
-      }
-      return;
-    }
-
-    // Forearms / Elbows
-    if (n.includes('forearm') || n.includes('lowerarm') || n.includes('elbow')) {
-      const sign = isLeft(n) ? 1 : isRight(n) ? -1 : 0;
-      if (sign !== 0) {
-        let dX = 0;
-        let dZ = 0;
-        if (cfg.actionCycle === 'run') {
-          dX = -0.55 * exag;
-        } else if (cfg.actionCycle === 'walk') {
-          dX = -0.2 * exag + Math.max(0, -sign * Math.sin(angle)) * 0.2;
-        } else if (cfg.actionCycle === 'wave' && sign === 1) {
-          dZ = Math.sin(angle * 3) * 0.38 * exag;
-        } else if (cfg.actionCycle === 'punch' && sign === -1) {
-          dX = -0.55 * (1 - Math.max(0, Math.sin(angle))) * exag;
-        }
-        applyBoneDelta(bone, restQ, dX, 0, dZ);
-      }
-      return;
-    }
-
-    // Upper Arms / Shoulders
-    if (n.includes('arm') || n.includes('upperarm')) {
-      const sign = isLeft(n) ? 1 : isRight(n) ? -1 : 0;
-      if (sign !== 0) {
-        let dX = -sign * Math.sin(angle) * limbAmp * 0.55;
-        let dZ = 0;
-        if (cfg.actionCycle === 'wave' && sign === 1) {
-          dX = -0.95 + Math.sin(angle * 2) * 0.24;
-          dZ = 0.28 + Math.sin(angle * 3) * 0.16;
-        } else if (cfg.actionCycle === 'punch' && sign === -1) {
-          dX = -0.85 * Math.max(0, Math.sin(angle)) * exag;
-        } else if (cfg.actionCycle === 'jump') {
-          dX = -0.65 * Math.max(0, Math.sin(angle)) * exag;
-        }
-        applyBoneDelta(bone, restQ, dX, 0, dZ);
+    if ((obj as THREE.Bone).isBone) {
+      const n = obj.name.toLowerCase();
+      if (n.includes('leftupleg') || n.includes('thigh_l') || n.includes('l_thigh') || n.includes('leg_l')) {
+        obj.rotation.x = Math.sin(angle) * limbAmp;
+      } else if (n.includes('rightupleg') || n.includes('thigh_r') || n.includes('r_thigh') || n.includes('leg_r')) {
+        obj.rotation.x = -Math.sin(angle) * limbAmp;
+      } else if (n.includes('leftarm') || n.includes('upperarm_l') || n.includes('l_arm') || n.includes('arm_l')) {
+        obj.rotation.x =
+          cfg.actionCycle === 'wave'
+            ? -2.2 + Math.sin(angle * 2) * 0.45
+            : -Math.sin(angle) * limbAmp * 0.85;
+      } else if (n.includes('rightarm') || n.includes('upperarm_r') || n.includes('r_arm') || n.includes('arm_r')) {
+        obj.rotation.x =
+          cfg.actionCycle === 'punch'
+            ? -1.4 * Math.max(0, Math.sin(angle)) * exag
+            : Math.sin(angle) * limbAmp * 0.85;
+      } else if (n.includes('head') && cfg.secondaryAction === 'head_look') {
+        obj.rotation.y = Math.sin(angle * 1.5) * 0.35 * exag;
       }
     }
   });
@@ -868,124 +468,4 @@ export function applyAnimationPrinciplesFrame(
   } else {
     trailLine.visible = false;
   }
-}
-
-const RIG_RINGS_GROUP_NAME = '__alexdesign_actionforge_rig_rings__';
-
-export function syncActionForgeRigRings(
-  scene: THREE.Scene,
-  target: THREE.Object3D | null,
-  visible: boolean
-): void {
-  let group = scene.getObjectByName(RIG_RINGS_GROUP_NAME) as THREE.Group | undefined;
-  if (!visible || !target) {
-    if (group) group.visible = false;
-    return;
-  }
-
-  if (!group) {
-    group = new THREE.Group();
-    group.name = RIG_RINGS_GROUP_NAME;
-    scene.add(group);
-  }
-
-  // Rebuild rings only when target changes
-  if (group.userData.targetUuid !== target.uuid) {
-    while (group.children.length > 0) {
-      const child = group.children[0];
-      group.remove(child);
-    }
-    group.userData.targetUuid = target.uuid;
-
-    target.updateWorldMatrix(true, true);
-    const box = new THREE.Box3().setFromObject(target);
-    const size = new THREE.Vector3();
-    const center = new THREE.Vector3();
-    box.getSize(size);
-    box.getCenter(center);
-    const radius = Math.max(0.38, Math.max(size.x, size.z) * 0.65);
-
-    const makeRing = (r: number, color: number, rotX = Math.PI / 2) => {
-      const pts: THREE.Vector3[] = [];
-      const segs = 40;
-      for (let i = 0; i <= segs; i++) {
-        const a = (i / segs) * Math.PI * 2;
-        pts.push(new THREE.Vector3(Math.cos(a) * r, Math.sin(a) * r, 0));
-      }
-      const geo = new THREE.BufferGeometry().setFromPoints(pts);
-      const mat = new THREE.LineBasicMaterial({ color, transparent: true, opacity: 0.92, depthTest: false });
-      const loop = new THREE.Line(geo, mat);
-      loop.rotation.x = rotX;
-      loop.renderOrder = 999;
-      return loop;
-    };
-
-    // 1. Yellow Root Ring + 4 Directional Arrows at floor
-    const rootRing = makeRing(radius, 0xfacc15);
-    rootRing.position.set(center.x, Math.max(0.01, box.min.y + 0.01), center.z);
-    group.add(rootRing);
-
-    const arrowDirs = [
-      [1, 0],
-      [-1, 0],
-      [0, 1],
-      [0, -1],
-    ];
-    for (const [dx, dz] of arrowDirs) {
-      const arrowPts = [
-        new THREE.Vector3(center.x + dx * radius, box.min.y + 0.012, center.z + dz * radius),
-        new THREE.Vector3(center.x + dx * (radius + 0.16), box.min.y + 0.012, center.z + dz * (radius + 0.16)),
-      ];
-      const arrowGeo = new THREE.BufferGeometry().setFromPoints(arrowPts);
-      const arrowMat = new THREE.LineBasicMaterial({ color: 0xfacc15, depthTest: false });
-      const arrow = new THREE.Line(arrowGeo, arrowMat);
-      arrow.renderOrder = 999;
-      group.add(arrow);
-    }
-
-    // 2. Bone-tracked or proportional joint rings (Yellow center, Blue left, Red right)
-    const bones: THREE.Bone[] = [];
-    target.traverse((o) => {
-      if ((o as THREE.Bone).isBone) bones.push(o as THREE.Bone);
-    });
-
-    if (bones.length > 0) {
-      const worldPos = new THREE.Vector3();
-      for (const bone of bones) {
-        const n = bone.name.toLowerCase();
-        const isL = /(^|[^a-z])(left|l_|_l|\.l)/.test(n) || n.includes('left');
-        const isR = /(^|[^a-z])(right|r_|_r|\.r)/.test(n) || n.includes('right');
-        const isCore = n.includes('hip') || n.includes('spine') || n.includes('chest') || n.includes('neck') || n.includes('head');
-        const isLimb = n.includes('arm') || n.includes('elbow') || n.includes('hand') || n.includes('leg') || n.includes('thigh') || n.includes('knee') || n.includes('foot');
-        if (!isCore && !isLimb) continue;
-
-        bone.getWorldPosition(worldPos);
-        const color = isL ? 0x38bdf8 : isR ? 0xf43f5e : 0xfacc15;
-        const r = isCore ? radius * 0.42 : radius * 0.2;
-        const ring = makeRing(r, color);
-        ring.position.copy(worldPos);
-        ring.userData.trackBone = bone;
-        group.add(ring);
-      }
-    } else {
-      // Fallback proportional torso rings for unrigged models
-      const heights = [0.35, 0.55, 0.72];
-      for (const h of heights) {
-        const ring = makeRing(radius * 0.45, 0xfacc15);
-        ring.position.set(center.x, box.min.y + size.y * h, center.z);
-        group.add(ring);
-      }
-    }
-  }
-
-  // Live update bone-tracked ring positions every frame
-  const tmpPos = new THREE.Vector3();
-  for (const child of group.children) {
-    const bone = child.userData.trackBone as THREE.Bone | undefined;
-    if (bone) {
-      bone.getWorldPosition(tmpPos);
-      child.position.copy(tmpPos);
-    }
-  }
-  group.visible = true;
 }

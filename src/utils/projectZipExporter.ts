@@ -1,7 +1,8 @@
 import JSZip from 'jszip';
 import * as THREE from 'three';
-import { GLTFExporter } from 'three/addons/exporters/GLTFExporter.js';
+import { exportGltf, exportGlb } from '../engine/gltfExport';
 import { auditThreeScene } from './gltfVerifier';
+import { prepareSceneForBlender, generateBlenderPythonScript } from '../engine/blenderBridge';
 import { RigPreset, RIG_PRESET_DEFINITIONS } from '../types/studioConfig';
 
 export interface CompleteBundleInput {
@@ -116,26 +117,6 @@ function renderUvLayoutPngBlob(root: THREE.Object3D, size = 1024): Promise<Blob 
   return new Promise((resolve) => canvas.toBlob((b) => resolve(b), 'image/png'));
 }
 
-function exportGltfPromise(
-  targets: THREE.Object3D | THREE.Object3D[],
-  binary: boolean,
-  animations: THREE.AnimationClip[]
-): Promise<ArrayBuffer | Record<string, unknown>> {
-  const exporter = new GLTFExporter();
-  return new Promise((resolve, reject) => {
-    exporter.parse(
-      targets,
-      (res) => resolve(res as ArrayBuffer | Record<string, unknown>),
-      (err) => reject(err),
-      {
-        binary,
-        onlyVisible: true,
-        animations,
-      }
-    );
-  });
-}
-
 export async function exportCompleteProjectZip(input: CompleteBundleInput): Promise<string> {
   const zip = new JSZip();
   const safeBase = input.assetName.replace(/\.(glb|gltf)$/i, '').replace(/[^a-zA-Z0-9_-]+/g, '_') || 'PBR_Asset';
@@ -146,9 +127,12 @@ export async function exportCompleteProjectZip(input: CompleteBundleInput): Prom
     exportInputs.push(input.userLights);
   }
 
+  // Normaliza a cena para glTF 2.0 -> Blender 3.5+ (nomes, espaço de cor, escala)
+  for (const root of exportInputs) prepareSceneForBlender(root, { clips: input.clips });
+
   // 1. Export GLB and glTF JSON
-  const glbBuffer = (await exportGltfPromise(exportInputs, true, input.clips)) as ArrayBuffer;
-  const gltfJson = (await exportGltfPromise(exportInputs, false, input.clips)) as Record<string, unknown>;
+  const glbBuffer = await exportGlb(exportInputs, { animations: input.clips });
+  const gltfJson = (await exportGltf(exportInputs, { binary: false, animations: input.clips })) as Record<string, unknown>;
   zip.file(`model/${safeBase}.glb`, glbBuffer);
   zip.file(`model/${safeBase}.gltf`, JSON.stringify(gltfJson, null, 2));
 
@@ -206,9 +190,8 @@ export async function exportCompleteProjectZip(input: CompleteBundleInput): Prom
   if (input.studioRenderBlob) {
     zip.file(`renders/${safeBase}_Studio_Render.png`, input.studioRenderBlob);
   }
-  if (input.blenderPipelinePy) {
-    zip.file('blender/pipeline_blender_5_3.py', input.blenderPipelinePy);
-  }
+  const blenderPy = input.blenderPipelinePy || generateBlenderPythonScript(`../model/${safeBase}.glb`);
+  zip.file('blender/pipeline_blender.py', blenderPy);
 
   // 3. Technical Verification Report JSON
   const report = auditThreeScene(input.targetRoot, input.clips, input.assetName, null);
@@ -237,7 +220,7 @@ export async function exportCompleteProjectZip(input: CompleteBundleInput): Prom
     ...(emissiveBlob ? [`- textures/${safeBase}_Emissive.png  (Mapa Emissivo)`] : []),
     `- uv_layouts/${safeBase}_UV_Layout.png (Layout UV 1024x1024)`,
     ...(input.studioRenderBlob ? [`- renders/${safeBase}_Studio_Render.png (Render de Estúdio PNG)`] : []),
-    ...(input.blenderPipelinePy ? [`- blender/pipeline_blender_5_3.py   (Script Python bpy Etapas 1-13 Blender 5.3+)`] : []),
+    `- blender/pipeline_blender.py        (Script bpy compativel com Blender 3.5 ou superior: Scripting > Open > Run)`,
     `- report/verification_report.json    (Auditoria técnica PBR/UV/Rig)`,
   ].join('\n');
 

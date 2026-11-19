@@ -24,7 +24,7 @@ export const RIG_PRESET_DEFINITIONS: Record<RigPreset, RigPresetDefinition> = {
     label: 'Objeto / Prop (3 Ossos)',
     shortLabel: 'Objeto / Prop',
     boneCount: 3,
-    description: 'Armadura leve com pivô raiz, controle central e topo — ideal para Helmet e props 3D.',
+    description: 'Armadura leve com pivô raiz, controle central e topo — ideal para props 3D.',
     bones: [
       ['root_pivot', null, [0.0, 0.0, 0.0], [0.0, 0.0, 0.35]],
       ['center_ctrl', 'root_pivot', [0.0, 0.0, 0.35], [0.0, 0.0, 0.72]],
