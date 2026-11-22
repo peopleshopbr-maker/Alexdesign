@@ -1,4 +1,4 @@
-﻿import { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Sun, Moon, Eye, EyeOff } from 'lucide-react';
 
 export function ThemeFocusToolbar() {

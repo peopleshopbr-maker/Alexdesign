@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Check, Code2, Copy, Download, Link2, X } from 'lucide-react';
 import {
   CodeExportObjectSpec,
@@ -97,7 +97,7 @@ export const SplineCodeExportModal: React.FC<SplineCodeExportModalProps> = ({
       className="fixed inset-0 z-50 bg-[#F5F1EA]/75 flex items-center justify-center p-4"
       onClick={onClose}
       role="dialog"
-      aria-label="3D interativo feito para a web â€” exportar código"
+      aria-label="3D interativo feito para a web — exportar código"
     >
       <div
         className="w-full max-w-4xl rounded-xl bg-[#141923] border border-slate-700 shadow-2xl overflow-hidden flex flex-col max-h-[88vh]"

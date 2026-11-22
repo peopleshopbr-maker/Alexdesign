@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { AlertTriangle, CheckCircle2, Download, FileSearch, Upload, X } from 'lucide-react';
 import { GltfAuditReport, auditGltfOrGlbFile } from '../utils/gltfVerifier';
 
@@ -136,7 +136,7 @@ export const FileVerificationModal: React.FC<FileVerificationModalProps> = ({
                 <div>
                   <div className="text-sm font-semibold text-[#231F1D]">{report.fileName}</div>
                   <div className="text-[11px] text-[#635B54] font-mono">
-                    Gerador: {report.generator} Â· {(report.fileSizeBytes / 1024).toFixed(1)} KB
+                    Gerador: {report.generator} · {(report.fileSizeBytes / 1024).toFixed(1)} KB
                   </div>
                 </div>
                 <div className="inline-flex items-center gap-1.5 font-semibold">
@@ -182,7 +182,7 @@ export const FileVerificationModal: React.FC<FileVerificationModalProps> = ({
                   <div className="font-semibold text-amber-300">Alertas de Pipeline</div>
                   {report.warnings.map((w, i) => (
                     <div key={i} className="text-amber-200/90">
-                      Â· {w}
+                      · {w}
                     </div>
                   ))}
                 </div>
@@ -204,7 +204,7 @@ export const FileVerificationModal: React.FC<FileVerificationModalProps> = ({
                           <div className="text-[10px] text-slate-500 truncate">{m.materialName}</div>
                         </div>
                         <div className="text-[11px] font-mono text-slate-300 tabular-nums shrink-0">
-                          {m.triangles.toLocaleString()} tris Â· {m.hasNormals ? 'Normais OK' : 'Sem normais'}
+                          {m.triangles.toLocaleString()} tris · {m.hasNormals ? 'Normais OK' : 'Sem normais'}
                         </div>
                       </div>
                     ))}

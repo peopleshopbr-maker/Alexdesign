@@ -1,7 +1,7 @@
-﻿import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 
-/* â”€â”€ 1. Tooltip with 0.4s delay showing Name + Keyboard Shortcut â”€â”€ */
+/* ── 1. Tooltip with 0.4s delay showing Name + Keyboard Shortcut ── */
 interface ShortcutTooltipProps {
   label: string;
   shortcut?: string;
@@ -65,7 +65,7 @@ export const ShortcutTooltip: React.FC<ShortcutTooltipProps> = ({
   );
 };
 
-/* â”€â”€ 2. Draggable Number Scrubber with XYZ Axis Colors + Shift Fine Precision â”€â”€ */
+/* ── 2. Draggable Number Scrubber with XYZ Axis Colors + Shift Fine Precision ── */
 export type AxisCode = 'X' | 'Y' | 'Z';
 
 const AXIS_STYLE: Record<AxisCode, { bar: string; text: string }> = {
@@ -187,7 +187,7 @@ export const NumberScrubber: React.FC<NumberScrubberProps> = ({
         e.stopPropagation();
         if (defaultValue !== undefined) onChange(clamp(defaultValue));
       }}
-      title="Arraste para ajustar (Shift = fino 0.01) Â· Clique para digitar Â· Duplo clique reseta"
+      title="Arraste para ajustar (Shift = fino 0.01) · Clique para digitar · Duplo clique reseta"
       className={`group flex items-center justify-between gap-1 rounded h-7 bg-[#0D1017] border transition-colors select-none cursor-ew-resize overflow-hidden pr-1.5 ${
         dragging
           ? 'border-orange-500 bg-orange-500/10'
@@ -214,7 +214,7 @@ export const NumberScrubber: React.FC<NumberScrubberProps> = ({
   );
 };
 
-/* â”€â”€ 3. PBR Filled Slider with Double-Click Reset â”€â”€ */
+/* ── 3. PBR Filled Slider with Double-Click Reset ── */
 interface PbrSliderProps {
   label: string;
   blenderSocket?: string;
@@ -247,7 +247,7 @@ export const PbrSlider: React.FC<PbrSliderProps> = ({
       className="flex flex-col gap-1 select-none"
       onDoubleClick={() => onChange(defaultValue)}
       title={`Duplo clique para restaurar padrão (${defaultValue.toFixed(decimals)})${
-        blenderSocket ? ` Â· Blender: ${blenderSocket}` : ''
+        blenderSocket ? ` · Blender: ${blenderSocket}` : ''
       }`}
     >
       <div className="flex items-center justify-between text-[10px] text-[#635B54]">
@@ -274,7 +274,7 @@ export const PbrSlider: React.FC<PbrSliderProps> = ({
   );
 };
 
-/* â”€â”€ 4. Blender-style Interactive 3D Axis Gizmo â”€â”€ */
+/* ── 4. Blender-style Interactive 3D Axis Gizmo ── */
 export type CameraSnapDirection = 'q34' | 'front' | 'back' | 'side' | 'left' | 'top' | 'bottom';
 
 interface AxisGizmo3DProps {
@@ -338,8 +338,8 @@ export const AxisGizmo3D: React.FC<AxisGizmo3DProps> = ({ quaternionRef, onSnapV
 
   return (
     <div
-      className="relative w-[76px] h-[76px] rounded-full bg-[#0D1017]/65 border border-[#231F1D]/15/80 backdrop-blur-sm select-none"
-      title="Gizmo 3D de Eixos â€” clique em X (Lado), Y (Topo), Z (Frente) ou no centro (3/4)"
+      className="relative w-[76px] h-[76px] rounded-full bg-[#0D1017]/65 border border-[#231F1D]/15 backdrop-blur-sm select-none"
+      title="Gizmo 3D de Eixos — clique em X (Lado), Y (Topo), Z (Frente) ou no centro (3/4)"
     >
       <svg viewBox="0 0 76 76" className="w-full h-full">
         {/* Center 3/4 Reset Sphere */}

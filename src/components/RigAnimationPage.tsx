@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 import {
   Anchor,
   Bone,
@@ -210,16 +210,16 @@ export const RigAnimationPage: React.FC<RigAnimationPageProps> = ({
       {/* Header Bar */}
       <div className="rounded-xl bg-[#141923] border border-[#231F1D]/15 p-3.5 flex flex-wrap items-center justify-between gap-3">
         <div className="space-y-1 min-w-0">
-          <h1 className="text-base font-bold text-[#231F1D]">ActionForge â€” Auto-Rigging, IK, Pesos & Dope Sheet</h1>
+          <h1 className="text-base font-bold text-[#231F1D]">ActionForge — Auto-Rigging, IK, Pesos & Dope Sheet</h1>
           <div className="flex flex-wrap items-center gap-2 text-xs text-[#635B54]">
             <span>
               Ativo: <strong className="font-mono text-slate-200 font-medium">{assetName}</strong>
             </span>
-            <span aria-hidden="true">Â·</span>
+            <span aria-hidden="true">·</span>
             <span className="font-mono tabular-nums">{meshCount} malha(s)</span>
-            <span aria-hidden="true">Â·</span>
+            <span aria-hidden="true">·</span>
             <span className="font-mono tabular-nums">{boneCount} osso(s)</span>
-            <span aria-hidden="true">Â·</span>
+            <span aria-hidden="true">·</span>
             <span className="font-mono text-orange-400">#clip={activeClipId}</span>
           </div>
         </div>
@@ -366,7 +366,7 @@ export const RigAnimationPage: React.FC<RigAnimationPageProps> = ({
               }`}
             >
               <FlipHorizontal2 className="w-3.5 h-3.5" />
-              <span>Simetria Lâ†”R</span>
+              <span>Simetria L↔R</span>
             </button>
 
             {isRigged && (
@@ -521,7 +521,7 @@ export const RigAnimationPage: React.FC<RigAnimationPageProps> = ({
               <div className="flex justify-between text-slate-300">
                 <span>Inclinação da Coluna (Spine Bend)</span>
                 <span className="font-mono text-orange-400 tabular-nums">
-                  {postureOffsets.spineBendDeg.toFixed(0)}Â°
+                  {postureOffsets.spineBendDeg.toFixed(0)}°
                 </span>
               </div>
               <input
@@ -557,7 +557,7 @@ export const RigAnimationPage: React.FC<RigAnimationPageProps> = ({
               <div className="flex justify-between text-slate-300">
                 <span>Abertura dos Braços (Arm Spread)</span>
                 <span className="font-mono text-orange-400 tabular-nums">
-                  {postureOffsets.armSpreadDeg.toFixed(0)}Â°
+                  {postureOffsets.armSpreadDeg.toFixed(0)}°
                 </span>
               </div>
               <input

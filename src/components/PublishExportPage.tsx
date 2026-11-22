@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   AlertTriangle,
   Archive,
@@ -433,7 +433,7 @@ export const PublishExportPage: React.FC<PublishExportPageProps> = ({
                 <div className="min-w-0">
                   <div className="font-semibold text-[#231F1D] truncate">{auditReport.fileName}</div>
                   <div className="text-[11px] font-mono text-[#635B54] truncate">
-                    {auditReport.generator} Â· {(auditReport.fileSizeBytes / 1024).toFixed(1)} KB
+                    {auditReport.generator} · {(auditReport.fileSizeBytes / 1024).toFixed(1)} KB
                   </div>
                 </div>
                 <div className="inline-flex items-center gap-1.5 font-semibold shrink-0">
@@ -474,7 +474,7 @@ export const PublishExportPage: React.FC<PublishExportPageProps> = ({
                   <div className="font-semibold text-amber-300">Alertas de Pipeline</div>
                   {auditReport.warnings.map((w, i) => (
                     <div key={i} className="text-amber-200/90">
-                      Â· {w}
+                      · {w}
                     </div>
                   ))}
                 </div>
@@ -502,7 +502,7 @@ export const PublishExportPage: React.FC<PublishExportPageProps> = ({
                       >
                         <span className="text-slate-200 truncate">{m.name}</span>
                         <span className="font-mono text-[11px] text-[#635B54] tabular-nums shrink-0">
-                          {m.triangles.toLocaleString()} tris Â· {m.hasNormals ? 'Normais OK' : 'Sem normais'}
+                          {m.triangles.toLocaleString()} tris · {m.hasNormals ? 'Normais OK' : 'Sem normais'}
                         </span>
                       </div>
                     ))}

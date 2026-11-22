@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import {
   Flame,
   ImagePlus,
@@ -136,7 +136,7 @@ export const SplineDesignPanel: React.FC<SplineDesignPanelProps> = ({
           >
             {SPLINE_TEMPLATES.map((tpl) => (
               <option key={tpl.id} value={tpl.id}>
-                {tpl.label} â€” {tpl.subtitle}
+                {tpl.label} — {tpl.subtitle}
               </option>
             ))}
           </select>

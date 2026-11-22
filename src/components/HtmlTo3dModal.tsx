@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Code2, Plus, Sparkles, X } from 'lucide-react';
 import {
   HTML_TO_3D_PRESETS,
@@ -66,7 +66,7 @@ export const HtmlTo3dModal: React.FC<HtmlTo3dModalProps> = ({
               <Code2 className="w-4 h-4 text-orange-400" />
             </div>
             <div>
-              <h2 className="text-sm font-bold text-[#231F1D]">HTML â†’ 3D (Painel Interativo Web)</h2>
+              <h2 className="text-sm font-bold text-[#231F1D]">HTML → 3D (Painel Interativo Web)</h2>
               <p className="text-[11px] text-[#635B54]">
                 Converta markup HTML em painéis 3D PBR exportáveis no .GLB e Blender 5.3.
               </p>
@@ -197,7 +197,7 @@ export const HtmlTo3dModal: React.FC<HtmlTo3dModalProps> = ({
           <div className="lg:col-span-6 flex flex-col gap-2">
             <div className="flex items-center justify-between text-[11px] text-slate-300">
               <span className="font-semibold">Pré-visualização da Textura 3D</span>
-              <span className="font-mono text-[10px] text-[#635B54]">sRGB Â· CanvasTexture</span>
+              <span className="font-mono text-[10px] text-[#635B54]">sRGB · CanvasTexture</span>
             </div>
             <div className="flex-1 min-h-[240px] rounded-xl bg-[#090C12] border border-[#231F1D]/15 p-3 flex items-center justify-center">
               <canvas

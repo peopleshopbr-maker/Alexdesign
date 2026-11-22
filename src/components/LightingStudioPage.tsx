@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 import { Box, Camera, Sun } from 'lucide-react';
 import { HdriEnvironmentPanel } from './HdriEnvironmentPanel';
 import { LightingRenderPanel } from './LightingRenderPanel';

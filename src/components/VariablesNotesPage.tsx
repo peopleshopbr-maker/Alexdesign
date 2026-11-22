@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Box, Check, MessageSquare, MousePointerClick, Plus, Sliders, Trash2 } from 'lucide-react';
 import {
   VariableBindingRule,
@@ -399,14 +399,14 @@ export const VariablesNotesPage: React.FC<VariablesNotesPageProps> = ({
                   key={n.id}
                   className={`p-3 rounded-xl border flex items-start justify-between gap-3 ${
                     n.resolved
-                      ? 'bg-[#0D1017]/60 border-[#231F1D]/15/70 opacity-70'
+                      ? 'bg-[#0D1017]/60 border-[#231F1D]/15 opacity-70'
                       : 'bg-[#0D1017] border-[#231F1D]/15'
                   }`}
                 >
                   <div className="space-y-1 min-w-0">
                     <div className="flex items-center gap-2 text-[11px] text-[#635B54]">
                       <span className="font-semibold text-slate-200">{n.author}</span>
-                      <span aria-hidden="true">Â·</span>
+                      <span aria-hidden="true">·</span>
                       <span className="font-mono">{n.createdAt}</span>
                     </div>
                     <p

@@ -1,4 +1,4 @@
-﻿import React, { useRef, useState } from 'react';
+import React, { useRef, useState } from 'react';
 import {
   ArrowRight,
   Code2,
@@ -173,12 +173,12 @@ export const WelcomeLandingPage: React.FC<WelcomeLandingPageProps> = ({
                   <Code2 className="w-4 h-4" />
                 </div>
                 <span className="text-[10px] font-mono uppercase tracking-wider text-orange-300/80">
-                  HTML â†’ 3D
+                  HTML → 3D
                 </span>
               </div>
               <div>
                 <h3 className="text-xs sm:text-sm font-semibold text-[#231F1D]">
-                  Criar painel de HTML â†’ 3D
+                  Criar painel de HTML → 3D
                 </h3>
                 <p className="text-[11px] text-[#635B54] mt-0.5 leading-relaxed">
                   Converta interfaces e layouts HTML em painéis 3D PBR para referenciar e posicionar

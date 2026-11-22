@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Archive,
   ArrowRight,
@@ -62,7 +62,7 @@ const COMMAND_ITEMS: CommandItem[] = [
   },
   {
     id: 'html3d',
-    title: 'HTML â†’ 3D (Criar Painel Web 3D PBR)',
+    title: 'HTML → 3D (Criar Painel Web 3D PBR)',
     subtitle: 'Converter código HTML em placa 3D exportável no .GLB',
     keywords: ['html', '3d', 'ui', 'placa', 'painel', 'card', 'web', 'texto'],
     icon: <Code2 className="w-4 h-4 text-orange-400" />,
@@ -280,7 +280,7 @@ export const SmartCommandPalette: React.FC<SmartCommandPaletteProps> = ({
               <span>Texto Ampliado</span>
             </button>
           </div>
-          <span className="text-slate-500 font-mono">Ctrl+K: Buscar Â· Esc: Fechar</span>
+          <span className="text-slate-500 font-mono">Ctrl+K: Buscar · Esc: Fechar</span>
         </div>
       </div>
     </div>

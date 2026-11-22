@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Activity,
   Bone,
@@ -386,7 +386,7 @@ export const ExplorerOutlinerDock: React.FC<ExplorerOutlinerDockProps> = ({
         </button>
       </div>
 
-      <div className="px-2 py-1.5 border-b border-[#231F1D]/15/80">
+      <div className="px-2 py-1.5 border-b border-[#231F1D]/15">
         <div className="flex items-center gap-1.5 px-2 py-1 rounded bg-[#090C12] border border-[#231F1D]/15 focus-within:border-orange-500">
           <Search className="w-3 h-3 text-slate-500 shrink-0" />
           <input
@@ -447,7 +447,7 @@ export const ExplorerOutlinerDock: React.FC<ExplorerOutlinerDockProps> = ({
                           className={`flex-1 min-w-0 text-left truncate ${
                             item.locked ? 'opacity-55 cursor-not-allowed' : 'cursor-pointer'
                           }`}
-                          title={`${item.name} Â· ${item.triCount.toLocaleString()} tris`}
+                          title={`${item.name} · ${item.triCount.toLocaleString()} tris`}
                         >
                           {item.name}
                         </button>
@@ -658,7 +658,7 @@ export const ExplorerOutlinerDock: React.FC<ExplorerOutlinerDockProps> = ({
                   className="inline-flex items-center justify-center gap-1 py-1.5 px-2 rounded-lg bg-[#090C12] border border-[#231F1D]/15 hover:border-orange-500 text-[10px] font-medium text-slate-200 cursor-pointer"
                 >
                   <Code2 className="w-3 h-3 text-orange-400 shrink-0" />
-                  <span className="truncate">HTML â†’ 3D</span>
+                  <span className="truncate">HTML → 3D</span>
                 </button>
               )}
             </div>
@@ -803,7 +803,7 @@ export const ExplorerOutlinerDock: React.FC<ExplorerOutlinerDockProps> = ({
 
             {!refPlane?.active && htmlReferences.length === 0 && (
               <p className="px-2 py-3 text-center text-[10px] text-slate-500 leading-relaxed">
-                Nenhuma referência ainda. Importe uma imagem 3D ou painel HTML â€” referências
+                Nenhuma referência ainda. Importe uma imagem 3D ou painel HTML — referências
                 ficam apenas na viewport.
               </p>
             )}
@@ -1038,7 +1038,7 @@ export const OutlinerPropertiesDock: React.FC<OutlinerPropertiesDockProps> = ({
           </button>
         </div>
       ) : (
-      /* TOP HALF â€” FIXED OUTLINER (Armature / Malhas / Referências) */
+      /* TOP HALF — FIXED OUTLINER (Armature / Malhas / Referências) */
       <div className="flex flex-col h-[40%] min-h-[175px] border-b border-[#231F1D]/15 bg-[#0F131B]">
         <div className="px-2 py-1.5 border-b border-[#231F1D]/15 flex items-center justify-between gap-1.5">
           <div className="flex items-center gap-1 min-w-0 overflow-x-auto no-scrollbar">
@@ -1099,7 +1099,7 @@ export const OutlinerPropertiesDock: React.FC<OutlinerPropertiesDockProps> = ({
           </div>
         </div>
 
-        <div className="px-2 py-1.5 border-b border-[#231F1D]/15/80">
+        <div className="px-2 py-1.5 border-b border-[#231F1D]/15">
           <div className="flex items-center gap-1.5 px-2 py-1 rounded bg-[#090C12] border border-[#231F1D]/15 focus-within:border-orange-500">
             <Search className="w-3 h-3 text-slate-500 shrink-0" />
             <input
@@ -1160,7 +1160,7 @@ export const OutlinerPropertiesDock: React.FC<OutlinerPropertiesDockProps> = ({
                             className={`flex-1 min-w-0 text-left truncate ${
                               item.locked ? 'opacity-55 cursor-not-allowed' : 'cursor-pointer'
                             }`}
-                            title={`${item.name} Â· ${item.triCount.toLocaleString()} tris`}
+                            title={`${item.name} · ${item.triCount.toLocaleString()} tris`}
                           >
                             {item.name}
                           </button>
@@ -1374,7 +1374,7 @@ export const OutlinerPropertiesDock: React.FC<OutlinerPropertiesDockProps> = ({
                     className="inline-flex items-center justify-center gap-1 py-1.5 px-2 rounded-lg bg-[#090C12] border border-[#231F1D]/15 hover:border-orange-500 text-[10px] font-medium text-slate-200 cursor-pointer"
                   >
                     <Code2 className="w-3 h-3 text-orange-400 shrink-0" />
-                    <span className="truncate">HTML â†’ 3D</span>
+                    <span className="truncate">HTML → 3D</span>
                   </button>
                 )}
               </div>
@@ -1519,7 +1519,7 @@ export const OutlinerPropertiesDock: React.FC<OutlinerPropertiesDockProps> = ({
 
               {!refPlane?.active && htmlReferences.length === 0 && (
                 <p className="px-2 py-3 text-center text-[10px] text-slate-500 leading-relaxed">
-                  Nenhuma referência ainda. Importe uma imagem 3D ou painel HTML â€” referências
+                  Nenhuma referência ainda. Importe uma imagem 3D ou painel HTML — referências
                   ficam apenas na viewport.
                 </p>
               )}
@@ -1570,7 +1570,7 @@ export const OutlinerPropertiesDock: React.FC<OutlinerPropertiesDockProps> = ({
                       <span>CENA &amp; MODELAGEM 3D</span>
                     </div>
                     <div className="text-[10px] text-[#635B54]">
-                      {playMode ? 'Play Interativo' : 'Editar'} Â· {meshes.length} objeto(s)
+                      {playMode ? 'Play Interativo' : 'Editar'} · {meshes.length} objeto(s)
                     </div>
                   </div>
                 </div>
@@ -1654,7 +1654,7 @@ export const OutlinerPropertiesDock: React.FC<OutlinerPropertiesDockProps> = ({
                     <div className="grid grid-cols-4 gap-1">
                       {(
                         [
-                          { id: 'orbit', label: 'Ã“rbita', icon: <MousePointer className="w-3 h-3" /> },
+                          { id: 'orbit', label: 'Órbita', icon: <MousePointer className="w-3 h-3" /> },
                           { id: 'translate', label: 'Mover', icon: <Move className="w-3 h-3" /> },
                           { id: 'rotate', label: 'Girar', icon: <RotateCw className="w-3 h-3" /> },
                           { id: 'scale', label: 'Escala', icon: <Scaling className="w-3 h-3" /> },
@@ -1848,7 +1848,7 @@ export const OutlinerPropertiesDock: React.FC<OutlinerPropertiesDockProps> = ({
                         <span className="font-mono font-semibold text-cyan-300 truncate">
                           PoseBone: {selectedBoneName}
                         </span>
-                        <span className="text-[#635B54]">W/E/R Â· K</span>
+                        <span className="text-[#635B54]">W/E/R · K</span>
                       </div>
                       <div className="grid grid-cols-3 gap-1">
                         <button
@@ -1867,7 +1867,7 @@ export const OutlinerPropertiesDock: React.FC<OutlinerPropertiesDockProps> = ({
                             className="inline-flex items-center justify-center gap-1 py-1 rounded bg-[#090C12] border border-slate-700 hover:border-cyan-400 text-[10px] text-slate-200 cursor-pointer"
                           >
                             <FlipHorizontal2 className="w-3 h-3 text-cyan-400" />
-                            <span>Lâ†”R</span>
+                            <span>L↔R</span>
                           </button>
                         )}
                         {onResetBone && (
@@ -1892,7 +1892,7 @@ export const OutlinerPropertiesDock: React.FC<OutlinerPropertiesDockProps> = ({
                       onClick={() => toggleAccordion('transform')}
                       className="w-full px-2.5 py-1.5 flex items-center justify-between bg-[#0F131B] text-[11px] font-semibold text-[#231F1D] cursor-pointer"
                     >
-                      <span>Transform (Blender Zâ†”Y Auto)</span>
+                      <span>Transform (Blender Z↔Y Auto)</span>
                       <ChevronDown
                         className={`w-3.5 h-3.5 transition-transform ${
                           openAccordions.transform ? 'rotate-0' : '-rotate-90'
@@ -1904,7 +1904,7 @@ export const OutlinerPropertiesDock: React.FC<OutlinerPropertiesDockProps> = ({
                         {(
                           [
                             { key: 'position', label: 'Localização (m)', vals: selectedInspector.position, step: 0.05, def: 0 },
-                            { key: 'rotationDeg', label: 'Rotação (Â°)', vals: selectedInspector.rotationDeg, step: 1.5, def: 0 },
+                            { key: 'rotationDeg', label: 'Rotação (°)', vals: selectedInspector.rotationDeg, step: 1.5, def: 0 },
                             { key: 'scale', label: 'Escala', vals: selectedInspector.scale, step: 0.04, def: 1 },
                           ] as const
                         ).map((grp) => (
@@ -1914,7 +1914,7 @@ export const OutlinerPropertiesDock: React.FC<OutlinerPropertiesDockProps> = ({
                               <button
                                 type="button"
                                 onClick={onAddKeyframeAtCurrent}
-                                title="Inserir Keyframe no frame atual (â—†)"
+                                title="Inserir Keyframe no frame atual (◆)"
                                 className="p-0.5 rounded hover:bg-[#FAF8F5] cursor-pointer"
                               >
                                 <Diamond className={`w-3 h-3 ${keyDiamondClass}`} />
@@ -2199,7 +2199,7 @@ export const OutlinerPropertiesDock: React.FC<OutlinerPropertiesDockProps> = ({
                           return (
                             <div
                               key={slot.id}
-                              className="flex items-center justify-between gap-2 px-2 py-1 rounded bg-[#090C12] border border-[#231F1D]/15/90"
+                              className="flex items-center justify-between gap-2 px-2 py-1 rounded bg-[#090C12] border border-[#231F1D]/15"
                             >
                               <div className="flex items-center gap-2 min-w-0">
                                 {previewUrl ? (

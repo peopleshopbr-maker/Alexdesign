@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { ChevronDown, ChevronUp, Sun, Upload } from 'lucide-react';
 import {
   HDRI_ENVIRONMENT_OPTIONS,
@@ -84,7 +84,7 @@ export const HdriEnvironmentPanel: React.FC<HdriEnvironmentPanelProps> = ({
             })}
           </div>
 
-          <div className="flex flex-wrap items-center justify-between gap-2 pt-1 border-t border-[#231F1D]/15/80">
+          <div className="flex flex-wrap items-center justify-between gap-2 pt-1 border-t border-[#231F1D]/15">
             <button
               type="button"
               onClick={onUploadHdriClick}

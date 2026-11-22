@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 import { Camera, Plus, Sparkles, Trash2 } from 'lucide-react';
 import {
   RenderResolutionPreset,
@@ -236,7 +236,7 @@ export const LightingRenderPanel: React.FC<LightingRenderPanelProps> = ({
             )}
           </div>
 
-          <div className="space-y-1.5 pt-1.5 border-t border-[#231F1D]/15/80">
+          <div className="space-y-1.5 pt-1.5 border-t border-[#231F1D]/15">
             <label className="flex items-center justify-between text-[11px] text-slate-200 cursor-pointer">
               <span>Depth of Field (Desfoque Bokeh)</span>
               <input
@@ -276,7 +276,7 @@ export const LightingRenderPanel: React.FC<LightingRenderPanelProps> = ({
             )}
           </div>
 
-          <div className="space-y-1.5 pt-1.5 border-t border-[#231F1D]/15/80">
+          <div className="space-y-1.5 pt-1.5 border-t border-[#231F1D]/15">
             <label className="flex items-center justify-between text-[11px] text-slate-200 cursor-pointer">
               <span>Motion Blur (Arrasto de Movimento)</span>
               <input

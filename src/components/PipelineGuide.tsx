@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 import { ArrowRight, Bone, Code2, Paintbrush, Sun, Upload } from 'lucide-react';
 
 export type GuideActionTarget = 'import' | 'stage3' | 'lighting' | 'rigging' | 'export';
@@ -74,7 +74,7 @@ export const PipelineGuide: React.FC<PipelineGuideProps> = ({
       <div className="rounded-xl bg-[#141923] border border-[#231F1D]/15 p-4 flex flex-wrap items-center justify-between gap-3">
         <div className="min-w-0">
           <h1 className="text-base font-bold text-[#231F1D]">
-            Fluxo de Trabalho Web 3D â€” Do Modelo à Publicação
+            Fluxo de Trabalho Web 3D — Do Modelo à Publicação
           </h1>
           <p className="text-xs text-[#635B54] mt-1">
             Todas as etapas permanecem sincronizadas ao vivo com o Viewport 3D acima.

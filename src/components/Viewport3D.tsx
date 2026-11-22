@@ -1,4 +1,4 @@
-﻿import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { TransformControls } from 'three/addons/controls/TransformControls.js';
@@ -1340,7 +1340,7 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
         setToolMode('weight_paint');
         setInteractionMode('weight_paint');
         transformRef.current?.detach();
-        flashBanner('Pintura de Pesos (Mapa de Calor Azul â†’ Vermelho) ativa!');
+        flashBanner('Pintura de Pesos (Mapa de Calor Azul → Vermelho) ativa!');
       } else if (toolModeRef.current === 'weight_paint') {
         setToolMode('orbit');
         setInteractionMode('object');
@@ -1684,7 +1684,7 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
         frameCameraToScene();
         // Auto-select first imported mesh so the user can immediately move/rotate/scale/edit materials
         syncSelectedInspectorFromObject(firstMesh ?? loadedGroup);
-        flashBanner(`Modelo carregado: ${targetFile.name} â€” clique para mover, girar ou editar PBR.`);
+        flashBanner(`Modelo carregado: ${targetFile.name} — clique para mover, girar ou editar PBR.`);
       } catch (err) {
         flashBanner(err instanceof Error ? err.message : 'Falha ao carregar modelo 3D.');
       } finally {
@@ -1814,7 +1814,7 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
       rebuildRigMarkers(next);
       if (next) {
         selectToolModeWithTarget('translate');
-        flashBanner('Marcadores 3D ativos â€” arraste as esferas nas juntas e clique em Vincular Esqueleto.');
+        flashBanner('Marcadores 3D ativos — arraste as esferas nas juntas e clique em Vincular Esqueleto.');
       }
       return next;
     });
@@ -1889,7 +1889,7 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
 
       updateStatsRef.current({ bones: res.boneCount });
       syncSceneHierarchy();
-      flashBanner(`Auto-Rig ${RIG_PRESET_DEFINITIONS[preset].shortLabel} (${res.boneCount} ossos Â· ${res.clips.length} clipes) ativo!`);
+      flashBanner(`Auto-Rig ${RIG_PRESET_DEFINITIONS[preset].shortLabel} (${res.boneCount} ossos · ${res.clips.length} clipes) ativo!`);
     },
     [activeClipId, config.rigPreset, flashBanner, playClipInstance, syncSceneHierarchy, syncSelectedInspectorFromObject]
   );
@@ -1975,7 +1975,7 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
       syncSelectedInspectorFromObject(bone);
       skeletonVisualizerRef.current?.setSelectedBone(bone.name);
       setShowSkeleton(true);
-      flashBanner(`Osso selecionado: ${boneName} â€” W Mover Â· E Girar Â· K Gravar Key â—†.`);
+      flashBanner(`Osso selecionado: ${boneName} — W Mover · E Girar · K Gravar Key ◆.`);
     },
     [flashBanner, syncSelectedInspectorFromObject]
   );
@@ -2089,7 +2089,7 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
         handleSeekNormalized(clampedIn);
       }
       flashBanner(
-        `Trecho definido: ${Math.round(clampedIn * 100)}% â€“ ${Math.round(clampedOut * 100)}%`
+        `Trecho definido: ${Math.round(clampedIn * 100)}% – ${Math.round(clampedOut * 100)}%`
       );
     },
     [animProgress, flashBanner, handleSeekNormalized]
@@ -2247,7 +2247,7 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
         ? (selectedObjectRef.current as THREE.Bone)
         : null);
     if (!bone) {
-      flashBanner('Selecione um osso no Pose Mode para gravar um keyframe (â—†).');
+      flashBanner('Selecione um osso no Pose Mode para gravar um keyframe (◆).');
       return;
     }
 
@@ -2420,7 +2420,7 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
       ).normalize();
       partner.updateMatrixWorld(true);
       skeletonVisualizerRef.current?.update();
-      flashBanner(`Pose espelhada: ${bone.name} â†’ ${partner.name}.`);
+      flashBanner(`Pose espelhada: ${bone.name} → ${partner.name}.`);
     } else {
       bone.quaternion.set(
         bone.quaternion.x,
@@ -2742,7 +2742,7 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
       const encoded = btoa(unescape(encodeURIComponent(JSON.stringify(payload))));
       window.history.replaceState(null, '', `#scene=${encoded}`);
       navigator.clipboard?.writeText(window.location.href).catch(() => {});
-      flashBanner(`Link interativo público copiado (#scene=... Â· clip ${activeClipId})!`);
+      flashBanner(`Link interativo público copiado (#scene=... · clip ${activeClipId})!`);
     } catch {
       handleCopyClipLink(activeClipId);
     }
@@ -4442,7 +4442,7 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
         syncSceneHierarchy();
         syncSelectedInspectorFromObject(existing);
         editingHtml3dGroupRef.current = null;
-        flashBanner(`Painel HTML â†’ 3D atualizado: ${existing.name}`);
+        flashBanner(`Painel HTML → 3D atualizado: ${existing.name}`);
         return;
       }
       const grp = splineGroupRef.current;
@@ -4453,7 +4453,7 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
       grp.add(created);
       syncSceneHierarchy();
       syncSelectedInspectorFromObject(created);
-      flashBanner(`Painel HTML â†’ 3D criado: ${created.name}`);
+      flashBanner(`Painel HTML → 3D criado: ${created.name}`);
     },
     [flashBanner, syncSceneHierarchy, syncSelectedInspectorFromObject]
   );
@@ -5259,7 +5259,7 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
         }}
       />
 
-      {/* Left Column â€” Explorer (Armature / Malhas / Referências) */}
+      {/* Left Column — Explorer (Armature / Malhas / Referências) */}
       {!hideRightInspector && showMeshDrawer && (
         <ExplorerOutlinerDock
           onCollapse={() => setShowMeshDrawer(false)}
@@ -5408,7 +5408,7 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
               >
                 {(
                   [
-                    { id: 'orbit', label: 'Ã“rbita', keyHint: 'Q', icon: <MousePointer className="w-3 h-3" /> },
+                    { id: 'orbit', label: 'Órbita', keyHint: 'Q', icon: <MousePointer className="w-3 h-3" /> },
                     { id: 'translate', label: 'Mover', keyHint: 'W', icon: <Move className="w-3 h-3" /> },
                     { id: 'rotate', label: 'Girar', keyHint: 'E', icon: <RotateCw className="w-3 h-3" /> },
                     { id: 'scale', label: 'Escala', keyHint: 'R', icon: <Scaling className="w-3 h-3" /> },
@@ -5457,7 +5457,7 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
                 title="Converter HTML em painel 3D PBR ou editar painel HTML selecionado"
               >
                 <Code2 className="w-3.5 h-3.5 text-orange-400" />
-                <span className="hidden xl:inline">HTML â†’ 3D</span>
+                <span className="hidden xl:inline">HTML → 3D</span>
               </button>
 
               {riggedBoneNames.length > 0 && (
@@ -5614,7 +5614,7 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
             </div>
 
             {/* Subtle Blender Context Breadcrumb */}
-            <div className="pointer-events-none inline-flex items-center gap-1.5 px-2 py-0.5 rounded bg-[#0D1017]/80 border border-[#231F1D]/15/70 text-[10px] font-mono text-[#635B54] w-fit">
+            <div className="pointer-events-none inline-flex items-center gap-1.5 px-2 py-0.5 rounded bg-[#0D1017]/80 border border-[#231F1D]/15 text-[10px] font-mono text-[#635B54] w-fit">
               <span>Perspectiva</span>
               <ChevronRight className="w-3 h-3 text-slate-600" />
               <span className="text-slate-300">Coleção</span>
@@ -5851,19 +5851,19 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
 
           {/* Smart Contextual Bottom Status Bar */}
           <div className="absolute bottom-2.5 left-3 right-3 z-10 pointer-events-none flex items-center justify-between gap-2 text-[11px] text-[#635B54]">
-            <span className="px-2.5 py-1 rounded bg-[#141923] border border-[#231F1D]/15/90 font-mono truncate max-w-[65%]">
+            <span className="px-2.5 py-1 rounded bg-[#141923] border border-[#231F1D]/15 font-mono truncate max-w-[65%]">
               {isImporting
                 ? 'Importando modelo 3D...'
-                : statusBanner || `${activeAssetName} Â· ${sceneMeshes.length} malha(s)`}
+                : statusBanner || `${activeAssetName} · ${sceneMeshes.length} malha(s)`}
             </span>
-            <span className="hidden md:inline px-2.5 py-1 rounded bg-[#141923] border border-[#231F1D]/15/90 font-mono">
+            <span className="hidden md:inline px-2.5 py-1 rounded bg-[#141923] border border-[#231F1D]/15 font-mono">
               {toolMode === 'weight_paint'
-                ? 'Arraste sobre a malha: Pintar Pesos Â· Azul=0 Vermelho=1'
+                ? 'Arraste sobre a malha: Pintar Pesos · Azul=0 Vermelho=1'
                 : toolMode === 'paint'
-                ? 'Clique e arraste: Pintar Textura 3D Â· B: Pincel'
+                ? 'Clique e arraste: Pintar Textura 3D · B: Pincel'
                 : toolMode === 'translate' || toolMode === 'rotate' || toolMode === 'scale'
-                ? 'Arraste eixos RGB Â· Tab: Modo Â· F: Enquadrar Â· Del: Excluir'
-                : 'Arraste: Orbitar Â· Scroll: Zoom Â· Q/W/E/R/B Â· Arraste GLB/glTF'}
+                ? 'Arraste eixos RGB · Tab: Modo · F: Enquadrar · Del: Excluir'
+                : 'Arraste: Orbitar · Scroll: Zoom · Q/W/E/R/B · Arraste GLB/glTF'}
             </span>
           </div>
         </div>
