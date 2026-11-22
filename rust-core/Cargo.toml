@@ -1,0 +1,24 @@
+[package]
+name = "alexdesign-rust-core"
+version = "1.0.0"
+edition = "2021"
+description = "NÃºcleo de validaÃ§Ã£o e mÃ¡quina de estados do AlexDesign 3D Studio (WebAssembly)"
+license = "MIT"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+wasm-bindgen = "0.2.92"
+serde = { version = "1.0.203", features = ["derive"] }
+serde-wasm-bindgen = "0.6.5"
+
+[dependencies.web-sys]
+version = "0.3.69"
+features = ["console"]
+
+[profile.release]
+opt-level = "s"     # tamanho mÃ­nimo para WASM
+lto = true
+panic = "abort"
+codegen-units = 1

@@ -19,6 +19,12 @@ import { AfterimagePass } from 'three/addons/postprocessing/AfterimagePass.js';
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 import JSZip from 'jszip';
 import {
+  validateGltfFile,
+  canExecuteCommand,
+  buildSceneSnapshot,
+  initRustCore,
+} from '../wasm/rustBridge';
+import {
   Bone,
   Camera,
   ChevronRight,
@@ -1436,6 +1442,35 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
         if (!targetFile) {
           flashBanner('Selecione um arquivo .glb, .gltf, .fbx, .obj, .stl ou .zip.');
           return;
+        }
+
+        // ============================================================
+        // VALIDAÇÃO BLINDADA (Rust/WASM) antes do Three.js tocar o arquivo
+        // ============================================================
+        const targetExt = targetFile.name.toLowerCase().split('.').pop() || '';
+        if (targetExt === 'glb' || targetExt === 'gltf') {
+          try {
+            const validation = await validateGltfFile(targetFile);
+            if (!validation.allowed) {
+              const errors = validation.report.issues
+                .filter((i) => i.severity === 'error')
+                .map((i) => i.message)
+                .join(' | ');
+              flashBanner(
+                `Arquivo rejeitado pela validação rust-core: ${errors || 'estrutura inválida.'}`
+              );
+              return;
+            }
+            const warns = validation.report.issues.filter((i) => i.severity !== 'error');
+            if (warns.length > 0 && validation.source === 'rust') {
+              console.info(
+                `[Viewport3D] rust-core: ${validation.report.meshes} malha(s), ${validation.report.skins} skin(s), ${validation.report.animations} animação(ões) — ${warns.length} aviso(s).`
+              );
+            }
+          } catch (validationErr) {
+            // Nunca derruba a app: registra e segue para o Three.js
+            console.error('[Viewport3D] validação rust-core falhou:', validationErr);
+          }
         }
 
         const ext = targetFile.name.toLowerCase().split('.').pop() || '';
@@ -4695,6 +4730,28 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
 
   // Register global header & contextual page actions
   useEffect(() => {
+    // Helper: roda callback apenas se o gate Rust (ou fallback TS) permitir.
+    const gated = (
+      command: string,
+      action: () => void
+    ) => {
+      const snapshot = buildSceneSnapshot({
+        hasModel: Boolean(modelRootRef.current),
+        hasSkeleton: bonesRef.current.length > 0,
+        boneCount: bonesRef.current.length,
+        clipCount: clipsRef.current.length,
+        hasEmitterSelected: Boolean(selectedEmitterId),
+        isPlaying: isPlaying,
+        isImporting: isImporting,
+      });
+      const decision = canExecuteCommand(command, snapshot);
+      if (!decision.allowed) {
+        flashBanner(`Ação bloqueada: ${decision.reason}`);
+        return;
+      }
+      action();
+    };
+
     onRegisterGlobalActionsRef.current({
       undo: handleUndoTransform,
       redo: handleRedoTransform,
@@ -4703,9 +4760,9 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
       importModel: () => fileInputRef.current?.click(),
       importAnimationFile: () => animFileInputRef.current?.click(),
       frameScene: frameCameraToScene,
-      runAutoRig: (preset) => handleRunAutoRig(preset),
-      resetPose: handleResetPose,
-      removeRig: handleRemoveRig,
+      runAutoRig: (preset) => gated('auto_rig', () => handleRunAutoRig(preset)),
+      resetPose: () => gated('reset_pose', handleResetPose),
+      removeRig: () => gated('remove_rig', handleRemoveRig),
       toggleRigMarkers: handleToggleRigMarkers,
       toggleMarkerSymmetry: () => setMarkerSymmetry((v) => !v),
       toggleSkeleton: () => setShowSkeleton((s) => !s),
@@ -4725,8 +4782,8 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
       setMorphTargetValue: handleChangeMorphTarget,
       selectBoneForPose: handleSelectBoneForPose,
       selectClip: handleSelectClip,
-      togglePlay: () => setIsPlaying((p) => !p),
-      stopAnimation: handleStopAnimation,
+      togglePlay: () => gated('toggle_play', () => setIsPlaying((p) => !p)),
+      stopAnimation: () => gated('stop_animation', handleStopAnimation),
       stepFrame: handleStepFrame,
       seekNormalized: handleSeekNormalized,
       setPlayRange: handleSetPlayRange,
@@ -4748,7 +4805,7 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
       moveKeyframe: handleMoveKeyframe,
       copyClipLink: handleCopyClipLink,
       copyPublicLink: handleCopyPublicLink,
-      bakeIkPhysics: handleBakeIkPhysics,
+      bakeIkPhysics: () => gated('bake_ik_physics', handleBakeIkPhysics),
       setToolMode: selectToolModeWithTarget,
       setShowGrid: (show) => setShowGrid(show),
       applyGlobalScale: handleApplyGlobalScale,
@@ -4762,14 +4819,15 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
               clipsRef.current.length
             )
           : null,
-      exportModel: handleExportModel,
-      exportFbx: handleExportFbx,
-      exportZip: handleExportZip,
+      exportModel: (fmt, includeAnimations) =>
+        gated(fmt === 'glb' ? 'export_glb' : 'export_gltf', () => handleExportModel(fmt, includeAnimations)),
+      exportFbx: () => gated('export_fbx', handleExportFbx),
+      exportZip: () => gated('export_zip', handleExportZip),
       uploadHdri: () => hdriFileInputRef.current?.click(),
-      renderPng: () => handleRenderPng(false),
-      renderTransparentPng: () => handleRenderPng(true),
+      renderPng: () => gated('render_png', () => handleRenderPng(false)),
+      renderTransparentPng: () => gated('render_png_transparent', () => handleRenderPng(true)),
       restoreDefaultScene: handleRestoreDefaultScene,
-      openCodeExport: () => setShowCodeModal(true),
+      openCodeExport: () => gated('open_code_export', () => setShowCodeModal(true)),
       openHtmlTo3d: handleOpenHtmlTo3dModal,
       openReferenceImport: () => refImageInputRef.current?.click(),
       setRightPropTab: (tab) => {
