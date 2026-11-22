@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+﻿import React, { useEffect, useRef, useState } from 'react';
 import { AlertTriangle, CheckCircle2, Download, FileSearch, Upload, X } from 'lucide-react';
 import { GltfAuditReport, auditGltfOrGlbFile } from '../utils/gltfVerifier';
 
@@ -58,19 +58,19 @@ export const FileVerificationModal: React.FC<FileVerificationModalProps> = ({
 
   return (
     <div
-      className="fixed inset-0 z-50 bg-black/75 flex items-center justify-center p-4"
+      className="fixed inset-0 z-50 bg-[#F5F1EA]/75 flex items-center justify-center p-4"
       onClick={onClose}
       role="dialog"
-      aria-label="Auditoria e verificação técnica GLB/glTF"
+      aria-label="Auditoria e verificaÃ§Ã£o tÃ©cnica GLB/glTF"
     >
       <div
         className="w-full max-w-2xl rounded-xl bg-[#141923] border border-slate-700 shadow-2xl overflow-hidden flex flex-col max-h-[86vh]"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="px-4 py-3 border-b border-slate-800 flex items-center justify-between gap-2">
+        <div className="px-4 py-3 border-b border-[#231F1D]/15 flex items-center justify-between gap-2">
           <div className="flex items-center gap-2">
             <FileSearch className="w-4 h-4 text-orange-400" />
-            <span className="text-sm font-semibold text-white">Verificação Técnica GLB / glTF</span>
+            <span className="text-sm font-semibold text-[#231F1D]">VerificaÃ§Ã£o TÃ©cnica GLB / glTF</span>
           </div>
           <div className="flex items-center gap-1.5">
             <input
@@ -86,7 +86,7 @@ export const FileVerificationModal: React.FC<FileVerificationModalProps> = ({
             <button
               type="button"
               onClick={() => verifyInputRef.current?.click()}
-              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-slate-800 hover:bg-slate-700 text-xs text-slate-200 cursor-pointer"
+              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-[#FAF8F5] hover:bg-slate-700 text-xs text-slate-200 cursor-pointer"
             >
               <Upload className="w-3.5 h-3.5 text-sky-400" />
               <span>Auditar Arquivo</span>
@@ -94,7 +94,7 @@ export const FileVerificationModal: React.FC<FileVerificationModalProps> = ({
             <button
               type="button"
               onClick={onVerifyCurrentScene}
-              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-orange-600 hover:bg-orange-500 text-xs font-medium text-white cursor-pointer"
+              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-orange-600 hover:bg-orange-500 text-xs font-medium text-[#231F1D] cursor-pointer"
             >
               <span>Cena Atual</span>
             </button>
@@ -102,7 +102,7 @@ export const FileVerificationModal: React.FC<FileVerificationModalProps> = ({
               <button
                 type="button"
                 onClick={handleDownloadJsonReport}
-                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-slate-800 hover:bg-slate-700 text-xs text-slate-200 cursor-pointer"
+                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-[#FAF8F5] hover:bg-slate-700 text-xs text-slate-200 cursor-pointer"
               >
                 <Download className="w-3.5 h-3.5 text-emerald-400" />
                 <span>JSON</span>
@@ -112,7 +112,7 @@ export const FileVerificationModal: React.FC<FileVerificationModalProps> = ({
               type="button"
               onClick={onClose}
               aria-label="Fechar modal"
-              className="w-7 h-7 rounded-md hover:bg-slate-800 text-slate-400 hover:text-white flex items-center justify-center cursor-pointer"
+              className="w-7 h-7 rounded-md hover:bg-[#FAF8F5] text-[#635B54] hover:text-[#231F1D] flex items-center justify-center cursor-pointer"
             >
               <X className="w-4 h-4" />
             </button>
@@ -127,16 +127,16 @@ export const FileVerificationModal: React.FC<FileVerificationModalProps> = ({
           )}
 
           {!report ? (
-            <div className="py-10 text-center text-slate-400">
-              Clique em &ldquo;Cena Atual&rdquo; ou envie um arquivo .glb/.gltf para auditar malhas, UVs, normais e animações.
+            <div className="py-10 text-center text-[#635B54]">
+              Clique em &ldquo;Cena Atual&rdquo; ou envie um arquivo .glb/.gltf para auditar malhas, UVs, normais e animaÃ§Ãµes.
             </div>
           ) : (
             <>
-              <div className="flex flex-wrap items-center justify-between gap-2 p-3 rounded-lg bg-[#0D1017] border border-slate-800">
+              <div className="flex flex-wrap items-center justify-between gap-2 p-3 rounded-lg bg-[#0D1017] border border-[#231F1D]/15">
                 <div>
-                  <div className="text-sm font-semibold text-white">{report.fileName}</div>
-                  <div className="text-[11px] text-slate-400 font-mono">
-                    Gerador: {report.generator} · {(report.fileSizeBytes / 1024).toFixed(1)} KB
+                  <div className="text-sm font-semibold text-[#231F1D]">{report.fileName}</div>
+                  <div className="text-[11px] text-[#635B54] font-mono">
+                    Gerador: {report.generator} Â· {(report.fileSizeBytes / 1024).toFixed(1)} KB
                   </div>
                 </div>
                 <div className="inline-flex items-center gap-1.5 font-semibold">
@@ -148,7 +148,7 @@ export const FileVerificationModal: React.FC<FileVerificationModalProps> = ({
                   ) : (
                     <>
                       <AlertTriangle className="w-4 h-4 text-amber-400" />
-                      <span className="text-amber-400">Atenção ({report.warnings.length})</span>
+                      <span className="text-amber-400">AtenÃ§Ã£o ({report.warnings.length})</span>
                     </>
                   )}
                 </div>
@@ -157,20 +157,20 @@ export const FileVerificationModal: React.FC<FileVerificationModalProps> = ({
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                 {[
                   { label: 'Malhas', val: report.meshes },
-                  { label: 'Triângulos', val: report.triangles.toLocaleString() },
+                  { label: 'TriÃ¢ngulos', val: report.triangles.toLocaleString() },
                   { label: 'Materiais', val: report.materials },
                   { label: 'Texturas', val: report.textures },
                   { label: 'Ossos / Skins', val: `${report.bones} (${report.skins})` },
-                  { label: 'Animações', val: report.animations },
+                  { label: 'AnimaÃ§Ãµes', val: report.animations },
                   { label: 'Canal UV0', val: report.hasUv0 ? 'Presente' : 'Ausente' },
                   { label: 'Normais', val: report.hasNormals ? 'Presentes' : 'Ausentes' },
                 ].map((stat) => (
                   <div
                     key={stat.label}
-                    className="p-2.5 rounded-lg bg-[#0D1017] border border-slate-800"
+                    className="p-2.5 rounded-lg bg-[#0D1017] border border-[#231F1D]/15"
                   >
-                    <div className="text-[10px] text-slate-400">{stat.label}</div>
-                    <div className="text-sm font-semibold font-mono text-slate-100 tabular-nums mt-0.5">
+                    <div className="text-[10px] text-[#635B54]">{stat.label}</div>
+                    <div className="text-sm font-semibold font-mono text-[#231F1D] tabular-nums mt-0.5">
                       {stat.val}
                     </div>
                   </div>
@@ -182,14 +182,14 @@ export const FileVerificationModal: React.FC<FileVerificationModalProps> = ({
                   <div className="font-semibold text-amber-300">Alertas de Pipeline</div>
                   {report.warnings.map((w, i) => (
                     <div key={i} className="text-amber-200/90">
-                      · {w}
+                      Â· {w}
                     </div>
                   ))}
                 </div>
               )}
 
               {report.meshDetails.length > 0 && (
-                <div className="rounded-lg border border-slate-800 overflow-hidden">
+                <div className="rounded-lg border border-[#231F1D]/15 overflow-hidden">
                   <div className="px-3 py-2 bg-[#0F131B] text-[11px] font-semibold text-slate-300">
                     Detalhamento por Malha ({report.meshDetails.length})
                   </div>
@@ -204,7 +204,7 @@ export const FileVerificationModal: React.FC<FileVerificationModalProps> = ({
                           <div className="text-[10px] text-slate-500 truncate">{m.materialName}</div>
                         </div>
                         <div className="text-[11px] font-mono text-slate-300 tabular-nums shrink-0">
-                          {m.triangles.toLocaleString()} tris · {m.hasNormals ? 'Normais OK' : 'Sem normais'}
+                          {m.triangles.toLocaleString()} tris Â· {m.hasNormals ? 'Normais OK' : 'Sem normais'}
                         </div>
                       </div>
                     ))}
@@ -218,3 +218,4 @@ export const FileVerificationModal: React.FC<FileVerificationModalProps> = ({
     </div>
   );
 };
+

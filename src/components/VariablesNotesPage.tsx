@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+﻿import React, { useEffect, useState } from 'react';
 import { Box, Check, MessageSquare, MousePointerClick, Plus, Sliders, Trash2 } from 'lucide-react';
 import {
   VariableBindingRule,
@@ -35,19 +35,19 @@ interface VariablesNotesPageProps {
 const NOTES_STORAGE_KEY = 'alexdesign_scene_notes_v1';
 
 const SOURCE_LABELS: Record<VariableBindingSource, string> = {
-  mouse_x: 'Mouse X (Posição Horizontal)',
-  mouse_y: 'Mouse Y (Posição Vertical)',
+  mouse_x: 'Mouse X (PosiÃ§Ã£o Horizontal)',
+  mouse_y: 'Mouse Y (PosiÃ§Ã£o Vertical)',
   scroll: 'Scroll (Roda do Mouse)',
   click: 'Clique na Cena',
 };
 
 const TARGET_LABELS: Record<VariableBindingTarget, string> = {
   fresnel: 'Shader Fresnel (Brilho Borda)',
-  dissolve: 'Shader Dissolve (Ruído)',
-  distortion: 'Shader Distorção (Ondas)',
-  particleRate: 'Taxa de Partículas VFX',
-  animSpeed: 'Velocidade da Animação',
-  exposure: 'Exposição HDR (EV)',
+  dissolve: 'Shader Dissolve (RuÃ­do)',
+  distortion: 'Shader DistorÃ§Ã£o (Ondas)',
+  particleRate: 'Taxa de PartÃ­culas VFX',
+  animSpeed: 'Velocidade da AnimaÃ§Ã£o',
+  exposure: 'ExposiÃ§Ã£o HDR (EV)',
 };
 
 export const VariablesNotesPage: React.FC<VariablesNotesPageProps> = ({
@@ -123,12 +123,12 @@ export const VariablesNotesPage: React.FC<VariablesNotesPageProps> = ({
 
   return (
     <div className="max-w-[1440px] mx-auto p-3.5 sm:p-4 space-y-4">
-      <div className="rounded-xl bg-[#141923] border border-slate-800 p-4 flex flex-wrap items-center justify-between gap-3">
+      <div className="rounded-xl bg-[#141923] border border-[#231F1D]/15 p-4 flex flex-wrap items-center justify-between gap-3">
         <div className="space-y-1 min-w-0">
-          <h1 className="text-base font-bold text-white">
-            Variáveis Customizadas (Blender IDProperty) & Vínculos Web Interativos
+          <h1 className="text-base font-bold text-[#231F1D]">
+            VariÃ¡veis Customizadas (Blender IDProperty) & VÃ­nculos Web Interativos
           </h1>
-          <p className="text-xs text-slate-400">
+          <p className="text-xs text-[#635B54]">
             Vincule eventos reais (Mouse, Scroll, Clique) a Shaders/VFX e exporte tudo como{' '}
             <span className="font-mono text-sky-300">IDProperty</span> para{' '}
             <span className="font-mono text-slate-200">{assetName}</span>.
@@ -138,23 +138,23 @@ export const VariablesNotesPage: React.FC<VariablesNotesPageProps> = ({
         <button
           type="button"
           onClick={onOpenViewport}
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-orange-600 hover:bg-orange-500 text-xs font-semibold text-white cursor-pointer whitespace-nowrap"
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-orange-600 hover:bg-orange-500 text-xs font-semibold text-[#231F1D] cursor-pointer whitespace-nowrap"
         >
           <Box className="w-3.5 h-3.5" />
-          <span>Estúdio 3D</span>
+          <span>EstÃºdio 3D</span>
         </button>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start">
         {/* Left: Live Scene Variables + Interactive Bindings */}
-        <section className="rounded-xl bg-[#141923] border border-slate-800 p-4 space-y-3.5">
+        <section className="rounded-xl bg-[#141923] border border-[#231F1D]/15 p-4 space-y-3.5">
           <div className="flex items-center gap-2">
             <Sliders className="w-4 h-4 text-sky-400" />
-            <h2 className="text-sm font-semibold text-white">Variáveis Reativas da Cena (IDProperty)</h2>
+            <h2 className="text-sm font-semibold text-[#231F1D]">VariÃ¡veis Reativas da Cena (IDProperty)</h2>
           </div>
 
           <div className="space-y-3">
-            <div className="p-3.5 rounded-xl bg-[#0D1017] border border-slate-800 space-y-2">
+            <div className="p-3.5 rounded-xl bg-[#0D1017] border border-[#231F1D]/15 space-y-2">
               <div className="flex items-center justify-between text-xs">
                 <span className="font-mono text-sky-300">animacaoVelocidade</span>
                 <span className="font-mono text-slate-200 tabular-nums">
@@ -172,7 +172,7 @@ export const VariablesNotesPage: React.FC<VariablesNotesPageProps> = ({
               />
             </div>
 
-            <div className="p-3.5 rounded-xl bg-[#0D1017] border border-slate-800 space-y-2">
+            <div className="p-3.5 rounded-xl bg-[#0D1017] border border-[#231F1D]/15 space-y-2">
               <div className="flex items-center justify-between text-xs">
                 <span className="font-mono text-sky-300">escalaRaiz</span>
                 <span className="font-mono text-slate-200 tabular-nums">
@@ -191,7 +191,7 @@ export const VariablesNotesPage: React.FC<VariablesNotesPageProps> = ({
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <label className="p-3 rounded-xl bg-[#0D1017] border border-slate-800 flex items-center justify-between gap-2 text-xs cursor-pointer">
+              <label className="p-3 rounded-xl bg-[#0D1017] border border-[#231F1D]/15 flex items-center justify-between gap-2 text-xs cursor-pointer">
                 <span className="font-mono text-slate-200">exibirGrade</span>
                 <input
                   type="checkbox"
@@ -201,7 +201,7 @@ export const VariablesNotesPage: React.FC<VariablesNotesPageProps> = ({
                 />
               </label>
 
-              <label className="p-3 rounded-xl bg-[#0D1017] border border-slate-800 flex items-center justify-between gap-2 text-xs cursor-pointer">
+              <label className="p-3 rounded-xl bg-[#0D1017] border border-[#231F1D]/15 flex items-center justify-between gap-2 text-xs cursor-pointer">
                 <span className="font-mono text-slate-200">modoWireframe</span>
                 <input
                   type="checkbox"
@@ -212,7 +212,7 @@ export const VariablesNotesPage: React.FC<VariablesNotesPageProps> = ({
               </label>
             </div>
 
-            <div className="p-3 rounded-xl bg-[#0D1017] border border-slate-800 flex flex-wrap items-center justify-between gap-3">
+            <div className="p-3 rounded-xl bg-[#0D1017] border border-[#231F1D]/15 flex flex-wrap items-center justify-between gap-3">
               <div className="flex items-center gap-2.5">
                 <input
                   type="color"
@@ -222,7 +222,7 @@ export const VariablesNotesPage: React.FC<VariablesNotesPageProps> = ({
                 />
                 <div>
                   <div className="text-xs font-mono text-sky-300">corDestaque</div>
-                  <div className="text-[11px] font-mono text-slate-400">
+                  <div className="text-[11px] font-mono text-[#635B54]">
                     {variables.highlightColor.toUpperCase()}
                   </div>
                 </div>
@@ -230,16 +230,16 @@ export const VariablesNotesPage: React.FC<VariablesNotesPageProps> = ({
               <button
                 type="button"
                 onClick={() => onApplyAccentToScene(variables.highlightColor)}
-                className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-medium text-white cursor-pointer"
+                className="px-3 py-1.5 rounded-lg bg-[#FAF8F5] hover:bg-slate-700 text-xs font-medium text-[#231F1D] cursor-pointer"
               >
                 Aplicar na Malha Ativa
               </button>
             </div>
 
             {/* Web Interactivity Bindings (Mouse / Scroll / Click -> VFX/Anim/Shader) */}
-            <div className="p-3.5 rounded-xl bg-[#0D1017] border border-slate-800 space-y-2.5">
+            <div className="p-3.5 rounded-xl bg-[#0D1017] border border-[#231F1D]/15 space-y-2.5">
               <div className="flex items-center justify-between gap-2">
-                <div className="flex items-center gap-1.5 text-xs font-semibold text-white">
+                <div className="flex items-center gap-1.5 text-xs font-semibold text-[#231F1D]">
                   <MousePointerClick className="w-3.5 h-3.5 text-cyan-400" />
                   <span>Gatilhos Interativos (Mouse / Scroll / Clique)</span>
                 </div>
@@ -249,7 +249,7 @@ export const VariablesNotesPage: React.FC<VariablesNotesPageProps> = ({
                   className="inline-flex items-center gap-1 px-2 py-1 rounded bg-cyan-600/20 border border-cyan-500/50 hover:bg-cyan-600/30 text-[11px] text-cyan-200 cursor-pointer"
                 >
                   <Plus className="w-3 h-3" />
-                  <span>Vínculo</span>
+                  <span>VÃ­nculo</span>
                 </button>
               </div>
 
@@ -257,7 +257,7 @@ export const VariablesNotesPage: React.FC<VariablesNotesPageProps> = ({
                 {bindings.map((rule) => (
                   <div
                     key={rule.id}
-                    className="p-2.5 rounded-lg bg-[#141923] border border-slate-800 space-y-2 text-[11px]"
+                    className="p-2.5 rounded-lg bg-[#141923] border border-[#231F1D]/15 space-y-2 text-[11px]"
                   >
                     <div className="flex items-center justify-between gap-2">
                       <label className="flex items-center gap-1.5 text-slate-200 font-medium cursor-pointer">
@@ -278,8 +278,8 @@ export const VariablesNotesPage: React.FC<VariablesNotesPageProps> = ({
                       <button
                         type="button"
                         onClick={() => onUpdateBindings(bindings.filter((b) => b.id !== rule.id))}
-                        className="text-slate-400 hover:text-red-400 cursor-pointer"
-                        title="Remover vínculo"
+                        className="text-[#635B54] hover:text-red-400 cursor-pointer"
+                        title="Remover vÃ­nculo"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>
@@ -327,7 +327,7 @@ export const VariablesNotesPage: React.FC<VariablesNotesPageProps> = ({
                       </select>
                     </div>
 
-                    <label className="flex items-center gap-2 text-[10px] text-slate-400">
+                    <label className="flex items-center gap-2 text-[10px] text-[#635B54]">
                       <span>Ganho</span>
                       <input
                         type="range"
@@ -356,10 +356,10 @@ export const VariablesNotesPage: React.FC<VariablesNotesPageProps> = ({
         </section>
 
         {/* Right: Design Notes & Checklist */}
-        <section className="rounded-xl bg-[#141923] border border-slate-800 p-4 space-y-3.5">
+        <section className="rounded-xl bg-[#141923] border border-[#231F1D]/15 p-4 space-y-3.5">
           <div className="flex items-center gap-2">
             <MessageSquare className="w-4 h-4 text-orange-400" />
-            <h2 className="text-sm font-semibold text-white">Comentários & Notas da Cena</h2>
+            <h2 className="text-sm font-semibold text-[#231F1D]">ComentÃ¡rios & Notas da Cena</h2>
           </div>
 
           <form onSubmit={handleAddNote} className="space-y-2">
@@ -369,29 +369,29 @@ export const VariablesNotesPage: React.FC<VariablesNotesPageProps> = ({
                 value={authorName}
                 onChange={(e) => setAuthorName(e.target.value)}
                 placeholder="Autor"
-                className="px-2.5 py-2 rounded-lg bg-[#0D1017] border border-slate-800 text-xs text-slate-100 focus:outline-none focus:border-orange-500"
+                className="px-2.5 py-2 rounded-lg bg-[#0D1017] border border-[#231F1D]/15 text-xs text-[#231F1D] focus:outline-none focus:border-orange-500"
               />
               <input
                 type="text"
                 value={noteInput}
                 onChange={(e) => setNoteInput(e.target.value)}
-                placeholder="Adicionar anotação de ajuste ou revisão..."
-                className="px-3 py-2 rounded-lg bg-[#0D1017] border border-slate-800 text-xs text-slate-100 focus:outline-none focus:border-orange-500"
+                placeholder="Adicionar anotaÃ§Ã£o de ajuste ou revisÃ£o..."
+                className="px-3 py-2 rounded-lg bg-[#0D1017] border border-[#231F1D]/15 text-xs text-[#231F1D] focus:outline-none focus:border-orange-500"
               />
             </div>
             <button
               type="submit"
-              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-orange-600 hover:bg-orange-500 text-xs font-semibold text-white cursor-pointer"
+              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-orange-600 hover:bg-orange-500 text-xs font-semibold text-[#231F1D] cursor-pointer"
             >
               <Plus className="w-3.5 h-3.5" />
-              <span>Registrar Anotação</span>
+              <span>Registrar AnotaÃ§Ã£o</span>
             </button>
           </form>
 
           <div className="space-y-2 max-h-96 overflow-y-auto">
             {notes.length === 0 ? (
-              <div className="p-6 text-center text-xs text-slate-500 border border-dashed border-slate-800 rounded-xl">
-                Nenhuma anotação registrada nesta cena.
+              <div className="p-6 text-center text-xs text-slate-500 border border-dashed border-[#231F1D]/15 rounded-xl">
+                Nenhuma anotaÃ§Ã£o registrada nesta cena.
               </div>
             ) : (
               notes.map((n) => (
@@ -399,14 +399,14 @@ export const VariablesNotesPage: React.FC<VariablesNotesPageProps> = ({
                   key={n.id}
                   className={`p-3 rounded-xl border flex items-start justify-between gap-3 ${
                     n.resolved
-                      ? 'bg-[#0D1017]/60 border-slate-800/70 opacity-70'
-                      : 'bg-[#0D1017] border-slate-800'
+                      ? 'bg-[#0D1017]/60 border-[#231F1D]/15/70 opacity-70'
+                      : 'bg-[#0D1017] border-[#231F1D]/15'
                   }`}
                 >
                   <div className="space-y-1 min-w-0">
-                    <div className="flex items-center gap-2 text-[11px] text-slate-400">
+                    <div className="flex items-center gap-2 text-[11px] text-[#635B54]">
                       <span className="font-semibold text-slate-200">{n.author}</span>
-                      <span aria-hidden="true">·</span>
+                      <span aria-hidden="true">Â·</span>
                       <span className="font-mono">{n.createdAt}</span>
                     </div>
                     <p
@@ -425,11 +425,11 @@ export const VariablesNotesPage: React.FC<VariablesNotesPageProps> = ({
                           prev.map((x) => (x.id === n.id ? { ...x, resolved: !x.resolved } : x))
                         )
                       }
-                      title={n.resolved ? 'Reabrir nota' : 'Marcar como concluída'}
+                      title={n.resolved ? 'Reabrir nota' : 'Marcar como concluÃ­da'}
                       className={`w-7 h-7 rounded-md flex items-center justify-center cursor-pointer ${
                         n.resolved
-                          ? 'bg-emerald-600 text-white'
-                          : 'bg-slate-800 text-slate-300 hover:text-emerald-400'
+                          ? 'bg-emerald-600 text-[#231F1D]'
+                          : 'bg-[#FAF8F5] text-slate-300 hover:text-emerald-400'
                       }`}
                     >
                       <Check className="w-3.5 h-3.5" />
@@ -437,8 +437,8 @@ export const VariablesNotesPage: React.FC<VariablesNotesPageProps> = ({
                     <button
                       type="button"
                       onClick={() => setNotes((prev) => prev.filter((x) => x.id !== n.id))}
-                      title="Excluir anotação"
-                      className="w-7 h-7 rounded-md bg-slate-800 text-slate-400 hover:text-red-400 flex items-center justify-center cursor-pointer"
+                      title="Excluir anotaÃ§Ã£o"
+                      className="w-7 h-7 rounded-md bg-[#FAF8F5] text-[#635B54] hover:text-red-400 flex items-center justify-center cursor-pointer"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>
@@ -452,3 +452,4 @@ export const VariablesNotesPage: React.FC<VariablesNotesPageProps> = ({
     </div>
   );
 };
+

@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+﻿import React, { useEffect, useRef, useState } from 'react';
 import {
   AlertTriangle,
   Archive,
@@ -165,13 +165,13 @@ export const PublishExportPage: React.FC<PublishExportPageProps> = ({
   return (
     <div className="max-w-[1440px] mx-auto p-3.5 sm:p-4 space-y-4">
       {/* Header Summary */}
-      <div className="rounded-xl bg-[#141923] border border-slate-800 p-4 flex flex-wrap items-center justify-between gap-3">
+      <div className="rounded-xl bg-[#141923] border border-[#231F1D]/15 p-4 flex flex-wrap items-center justify-between gap-3">
         <div className="space-y-1 min-w-0">
-          <h1 className="text-base font-bold text-white">
+          <h1 className="text-base font-bold text-[#231F1D]">
             Exportar Blender 5.3 (bpy), .FBX, .GLB, PNG Transparente & Link Interativo
           </h1>
-          <p className="text-xs text-slate-400">
-            Exporte criações 100% compatíveis com docs.blender.org/api/current (Collections, KinematicConstraint, Principled BSDF, IDProperty, ParticleSettings e RigidBodyObject).
+          <p className="text-xs text-[#635B54]">
+            Exporte criaÃ§Ãµes 100% compatÃ­veis com docs.blender.org/api/current (Collections, KinematicConstraint, Principled BSDF, IDProperty, ParticleSettings e RigidBodyObject).
           </p>
         </div>
 
@@ -179,11 +179,11 @@ export const PublishExportPage: React.FC<PublishExportPageProps> = ({
           <button
             type="button"
             onClick={onBakeIkPhysics}
-            title="Assar poses IK e física em keyframes puros antes de exportar"
+            title="Assar poses IK e fÃ­sica em keyframes puros antes de exportar"
             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-600/20 border border-amber-500/50 hover:bg-amber-600/30 text-xs font-semibold text-amber-200 cursor-pointer whitespace-nowrap"
           >
             <Sparkles className="w-3.5 h-3.5" />
-            <span>Bake Animação & Física</span>
+            <span>Bake AnimaÃ§Ã£o & FÃ­sica</span>
           </button>
 
           <button
@@ -192,16 +192,16 @@ export const PublishExportPage: React.FC<PublishExportPageProps> = ({
             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-sky-600/20 border border-sky-500/50 hover:bg-sky-600/30 text-xs font-semibold text-sky-200 cursor-pointer whitespace-nowrap"
           >
             {linkCopied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Link2 className="w-3.5 h-3.5" />}
-            <span>{linkCopied ? 'Link Copiado!' : 'Copiar Link Público'}</span>
+            <span>{linkCopied ? 'Link Copiado!' : 'Copiar Link PÃºblico'}</span>
           </button>
 
           <button
             type="button"
             onClick={onOpenViewport}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-white cursor-pointer whitespace-nowrap"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#FAF8F5] hover:bg-slate-700 text-xs font-semibold text-[#231F1D] cursor-pointer whitespace-nowrap"
           >
             <Box className="w-3.5 h-3.5 text-orange-400" />
-            <span>Estúdio 3D</span>
+            <span>EstÃºdio 3D</span>
           </button>
         </div>
       </div>
@@ -217,50 +217,50 @@ export const PublishExportPage: React.FC<PublishExportPageProps> = ({
             <Archive className="w-4 h-4 text-orange-400" />
           </div>
           <div className="min-w-0">
-            <div className="text-xs font-semibold text-white">Pacote Blender (.ZIP)</div>
-            <div className="text-[11px] text-slate-400 truncate">GLB + Script bpy 5.3 + Auditoria</div>
+            <div className="text-xs font-semibold text-[#231F1D]">Pacote Blender (.ZIP)</div>
+            <div className="text-[11px] text-[#635B54] truncate">GLB + Script bpy 5.3 + Auditoria</div>
           </div>
         </button>
 
         <button
           type="button"
           onClick={onExportGlb}
-          className="p-4 rounded-xl bg-[#141923] border border-slate-800 hover:border-emerald-500/70 text-left flex items-center gap-3 cursor-pointer transition-colors"
+          className="p-4 rounded-xl bg-[#141923] border border-[#231F1D]/15 hover:border-emerald-500/70 text-left flex items-center gap-3 cursor-pointer transition-colors"
         >
-          <div className="w-9 h-9 rounded-lg bg-[#0D1017] border border-slate-800 flex items-center justify-center shrink-0">
+          <div className="w-9 h-9 rounded-lg bg-[#0D1017] border border-[#231F1D]/15 flex items-center justify-center shrink-0">
             <Download className="w-4 h-4 text-emerald-400" />
           </div>
           <div className="min-w-0">
-            <div className="text-xs font-semibold text-white">Exportar .GLB</div>
-            <div className="text-[11px] text-slate-400 truncate">Binário glTF 2.0 + Extras bpy</div>
+            <div className="text-xs font-semibold text-[#231F1D]">Exportar .GLB</div>
+            <div className="text-[11px] text-[#635B54] truncate">BinÃ¡rio glTF 2.0 + Extras bpy</div>
           </div>
         </button>
 
         <button
           type="button"
           onClick={onExportFbx}
-          className="p-4 rounded-xl bg-[#141923] border border-slate-800 hover:border-violet-500/70 text-left flex items-center gap-3 cursor-pointer transition-colors"
+          className="p-4 rounded-xl bg-[#141923] border border-[#231F1D]/15 hover:border-violet-500/70 text-left flex items-center gap-3 cursor-pointer transition-colors"
         >
-          <div className="w-9 h-9 rounded-lg bg-[#0D1017] border border-slate-800 flex items-center justify-center shrink-0">
+          <div className="w-9 h-9 rounded-lg bg-[#0D1017] border border-[#231F1D]/15 flex items-center justify-center shrink-0">
             <Download className="w-4 h-4 text-violet-400" />
           </div>
           <div className="min-w-0">
-            <div className="text-xs font-semibold text-white">Exportar .FBX (7.4)</div>
-            <div className="text-[11px] text-slate-400 truncate">Malhas, Skin & Animações</div>
+            <div className="text-xs font-semibold text-[#231F1D]">Exportar .FBX (7.4)</div>
+            <div className="text-[11px] text-[#635B54] truncate">Malhas, Skin & AnimaÃ§Ãµes</div>
           </div>
         </button>
 
         <button
           type="button"
           onClick={onExportGltf}
-          className="p-4 rounded-xl bg-[#141923] border border-slate-800 hover:border-sky-500/70 text-left flex items-center gap-3 cursor-pointer transition-colors"
+          className="p-4 rounded-xl bg-[#141923] border border-[#231F1D]/15 hover:border-sky-500/70 text-left flex items-center gap-3 cursor-pointer transition-colors"
         >
-          <div className="w-9 h-9 rounded-lg bg-[#0D1017] border border-slate-800 flex items-center justify-center shrink-0">
+          <div className="w-9 h-9 rounded-lg bg-[#0D1017] border border-[#231F1D]/15 flex items-center justify-center shrink-0">
             <Download className="w-4 h-4 text-sky-400" />
           </div>
           <div className="min-w-0">
-            <div className="text-xs font-semibold text-white">Exportar .glTF</div>
-            <div className="text-[11px] text-slate-400 truncate">JSON legível glTF 2.0</div>
+            <div className="text-xs font-semibold text-[#231F1D]">Exportar .glTF</div>
+            <div className="text-[11px] text-[#635B54] truncate">JSON legÃ­vel glTF 2.0</div>
           </div>
         </button>
 
@@ -273,75 +273,75 @@ export const PublishExportPage: React.FC<PublishExportPageProps> = ({
             <ImageDown className="w-4 h-4 text-emerald-400" />
           </div>
           <div className="min-w-0">
-            <div className="text-xs font-semibold text-white">PNG Transparente</div>
-            <div className="text-[11px] text-slate-400 truncate">Render WebGL RGBA Alpha</div>
+            <div className="text-xs font-semibold text-[#231F1D]">PNG Transparente</div>
+            <div className="text-[11px] text-[#635B54] truncate">Render WebGL RGBA Alpha</div>
           </div>
         </button>
 
         <button
           type="button"
           onClick={handleDownloadBlenderScript}
-          className="p-4 rounded-xl bg-[#141923] border border-slate-800 hover:border-amber-500/70 text-left flex items-center gap-3 cursor-pointer transition-colors"
+          className="p-4 rounded-xl bg-[#141923] border border-[#231F1D]/15 hover:border-amber-500/70 text-left flex items-center gap-3 cursor-pointer transition-colors"
         >
-          <div className="w-9 h-9 rounded-lg bg-[#0D1017] border border-slate-800 flex items-center justify-center shrink-0">
+          <div className="w-9 h-9 rounded-lg bg-[#0D1017] border border-[#231F1D]/15 flex items-center justify-center shrink-0">
             <FileCode2 className="w-4 h-4 text-amber-400" />
           </div>
           <div className="min-w-0">
-            <div className="text-xs font-semibold text-white">Script Blender 5.3 (.py)</div>
-            <div className="text-[11px] text-slate-400 truncate">Collections, IK, VFX & FCurves</div>
+            <div className="text-xs font-semibold text-[#231F1D]">Script Blender 5.3 (.py)</div>
+            <div className="text-[11px] text-[#635B54] truncate">Collections, IK, VFX & FCurves</div>
           </div>
         </button>
 
         <button
           type="button"
           onClick={handleCopyShareLink}
-          className="p-4 rounded-xl bg-[#141923] border border-slate-800 hover:border-sky-500/70 text-left flex items-center gap-3 cursor-pointer transition-colors"
+          className="p-4 rounded-xl bg-[#141923] border border-[#231F1D]/15 hover:border-sky-500/70 text-left flex items-center gap-3 cursor-pointer transition-colors"
         >
-          <div className="w-9 h-9 rounded-lg bg-[#0D1017] border border-slate-800 flex items-center justify-center shrink-0">
+          <div className="w-9 h-9 rounded-lg bg-[#0D1017] border border-[#231F1D]/15 flex items-center justify-center shrink-0">
             <Link2 className="w-4 h-4 text-sky-400" />
           </div>
           <div className="min-w-0">
-            <div className="text-xs font-semibold text-white">Link Interativo 3D</div>
-            <div className="text-[11px] text-slate-400 truncate">Compartilhar cena via URL</div>
+            <div className="text-xs font-semibold text-[#231F1D]">Link Interativo 3D</div>
+            <div className="text-[11px] text-[#635B54] truncate">Compartilhar cena via URL</div>
           </div>
         </button>
 
         <button
           type="button"
           onClick={onRestoreDefaultScene}
-          className="p-4 rounded-xl bg-[#141923] border border-slate-800 hover:border-slate-600 text-left flex items-center gap-3 cursor-pointer transition-colors"
+          className="p-4 rounded-xl bg-[#141923] border border-[#231F1D]/15 hover:border-slate-600 text-left flex items-center gap-3 cursor-pointer transition-colors"
         >
-          <div className="w-9 h-9 rounded-lg bg-[#0D1017] border border-slate-800 flex items-center justify-center shrink-0">
+          <div className="w-9 h-9 rounded-lg bg-[#0D1017] border border-[#231F1D]/15 flex items-center justify-center shrink-0">
             <RotateCcw className="w-4 h-4 text-slate-300" />
           </div>
           <div className="min-w-0">
-            <div className="text-xs font-semibold text-white">Restaurar Cena Padrão</div>
-            <div className="text-[11px] text-slate-400 truncate">Reiniciar modelo AlexDesign</div>
+            <div className="text-xs font-semibold text-[#231F1D]">Restaurar Cena PadrÃ£o</div>
+            <div className="text-[11px] text-[#635B54] truncate">Reiniciar modelo AlexDesign</div>
           </div>
         </button>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
         {/* Left: Interactive Blender Current API + Web Embed Code Studio */}
-        <section className="lg:col-span-7 rounded-xl bg-[#141923] border border-slate-800 overflow-hidden flex flex-col">
-          <div className="px-4 py-3 border-b border-slate-800 flex flex-wrap items-center justify-between gap-2">
+        <section className="lg:col-span-7 rounded-xl bg-[#141923] border border-[#231F1D]/15 overflow-hidden flex flex-col">
+          <div className="px-4 py-3 border-b border-[#231F1D]/15 flex flex-wrap items-center justify-between gap-2">
             <div className="flex items-center gap-2">
               <Code2 className="w-4 h-4 text-orange-400" />
-              <h2 className="text-sm font-semibold text-white">Blender API 5.3 (bpy) & Embed Web / iframe</h2>
+              <h2 className="text-sm font-semibold text-[#231F1D]">Blender API 5.3 (bpy) & Embed Web / iframe</h2>
             </div>
             <div className="flex items-center gap-1.5">
               <button
                 type="button"
                 onClick={handleCopy}
-                className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-md bg-slate-800 hover:bg-slate-700 text-xs font-medium text-slate-100 cursor-pointer whitespace-nowrap"
+                className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-md bg-[#FAF8F5] hover:bg-slate-700 text-xs font-medium text-[#231F1D] cursor-pointer whitespace-nowrap"
               >
                 {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
-                <span>{copied ? 'Copiado' : 'Copiar Código'}</span>
+                <span>{copied ? 'Copiado' : 'Copiar CÃ³digo'}</span>
               </button>
               <button
                 type="button"
                 onClick={handleDownloadCode}
-                className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-md bg-orange-600 hover:bg-orange-500 text-xs font-semibold text-white cursor-pointer whitespace-nowrap"
+                className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-md bg-orange-600 hover:bg-orange-500 text-xs font-semibold text-[#231F1D] cursor-pointer whitespace-nowrap"
               >
                 <Download className="w-3.5 h-3.5" />
                 <span>Baixar {activeMeta.filename}</span>
@@ -349,7 +349,7 @@ export const PublishExportPage: React.FC<PublishExportPageProps> = ({
             </div>
           </div>
 
-          <div className="px-4 py-2 bg-[#0F131B] border-b border-slate-800 flex items-center gap-1.5 overflow-x-auto no-scrollbar">
+          <div className="px-4 py-2 bg-[#0F131B] border-b border-[#231F1D]/15 flex items-center gap-1.5 overflow-x-auto no-scrollbar">
             {EMBED_TABS.map((t) => (
               <button
                 key={t.id}
@@ -357,8 +357,8 @@ export const PublishExportPage: React.FC<PublishExportPageProps> = ({
                 onClick={() => setEmbedTab(t.id)}
                 className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
                   embedTab === t.id
-                    ? 'bg-orange-600 text-white'
-                    : 'bg-slate-800/80 text-slate-300 hover:text-white hover:bg-slate-700'
+                    ? 'bg-orange-600 text-[#231F1D]'
+                    : 'bg-[#FAF8F5]/80 text-slate-300 hover:text-[#231F1D] hover:bg-slate-700'
                 }`}
               >
                 {t.label}
@@ -374,11 +374,11 @@ export const PublishExportPage: React.FC<PublishExportPageProps> = ({
         </section>
 
         {/* Right: Technical GLB/glTF Audit */}
-        <section className="lg:col-span-5 rounded-xl bg-[#141923] border border-slate-800 p-4 space-y-4 text-xs">
+        <section className="lg:col-span-5 rounded-xl bg-[#141923] border border-[#231F1D]/15 p-4 space-y-4 text-xs">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <div className="flex items-center gap-2">
               <FileSearch className="w-4 h-4 text-amber-400" />
-              <h2 className="text-sm font-semibold text-white">Auditoria Técnica GLB / glTF</h2>
+              <h2 className="text-sm font-semibold text-[#231F1D]">Auditoria TÃ©cnica GLB / glTF</h2>
             </div>
             <div className="flex items-center gap-1.5">
               <input
@@ -402,7 +402,7 @@ export const PublishExportPage: React.FC<PublishExportPageProps> = ({
               <button
                 type="button"
                 onClick={() => auditFileRef.current?.click()}
-                className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-md bg-slate-800 hover:bg-slate-700 text-slate-200 cursor-pointer whitespace-nowrap"
+                className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-md bg-[#FAF8F5] hover:bg-slate-700 text-slate-200 cursor-pointer whitespace-nowrap"
               >
                 <Upload className="w-3.5 h-3.5 text-sky-400" />
                 <span>Auditar Arquivo</span>
@@ -410,7 +410,7 @@ export const PublishExportPage: React.FC<PublishExportPageProps> = ({
               <button
                 type="button"
                 onClick={onRunSceneAudit}
-                className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-md bg-orange-600 hover:bg-orange-500 text-white font-semibold cursor-pointer whitespace-nowrap"
+                className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-md bg-orange-600 hover:bg-orange-500 text-[#231F1D] font-semibold cursor-pointer whitespace-nowrap"
               >
                 <span>Atualizar Cena</span>
               </button>
@@ -424,16 +424,16 @@ export const PublishExportPage: React.FC<PublishExportPageProps> = ({
           )}
 
           {!auditReport ? (
-            <div className="py-8 text-center text-slate-400">
+            <div className="py-8 text-center text-[#635B54]">
               Clique em &ldquo;Atualizar Cena&rdquo; para auditar as malhas, normais, ossos e materiais atuais.
             </div>
           ) : (
             <div className="space-y-3">
-              <div className="p-3 rounded-lg bg-[#0D1017] border border-slate-800 flex items-center justify-between gap-2">
+              <div className="p-3 rounded-lg bg-[#0D1017] border border-[#231F1D]/15 flex items-center justify-between gap-2">
                 <div className="min-w-0">
-                  <div className="font-semibold text-white truncate">{auditReport.fileName}</div>
-                  <div className="text-[11px] font-mono text-slate-400 truncate">
-                    {auditReport.generator} · {(auditReport.fileSizeBytes / 1024).toFixed(1)} KB
+                  <div className="font-semibold text-[#231F1D] truncate">{auditReport.fileName}</div>
+                  <div className="text-[11px] font-mono text-[#635B54] truncate">
+                    {auditReport.generator} Â· {(auditReport.fileSizeBytes / 1024).toFixed(1)} KB
                   </div>
                 </div>
                 <div className="inline-flex items-center gap-1.5 font-semibold shrink-0">
@@ -445,7 +445,7 @@ export const PublishExportPage: React.FC<PublishExportPageProps> = ({
                   ) : (
                     <>
                       <AlertTriangle className="w-4 h-4 text-amber-400" />
-                      <span className="text-amber-400">Atenção ({auditReport.warnings.length})</span>
+                      <span className="text-amber-400">AtenÃ§Ã£o ({auditReport.warnings.length})</span>
                     </>
                   )}
                 </div>
@@ -454,15 +454,15 @@ export const PublishExportPage: React.FC<PublishExportPageProps> = ({
               <div className="grid grid-cols-2 gap-2">
                 {[
                   { label: 'Malhas', val: auditReport.meshes },
-                  { label: 'Triângulos', val: auditReport.triangles.toLocaleString() },
+                  { label: 'TriÃ¢ngulos', val: auditReport.triangles.toLocaleString() },
                   { label: 'Materiais', val: auditReport.materials },
                   { label: 'Ossos / Skins', val: `${auditReport.bones} (${auditReport.skins})` },
                   { label: 'Canal UV0', val: auditReport.hasUv0 ? 'Presente' : 'Ausente' },
                   { label: 'Normais', val: auditReport.hasNormals ? 'Presentes' : 'Ausentes' },
                 ].map((s) => (
-                  <div key={s.label} className="p-2.5 rounded-lg bg-[#0D1017] border border-slate-800">
-                    <div className="text-[10px] text-slate-400">{s.label}</div>
-                    <div className="text-xs font-semibold font-mono text-slate-100 tabular-nums mt-0.5">
+                  <div key={s.label} className="p-2.5 rounded-lg bg-[#0D1017] border border-[#231F1D]/15">
+                    <div className="text-[10px] text-[#635B54]">{s.label}</div>
+                    <div className="text-xs font-semibold font-mono text-[#231F1D] tabular-nums mt-0.5">
                       {s.val}
                     </div>
                   </div>
@@ -474,14 +474,14 @@ export const PublishExportPage: React.FC<PublishExportPageProps> = ({
                   <div className="font-semibold text-amber-300">Alertas de Pipeline</div>
                   {auditReport.warnings.map((w, i) => (
                     <div key={i} className="text-amber-200/90">
-                      · {w}
+                      Â· {w}
                     </div>
                   ))}
                 </div>
               )}
 
               {auditReport.meshDetails.length > 0 && (
-                <div className="rounded-lg border border-slate-800 overflow-hidden">
+                <div className="rounded-lg border border-[#231F1D]/15 overflow-hidden">
                   <div className="px-3 py-2 bg-[#0F131B] flex items-center justify-between">
                     <span className="text-[11px] font-semibold text-slate-300">
                       Malhas ({auditReport.meshDetails.length})
@@ -501,8 +501,8 @@ export const PublishExportPage: React.FC<PublishExportPageProps> = ({
                         className="px-3 py-1.5 flex items-center justify-between gap-2 bg-[#0D1017]"
                       >
                         <span className="text-slate-200 truncate">{m.name}</span>
-                        <span className="font-mono text-[11px] text-slate-400 tabular-nums shrink-0">
-                          {m.triangles.toLocaleString()} tris · {m.hasNormals ? 'Normais OK' : 'Sem normais'}
+                        <span className="font-mono text-[11px] text-[#635B54] tabular-nums shrink-0">
+                          {m.triangles.toLocaleString()} tris Â· {m.hasNormals ? 'Normais OK' : 'Sem normais'}
                         </span>
                       </div>
                     ))}
@@ -516,3 +516,4 @@ export const PublishExportPage: React.FC<PublishExportPageProps> = ({
     </div>
   );
 };
+

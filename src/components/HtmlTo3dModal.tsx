@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+﻿import React, { useEffect, useRef, useState } from 'react';
 import { Code2, Plus, Sparkles, X } from 'lucide-react';
 import {
   HTML_TO_3D_PRESETS,
@@ -50,7 +50,7 @@ export const HtmlTo3dModal: React.FC<HtmlTo3dModalProps> = ({
 
   return (
     <div
-      className="fixed inset-0 z-50 bg-black/75 flex items-center justify-center p-4"
+      className="fixed inset-0 z-50 bg-[#F5F1EA]/75 flex items-center justify-center p-4"
       onClick={onClose}
       role="dialog"
       aria-label="Conversor HTML para 3D"
@@ -60,15 +60,15 @@ export const HtmlTo3dModal: React.FC<HtmlTo3dModalProps> = ({
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="px-4 py-3 border-b border-slate-800 bg-[#0F131B] flex items-center justify-between gap-3">
+        <div className="px-4 py-3 border-b border-[#231F1D]/15 bg-[#0F131B] flex items-center justify-between gap-3">
           <div className="flex items-center gap-2">
             <div className="w-7 h-7 rounded-lg bg-orange-600/20 border border-orange-500/40 flex items-center justify-center">
               <Code2 className="w-4 h-4 text-orange-400" />
             </div>
             <div>
-              <h2 className="text-sm font-bold text-white">HTML → 3D (Painel Interativo Web)</h2>
-              <p className="text-[11px] text-slate-400">
-                Converta markup HTML em painéis 3D PBR exportáveis no .GLB e Blender 5.3.
+              <h2 className="text-sm font-bold text-[#231F1D]">HTML â†’ 3D (Painel Interativo Web)</h2>
+              <p className="text-[11px] text-[#635B54]">
+                Converta markup HTML em painÃ©is 3D PBR exportÃ¡veis no .GLB e Blender 5.3.
               </p>
             </div>
           </div>
@@ -76,15 +76,15 @@ export const HtmlTo3dModal: React.FC<HtmlTo3dModalProps> = ({
             type="button"
             onClick={onClose}
             aria-label="Fechar"
-            className="w-8 h-8 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-white flex items-center justify-center cursor-pointer"
+            className="w-8 h-8 rounded-lg hover:bg-[#FAF8F5] text-[#635B54] hover:text-[#231F1D] flex items-center justify-center cursor-pointer"
           >
             <X className="w-4 h-4" />
           </button>
         </div>
 
         {/* Presets */}
-        <div className="px-4 py-2 border-b border-slate-800 bg-[#141923] flex flex-wrap items-center gap-1.5">
-          <span className="text-[11px] text-slate-400 mr-1">Modelos prontos:</span>
+        <div className="px-4 py-2 border-b border-[#231F1D]/15 bg-[#141923] flex flex-wrap items-center gap-1.5">
+          <span className="text-[11px] text-[#635B54] mr-1">Modelos prontos:</span>
           {HTML_TO_3D_PRESETS.map((preset) => (
             <button
               key={preset.id}
@@ -107,25 +107,25 @@ export const HtmlTo3dModal: React.FC<HtmlTo3dModalProps> = ({
                 type="text"
                 value={spec.name}
                 onChange={(e) => setSpec((prev) => ({ ...prev, name: e.target.value }))}
-                className="px-2.5 py-1.5 rounded-lg bg-[#090C12] border border-slate-800 focus:border-orange-500 outline-none text-slate-100"
+                className="px-2.5 py-1.5 rounded-lg bg-[#090C12] border border-[#231F1D]/15 focus:border-orange-500 outline-none text-[#231F1D]"
               />
             </label>
 
             <label className="flex flex-col gap-1">
               <span className="text-[11px] font-medium text-slate-300">
-                Código HTML (h1, h2, p, li, code, span.badge, button)
+                CÃ³digo HTML (h1, h2, p, li, code, span.badge, button)
               </span>
               <textarea
                 rows={7}
                 value={spec.html}
                 onChange={(e) => setSpec((prev) => ({ ...prev, html: e.target.value }))}
-                className="w-full p-2.5 rounded-lg bg-[#090C12] border border-slate-800 focus:border-orange-500 outline-none font-mono text-[11px] text-sky-200 leading-relaxed resize-y"
+                className="w-full p-2.5 rounded-lg bg-[#090C12] border border-[#231F1D]/15 focus:border-orange-500 outline-none font-mono text-[11px] text-sky-200 leading-relaxed resize-y"
               />
             </label>
 
             <div className="grid grid-cols-3 gap-2">
               <label className="flex flex-col gap-1">
-                <span className="text-[10px] text-slate-400">Largura ({spec.widthM.toFixed(2)}m)</span>
+                <span className="text-[10px] text-[#635B54]">Largura ({spec.widthM.toFixed(2)}m)</span>
                 <input
                   type="range"
                   min={0.4}
@@ -137,7 +137,7 @@ export const HtmlTo3dModal: React.FC<HtmlTo3dModalProps> = ({
                 />
               </label>
               <label className="flex flex-col gap-1">
-                <span className="text-[10px] text-slate-400">Altura ({spec.heightM.toFixed(2)}m)</span>
+                <span className="text-[10px] text-[#635B54]">Altura ({spec.heightM.toFixed(2)}m)</span>
                 <input
                   type="range"
                   min={0.35}
@@ -149,7 +149,7 @@ export const HtmlTo3dModal: React.FC<HtmlTo3dModalProps> = ({
                 />
               </label>
               <label className="flex flex-col gap-1">
-                <span className="text-[10px] text-slate-400">Emissão ({spec.emissiveGlow.toFixed(2)})</span>
+                <span className="text-[10px] text-[#635B54]">EmissÃ£o ({spec.emissiveGlow.toFixed(2)})</span>
                 <input
                   type="range"
                   min={0}
@@ -163,7 +163,7 @@ export const HtmlTo3dModal: React.FC<HtmlTo3dModalProps> = ({
             </div>
 
             <div className="grid grid-cols-3 gap-2 pt-1">
-              <label className="flex items-center justify-between px-2.5 py-1.5 rounded-lg bg-[#090C12] border border-slate-800 text-[11px] text-slate-300">
+              <label className="flex items-center justify-between px-2.5 py-1.5 rounded-lg bg-[#090C12] border border-[#231F1D]/15 text-[11px] text-slate-300">
                 <span>Fundo</span>
                 <input
                   type="color"
@@ -172,7 +172,7 @@ export const HtmlTo3dModal: React.FC<HtmlTo3dModalProps> = ({
                   className="w-6 h-5 bg-transparent border-0 cursor-pointer"
                 />
               </label>
-              <label className="flex items-center justify-between px-2.5 py-1.5 rounded-lg bg-[#090C12] border border-slate-800 text-[11px] text-slate-300">
+              <label className="flex items-center justify-between px-2.5 py-1.5 rounded-lg bg-[#090C12] border border-[#231F1D]/15 text-[11px] text-slate-300">
                 <span>Destaque</span>
                 <input
                   type="color"
@@ -181,7 +181,7 @@ export const HtmlTo3dModal: React.FC<HtmlTo3dModalProps> = ({
                   className="w-6 h-5 bg-transparent border-0 cursor-pointer"
                 />
               </label>
-              <label className="flex items-center justify-between px-2.5 py-1.5 rounded-lg bg-[#090C12] border border-slate-800 text-[11px] text-slate-300">
+              <label className="flex items-center justify-between px-2.5 py-1.5 rounded-lg bg-[#090C12] border border-[#231F1D]/15 text-[11px] text-slate-300">
                 <span>Texto</span>
                 <input
                   type="color"
@@ -196,10 +196,10 @@ export const HtmlTo3dModal: React.FC<HtmlTo3dModalProps> = ({
           {/* Right Live Preview */}
           <div className="lg:col-span-6 flex flex-col gap-2">
             <div className="flex items-center justify-between text-[11px] text-slate-300">
-              <span className="font-semibold">Pré-visualização da Textura 3D</span>
-              <span className="font-mono text-[10px] text-slate-400">sRGB · CanvasTexture</span>
+              <span className="font-semibold">PrÃ©-visualizaÃ§Ã£o da Textura 3D</span>
+              <span className="font-mono text-[10px] text-[#635B54]">sRGB Â· CanvasTexture</span>
             </div>
-            <div className="flex-1 min-h-[240px] rounded-xl bg-[#090C12] border border-slate-800 p-3 flex items-center justify-center">
+            <div className="flex-1 min-h-[240px] rounded-xl bg-[#090C12] border border-[#231F1D]/15 p-3 flex items-center justify-center">
               <canvas
                 ref={previewCanvasRef}
                 className="max-w-full max-h-[300px] rounded-lg shadow-lg border border-slate-700"
@@ -209,11 +209,11 @@ export const HtmlTo3dModal: React.FC<HtmlTo3dModalProps> = ({
         </div>
 
         {/* Footer */}
-        <div className="px-4 py-3 border-t border-slate-800 bg-[#0F131B] flex items-center justify-end gap-2">
+        <div className="px-4 py-3 border-t border-[#231F1D]/15 bg-[#0F131B] flex items-center justify-end gap-2">
           <button
             type="button"
             onClick={onClose}
-            className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 font-medium cursor-pointer"
+            className="px-3 py-1.5 rounded-lg bg-[#FAF8F5] hover:bg-slate-700 text-slate-200 font-medium cursor-pointer"
           >
             Cancelar
           </button>
@@ -223,7 +223,7 @@ export const HtmlTo3dModal: React.FC<HtmlTo3dModalProps> = ({
               onApply(spec);
               onClose();
             }}
-            className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-orange-600 hover:bg-orange-500 text-white font-semibold cursor-pointer"
+            className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-orange-600 hover:bg-orange-500 text-[#231F1D] font-semibold cursor-pointer"
           >
             {isEditingExisting ? <Sparkles className="w-3.5 h-3.5" /> : <Plus className="w-3.5 h-3.5" />}
             <span>{isEditingExisting ? 'Atualizar Painel 3D' : 'Inserir HTML na Cena 3D'}</span>
@@ -233,3 +233,4 @@ export const HtmlTo3dModal: React.FC<HtmlTo3dModalProps> = ({
     </div>
   );
 };
+

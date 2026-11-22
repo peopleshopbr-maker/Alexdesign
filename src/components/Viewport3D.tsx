@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+﻿import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { TransformControls } from 'three/addons/controls/TransformControls.js';
@@ -427,7 +427,7 @@ function upgradeToPhysicalMaterial(
     roughnessMap: std.roughnessMap ?? null,
     metalnessMap: std.metalnessMap ?? null,
     aoMap: std.aoMap ?? null,
-    emissive: std.emissive ? std.emissive.clone() : new THREE.Color(0x000000),
+    emissive: std.emissive ? std.emissive.clone() : new THREE.Color(0xE6DFD3),
     emissiveMap: std.emissiveMap ?? null,
     emissiveIntensity: typeof std.emissiveIntensity === 'number' ? std.emissiveIntensity : 0,
     alphaMap: std.alphaMap ?? null,
@@ -1334,7 +1334,7 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
         setToolMode('weight_paint');
         setInteractionMode('weight_paint');
         transformRef.current?.detach();
-        flashBanner('Pintura de Pesos (Mapa de Calor Azul → Vermelho) ativa!');
+        flashBanner('Pintura de Pesos (Mapa de Calor Azul â†’ Vermelho) ativa!');
       } else if (toolModeRef.current === 'weight_paint') {
         setToolMode('orbit');
         setInteractionMode('object');
@@ -1500,7 +1500,7 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
           mesh.name = targetFile.name.replace(/\.[^.]+$/, '');
           loadedGroup.add(mesh);
         } else {
-          flashBanner(`Formato não suportado: .${ext} (use .glb, .gltf, .fbx, .obj, .stl ou .zip).`);
+          flashBanner(`Formato nÃ£o suportado: .${ext} (use .glb, .gltf, .fbx, .obj, .stl ou .zip).`);
           return;
         }
 
@@ -1649,7 +1649,7 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
         frameCameraToScene();
         // Auto-select first imported mesh so the user can immediately move/rotate/scale/edit materials
         syncSelectedInspectorFromObject(firstMesh ?? loadedGroup);
-        flashBanner(`Modelo carregado: ${targetFile.name} — clique para mover, girar ou editar PBR.`);
+        flashBanner(`Modelo carregado: ${targetFile.name} â€” clique para mover, girar ou editar PBR.`);
       } catch (err) {
         flashBanner(err instanceof Error ? err.message : 'Falha ao carregar modelo 3D.');
       } finally {
@@ -1779,7 +1779,7 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
       rebuildRigMarkers(next);
       if (next) {
         selectToolModeWithTarget('translate');
-        flashBanner('Marcadores 3D ativos — arraste as esferas nas juntas e clique em Vincular Esqueleto.');
+        flashBanner('Marcadores 3D ativos â€” arraste as esferas nas juntas e clique em Vincular Esqueleto.');
       }
       return next;
     });
@@ -1854,7 +1854,7 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
 
       updateStatsRef.current({ bones: res.boneCount });
       syncSceneHierarchy();
-      flashBanner(`Auto-Rig ${RIG_PRESET_DEFINITIONS[preset].shortLabel} (${res.boneCount} ossos · ${res.clips.length} clipes) ativo!`);
+      flashBanner(`Auto-Rig ${RIG_PRESET_DEFINITIONS[preset].shortLabel} (${res.boneCount} ossos Â· ${res.clips.length} clipes) ativo!`);
     },
     [activeClipId, config.rigPreset, flashBanner, playClipInstance, syncSceneHierarchy, syncSelectedInspectorFromObject]
   );
@@ -1877,7 +1877,7 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
     if (selectedObjectRef.current && (selectedObjectRef.current as THREE.Bone).isBone) {
       syncSelectedInspectorFromObject(selectedObjectRef.current);
     }
-    flashBanner('Pose restaurada para posição neutra (Rest Pose).');
+    flashBanner('Pose restaurada para posiÃ§Ã£o neutra (Rest Pose).');
   }, [flashBanner, syncSelectedInspectorFromObject]);
 
   const handleRemoveRig = useCallback(() => {
@@ -1940,7 +1940,7 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
       syncSelectedInspectorFromObject(bone);
       skeletonVisualizerRef.current?.setSelectedBone(bone.name);
       setShowSkeleton(true);
-      flashBanner(`Osso selecionado: ${boneName} — W Mover · E Girar · K Gravar Key ◆.`);
+      flashBanner(`Osso selecionado: ${boneName} â€” W Mover Â· E Girar Â· K Gravar Key â—†.`);
     },
     [flashBanner, syncSelectedInspectorFromObject]
   );
@@ -2054,7 +2054,7 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
         handleSeekNormalized(clampedIn);
       }
       flashBanner(
-        `Trecho definido: ${Math.round(clampedIn * 100)}% – ${Math.round(clampedOut * 100)}%`
+        `Trecho definido: ${Math.round(clampedIn * 100)}% â€“ ${Math.round(clampedOut * 100)}%`
       );
     },
     [animProgress, flashBanner, handleSeekNormalized]
@@ -2157,7 +2157,7 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
         setAnimLoop(true);
         animLoopRef.current = true;
         playClipInstance(compiled, activeClipIdx, nextStrips[0].clipId, true);
-        flashBanner(`Sequência NLA compilada (${nextStrips.length} clipe(s), ${compiled.duration.toFixed(2)}s).`);
+        flashBanner(`SequÃªncia NLA compilada (${nextStrips.length} clipe(s), ${compiled.duration.toFixed(2)}s).`);
       }
     },
     [activeClipIdx, flashBanner, handleRunAutoRig, playClipInstance]
@@ -2212,7 +2212,7 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
         ? (selectedObjectRef.current as THREE.Bone)
         : null);
     if (!bone) {
-      flashBanner('Selecione um osso no Pose Mode para gravar um keyframe (◆).');
+      flashBanner('Selecione um osso no Pose Mode para gravar um keyframe (â—†).');
       return;
     }
 
@@ -2385,7 +2385,7 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
       ).normalize();
       partner.updateMatrixWorld(true);
       skeletonVisualizerRef.current?.update();
-      flashBanner(`Pose espelhada: ${bone.name} → ${partner.name}.`);
+      flashBanner(`Pose espelhada: ${bone.name} â†’ ${partner.name}.`);
     } else {
       bone.quaternion.set(
         bone.quaternion.x,
@@ -2525,7 +2525,7 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
       playClipInstance(updated, activeClipIdx, updated.name, animLoopRef.current);
       setIsPlaying(false);
       handleSeekNormalized(resumePct);
-      flashBanner(`Curva de interpolação alterada para: ${mode.toUpperCase()}.`);
+      flashBanner(`Curva de interpolaÃ§Ã£o alterada para: ${mode.toUpperCase()}.`);
     },
     [activeClipIdx, animProgress, flashBanner, handleSeekNormalized, playClipInstance]
   );
@@ -2577,7 +2577,7 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
         }
         grp.visible = true;
         setIsPlaying(false);
-        flashBanner('Alvos IK ativos! Arraste os octaedros nas mãos ou pés com Mover (W).');
+        flashBanner('Alvos IK ativos! Arraste os octaedros nas mÃ£os ou pÃ©s com Mover (W).');
       } else if (ikTargetsGroupRef.current) {
         ikTargetsGroupRef.current.visible = false;
         if (selectedObjectRef.current?.userData?.isIkTarget) {
@@ -2605,7 +2605,7 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
         incomingClips = gltf.animations || [];
       }
       if (incomingClips.length === 0) {
-        flashBanner(`Nenhuma faixa de animação encontrada em ${file.name}.`);
+        flashBanner(`Nenhuma faixa de animaÃ§Ã£o encontrada em ${file.name}.`);
         return;
       }
       const targetNames = bonesRef.current.map((b) => b.name);
@@ -2621,9 +2621,9 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
       retargeted.forEach((c) => clipPoolMapRef.current.set(c.name.toLowerCase(), c));
       setClipNames(clipsRef.current.map((c) => c.name));
       playClipInstance(retargeted[0], 0, retargeted[0].name, true);
-      flashBanner(`Animação importada e retargetada: ${retargeted[0].name} (${retargeted[0].tracks.length} tracks).`);
+      flashBanner(`AnimaÃ§Ã£o importada e retargetada: ${retargeted[0].name} (${retargeted[0].tracks.length} tracks).`);
     } catch (err) {
-      flashBanner(err instanceof Error ? err.message : 'Falha ao importar animação FBX/GLB.');
+      flashBanner(err instanceof Error ? err.message : 'Falha ao importar animaÃ§Ã£o FBX/GLB.');
     } finally {
       URL.revokeObjectURL(blobUrl);
     }
@@ -2656,7 +2656,7 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
       mixerRef.current = new THREE.AnimationMixer(modelRootRef.current);
     }
     playClipInstance(bakedClip, 0, bakedClip.name, true);
-    flashBanner(`IK & Física assados no clipe "${bakedClip.name}"!`);
+    flashBanner(`IK & FÃ­sica assados no clipe "${bakedClip.name}"!`);
   }, [activeClipId, animDuration, flashBanner, playClipInstance]);
 
   const handleCopyClipLink = useCallback(
@@ -2707,7 +2707,7 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
       const encoded = btoa(unescape(encodeURIComponent(JSON.stringify(payload))));
       window.history.replaceState(null, '', `#scene=${encoded}`);
       navigator.clipboard?.writeText(window.location.href).catch(() => {});
-      flashBanner(`Link interativo público copiado (#scene=... · clip ${activeClipId})!`);
+      flashBanner(`Link interativo pÃºblico copiado (#scene=... Â· clip ${activeClipId})!`);
     } catch {
       handleCopyClipLink(activeClipId);
     }
@@ -2869,7 +2869,7 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
           );
         },
         (err) => {
-          flashBanner(`Erro na exportação: ${err instanceof Error ? err.message : 'desconhecido'}`);
+          flashBanner(`Erro na exportaÃ§Ã£o: ${err instanceof Error ? err.message : 'desconhecido'}`);
         },
         { binary: format === 'glb', animations }
       );
@@ -2893,7 +2893,7 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
     a.download = `${activeAssetName}.fbx`;
     a.click();
     URL.revokeObjectURL(url);
-    flashBanner(`Exportado ${activeAssetName}.fbx (FBX 7.4 ASCII com Bones, Skin e Animações)!`);
+    flashBanner(`Exportado ${activeAssetName}.fbx (FBX 7.4 ASCII com Bones, Skin e AnimaÃ§Ãµes)!`);
   }, [activeAssetName, flashBanner, withRestoredPbrMaterials]);
 
   const handleExportZip = useCallback(() => {
@@ -2991,7 +2991,7 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
         powerPreference: 'high-performance',
       });
     } catch (err) {
-      setWebglError(err instanceof Error ? err.message : 'Contexto WebGL indisponível.');
+      setWebglError(err instanceof Error ? err.message : 'Contexto WebGL indisponÃ­vel.');
       return;
     }
 
@@ -3010,7 +3010,7 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
     rendererRef.current = renderer;
 
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color('#0d1017');
+    scene.background = new THREE.Color("#E6DFD3");
     sceneRef.current = scene;
 
     const camera = new THREE.PerspectiveCamera(40, wInit / hInit, 0.05, 120);
@@ -3794,7 +3794,7 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
 
     if (activeHdri === 'none') {
       scene.environment = null;
-      scene.background = new THREE.Color('#0d1017');
+      scene.background = new THREE.Color("#E6DFD3");
       return;
     }
 
@@ -3807,7 +3807,7 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
         envTexRef.current?.dispose();
         envTexRef.current = tex;
         scene.environment = tex;
-        scene.background = bgAsEnvironment ? tex : new THREE.Color('#0d1017');
+        scene.background = bgAsEnvironment ? tex : new THREE.Color("#E6DFD3");
       }
       return;
     }
@@ -3826,7 +3826,7 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
         envTexRef.current?.dispose();
         envTexRef.current = rt.texture;
         scene.environment = rt.texture;
-        scene.background = bgAsEnvironment ? rt.texture : new THREE.Color('#0d1017');
+        scene.background = bgAsEnvironment ? rt.texture : new THREE.Color("#E6DFD3");
       })
       .catch(() => {
         if (cancelled) return;
@@ -3849,7 +3849,7 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
     if (!scene) return;
     scene.environmentIntensity = envIntensity;
     scene.backgroundBlurriness = envBlur;
-    scene.background = bgAsEnvironment && envTexRef.current ? envTexRef.current : new THREE.Color('#0d1017');
+    scene.background = bgAsEnvironment && envTexRef.current ? envTexRef.current : new THREE.Color("#E6DFD3");
   }, [envIntensity, envBlur, bgAsEnvironment]);
 
   // Sync studio lights & renderer settings
@@ -4183,7 +4183,7 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
     const obj = selectedObjectRef.current;
     if (!obj || !obj.parent) return;
     if (obj === modelRootRef.current) {
-      flashBanner('Use "Restaurar Cena Padrão" para limpar o modelo inteiro.');
+      flashBanner('Use "Restaurar Cena PadrÃ£o" para limpar o modelo inteiro.');
       return;
     }
     const name = obj.name || 'Objeto';
@@ -4351,7 +4351,7 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
     refreshMorphTargets();
     frameCameraToScene();
     syncSelectedInspectorFromObject(fresh);
-    flashBanner('Cena restaurada: personagem padrão com Armature X-Ray & IK ativo.');
+    flashBanner('Cena restaurada: personagem padrÃ£o com Armature X-Ray & IK ativo.');
   }, [extractAndPushUvs, flashBanner, frameCameraToScene, refreshMorphTargets, syncEmitterSceneGroup, syncSceneHierarchy, syncSelectedInspectorFromObject, syncUndoRedoFlags]);
 
   const handleApplyGlobalScale = useCallback((scale: number) => {
@@ -4407,7 +4407,7 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
         syncSceneHierarchy();
         syncSelectedInspectorFromObject(existing);
         editingHtml3dGroupRef.current = null;
-        flashBanner(`Painel HTML → 3D atualizado: ${existing.name}`);
+        flashBanner(`Painel HTML â†’ 3D atualizado: ${existing.name}`);
         return;
       }
       const grp = splineGroupRef.current;
@@ -4418,7 +4418,7 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
       grp.add(created);
       syncSceneHierarchy();
       syncSelectedInspectorFromObject(created);
-      flashBanner(`Painel HTML → 3D criado: ${created.name}`);
+      flashBanner(`Painel HTML â†’ 3D criado: ${created.name}`);
     },
     [flashBanner, syncSceneHierarchy, syncSelectedInspectorFromObject]
   );
@@ -4444,7 +4444,7 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
             aspect,
           }));
           setShowReferencePopover(true);
-          flashBanner(`Referência carregada: ${file.name}`);
+          flashBanner(`ReferÃªncia carregada: ${file.name}`);
         };
         img.src = dataUrl;
       };
@@ -4977,7 +4977,7 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
     group.add(outMesh);
     syncSceneHierarchy();
     syncSelectedInspectorFromObject(outMesh);
-    flashBanner(`Operação CSG (${op}) aplicada.`);
+    flashBanner(`OperaÃ§Ã£o CSG (${op}) aplicada.`);
   };
 
   const handleRenderPng = async (forceTransparent?: boolean) => {
@@ -5185,7 +5185,7 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
             target.material.color.setHex(0xffffff);
             target.material.needsUpdate = true;
           }
-          flashBanner(`Textura de vídeo aplicada: ${f.name}`);
+          flashBanner(`Textura de vÃ­deo aplicada: ${f.name}`);
           e.target.value = '';
         }}
       />
@@ -5201,7 +5201,7 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
         }}
       />
 
-      {/* Left Column — Explorer (Armature / Malhas / Referências) */}
+      {/* Left Column â€” Explorer (Armature / Malhas / ReferÃªncias) */}
       {!hideRightInspector && showMeshDrawer && (
         <ExplorerOutlinerDock
           onCollapse={() => setShowMeshDrawer(false)}
@@ -5294,15 +5294,15 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
         <div className="relative flex-1 min-h-[220px] bg-[#0D1017]">
           {webglError ? (
             <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 p-6 text-center">
-              <div className="text-sm font-semibold text-red-300">Contexto WebGL indisponível</div>
-              <div className="max-w-md text-xs text-slate-400">{webglError}</div>
+              <div className="text-sm font-semibold text-red-300">Contexto WebGL indisponÃ­vel</div>
+              <div className="max-w-md text-xs text-[#635B54]">{webglError}</div>
               <button
                 type="button"
                 onClick={() => {
                   setWebglError(null);
                   setRetryWebglNonce((n) => n + 1);
                 }}
-                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-orange-600 hover:bg-orange-500 text-xs font-semibold text-white cursor-pointer"
+                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-orange-600 hover:bg-orange-500 text-xs font-semibold text-[#231F1D] cursor-pointer"
               >
                 <RotateCcw className="w-3.5 h-3.5" />
                 <span>Tentar Novamente</span>
@@ -5315,15 +5315,15 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
           {/* Top-Left Blender Mode Selector, Context Breadcrumb & Segmented Tools */}
           <div className="absolute top-3 left-3 z-10 flex flex-col gap-1.5 max-w-[calc(100%-220px)]">
             <div className="flex flex-wrap items-center gap-1.5">
-              <ShortcutTooltip label="Alternar Modo de Interação" shortcut="Tab">
+              <ShortcutTooltip label="Alternar Modo de InteraÃ§Ã£o" shortcut="Tab">
                 <select
-                  aria-label="Modo de Interação Blender"
+                  aria-label="Modo de InteraÃ§Ã£o Blender"
                   value={interactionMode}
                   onChange={(e) => handleApplyInteractionMode(e.target.value as BlenderInteractionMode)}
-                  className="h-8 px-2 rounded-lg bg-[#141923] border border-slate-800 hover:border-slate-600 text-[11px] font-semibold text-slate-100 cursor-pointer focus:outline-none"
+                  className="h-8 px-2 rounded-lg bg-[#141923] border border-[#231F1D]/15 hover:border-slate-600 text-[11px] font-semibold text-[#231F1D] cursor-pointer focus:outline-none"
                 >
                   <option value="object">Modo de Objeto</option>
-                  <option value="edit">Modo de Edição (Wire)</option>
+                  <option value="edit">Modo de EdiÃ§Ã£o (Wire)</option>
                   <option value="pose">Modo de Pose</option>
                   <option value="weight_paint">Pintura de Pesos</option>
                 </select>
@@ -5334,8 +5334,8 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
                 onClick={() => setShowMeshDrawer((v) => !v)}
                 className={`inline-flex items-center gap-1.5 h-8 px-2.5 rounded-lg border text-[11px] font-medium cursor-pointer ${
                   showMeshDrawer
-                    ? 'bg-orange-600 border-orange-500 text-white'
-                    : 'bg-[#141923] border-slate-800 text-slate-200 hover:border-slate-600'
+                    ? 'bg-orange-600 border-orange-500 text-[#231F1D]'
+                    : 'bg-[#141923] border-[#231F1D]/15 text-slate-200 hover:border-slate-600'
                 }`}
               >
                 <Layers className="w-3.5 h-3.5" />
@@ -5345,12 +5345,12 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
 
               <div
                 role="group"
-                aria-label="Ferramentas de edição 3D"
-                className="flex items-center rounded-lg border border-slate-800 bg-[#141923] p-0.5 divide-x divide-slate-800/80"
+                aria-label="Ferramentas de ediÃ§Ã£o 3D"
+                className="flex items-center rounded-lg border border-[#231F1D]/15 bg-[#141923] p-0.5 divide-x divide-slate-800/80"
               >
                 {(
                   [
-                    { id: 'orbit', label: 'Órbita', keyHint: 'Q', icon: <MousePointer className="w-3 h-3" /> },
+                    { id: 'orbit', label: 'Ã“rbita', keyHint: 'Q', icon: <MousePointer className="w-3 h-3" /> },
                     { id: 'translate', label: 'Mover', keyHint: 'W', icon: <Move className="w-3 h-3" /> },
                     { id: 'rotate', label: 'Girar', keyHint: 'E', icon: <RotateCw className="w-3 h-3" /> },
                     { id: 'scale', label: 'Escala', keyHint: 'R', icon: <Scaling className="w-3 h-3" /> },
@@ -5366,8 +5366,8 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
                         onClick={() => selectToolModeWithTarget(tool.id)}
                         className={`inline-flex items-center gap-1 px-2 py-1 rounded text-[11px] font-medium cursor-pointer whitespace-nowrap ${
                           isActive
-                            ? 'bg-orange-600 text-white'
-                            : 'text-slate-300 hover:text-white hover:bg-slate-800'
+                            ? 'bg-orange-600 text-[#231F1D]'
+                            : 'text-slate-300 hover:text-[#231F1D] hover:bg-[#FAF8F5]'
                         }`}
                       >
                         {tool.icon}
@@ -5383,8 +5383,8 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
                 onClick={() => setShowPrimitivesDrawer((v) => !v)}
                 className={`inline-flex items-center gap-1 h-8 px-2.5 rounded-lg border text-[11px] font-medium cursor-pointer ${
                   showPrimitivesDrawer
-                    ? 'bg-orange-600 border-orange-500 text-white'
-                    : 'bg-[#141923] border-slate-800 text-slate-200 hover:border-slate-600'
+                    ? 'bg-orange-600 border-orange-500 text-[#231F1D]'
+                    : 'bg-[#141923] border-[#231F1D]/15 text-slate-200 hover:border-slate-600'
                 }`}
                 title="Adicionar primitivas, Templates, CSG Boolean e Materiais Procedurais"
               >
@@ -5395,11 +5395,11 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
               <button
                 type="button"
                 onClick={handleOpenHtmlTo3dModal}
-                className="inline-flex items-center gap-1 h-8 px-2.5 rounded-lg border border-slate-800 bg-[#141923] hover:border-orange-500 text-[11px] font-medium text-slate-200 cursor-pointer"
+                className="inline-flex items-center gap-1 h-8 px-2.5 rounded-lg border border-[#231F1D]/15 bg-[#141923] hover:border-orange-500 text-[11px] font-medium text-slate-200 cursor-pointer"
                 title="Converter HTML em painel 3D PBR ou editar painel HTML selecionado"
               >
                 <Code2 className="w-3.5 h-3.5 text-orange-400" />
-                <span className="hidden xl:inline">HTML → 3D</span>
+                <span className="hidden xl:inline">HTML â†’ 3D</span>
               </button>
 
               {riggedBoneNames.length > 0 && (
@@ -5409,9 +5409,9 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
                   className={`inline-flex items-center gap-1 h-8 px-2.5 rounded-lg border text-[11px] font-medium cursor-pointer ${
                     showSkeleton
                       ? 'bg-cyan-600/20 border-cyan-500 text-cyan-200'
-                      : 'bg-[#141923] border-slate-800 text-slate-300 hover:border-slate-600'
+                      : 'bg-[#141923] border-[#231F1D]/15 text-slate-300 hover:border-slate-600'
                   }`}
-                  title="Alternar visualização X-Ray dos ossos e guias IK"
+                  title="Alternar visualizaÃ§Ã£o X-Ray dos ossos e guias IK"
                 >
                   <Bone className="w-3.5 h-3.5 text-cyan-400" />
                   <span className="hidden xl:inline">Ossos</span>
@@ -5431,25 +5431,25 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
                   className={`inline-flex items-center gap-1 h-8 px-2.5 rounded-lg border text-[11px] font-medium cursor-pointer ${
                     refPlane.active && refPlane.visible
                       ? 'bg-sky-600/20 border-sky-500 text-sky-200'
-                      : 'bg-[#141923] border-slate-800 text-slate-200 hover:border-slate-600'
+                      : 'bg-[#141923] border-[#231F1D]/15 text-slate-200 hover:border-slate-600'
                   }`}
-                  title="Importar ou ajustar imagem de referência (Frente / Lado / Topo)"
+                  title="Importar ou ajustar imagem de referÃªncia (Frente / Lado / Topo)"
                 >
                   <ImageIcon className="w-3.5 h-3.5 text-sky-400" />
-                  <span className="hidden xl:inline">Referência</span>
+                  <span className="hidden xl:inline">ReferÃªncia</span>
                 </button>
 
                 {showReferencePopover && refPlane.active && (
                   <div className="absolute left-0 top-10 z-30 w-64 rounded-xl bg-[#111622] border border-slate-700 shadow-2xl p-3 space-y-2.5 text-[11px]">
                     <div className="flex items-center justify-between">
-                      <span className="font-semibold text-white truncate max-w-[160px]">
-                        {refPlane.name || 'Imagem de Referência'}
+                      <span className="font-semibold text-[#231F1D] truncate max-w-[160px]">
+                        {refPlane.name || 'Imagem de ReferÃªncia'}
                       </span>
                       <button
                         type="button"
                         onClick={() => setShowReferencePopover(false)}
-                        aria-label="Fechar ajustes de referência"
-                        className="text-slate-400 hover:text-white cursor-pointer"
+                        aria-label="Fechar ajustes de referÃªncia"
+                        className="text-[#635B54] hover:text-[#231F1D] cursor-pointer"
                       >
                         <X className="w-3.5 h-3.5" />
                       </button>
@@ -5469,8 +5469,8 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
                           onClick={() => setRefPlane((p) => ({ ...p, axis: ax.id }))}
                           className={`py-1 rounded border text-[10px] font-medium cursor-pointer ${
                             refPlane.axis === ax.id
-                              ? 'bg-sky-600 border-sky-500 text-white'
-                              : 'bg-[#090C12] border-slate-800 text-slate-300'
+                              ? 'bg-sky-600 border-sky-500 text-[#231F1D]'
+                              : 'bg-[#090C12] border-[#231F1D]/15 text-slate-300'
                           }`}
                         >
                           {ax.label}
@@ -5514,10 +5514,10 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
                       <button
                         type="button"
                         onClick={() => setRefPlane((p) => ({ ...p, visible: !p.visible }))}
-                        className="flex-1 inline-flex items-center justify-center gap-1 py-1 rounded bg-[#090C12] border border-slate-800 hover:border-slate-600 text-[10px] text-slate-200 cursor-pointer"
+                        className="flex-1 inline-flex items-center justify-center gap-1 py-1 rounded bg-[#090C12] border border-[#231F1D]/15 hover:border-slate-600 text-[10px] text-slate-200 cursor-pointer"
                       >
                         {refPlane.visible ? <Eye className="w-3 h-3 text-emerald-400" /> : <EyeOff className="w-3 h-3" />}
-                        <span>{refPlane.visible ? 'Visível' : 'Oculta'}</span>
+                        <span>{refPlane.visible ? 'VisÃ­vel' : 'Oculta'}</span>
                       </button>
                       <button
                         type="button"
@@ -5526,7 +5526,7 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
                         className={`px-2 py-1 rounded border text-[10px] cursor-pointer ${
                           refPlane.flipX
                             ? 'bg-sky-600/20 border-sky-500 text-sky-300'
-                            : 'bg-[#090C12] border-slate-800 text-slate-300'
+                            : 'bg-[#090C12] border-[#231F1D]/15 text-slate-300'
                         }`}
                       >
                         <FlipHorizontal2 className="w-3 h-3" />
@@ -5534,7 +5534,7 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
                       <button
                         type="button"
                         onClick={() => refImageInputRef.current?.click()}
-                        className="px-2 py-1 rounded bg-[#090C12] border border-slate-800 hover:border-sky-500 text-[10px] text-sky-300 cursor-pointer"
+                        className="px-2 py-1 rounded bg-[#090C12] border border-[#231F1D]/15 hover:border-sky-500 text-[10px] text-sky-300 cursor-pointer"
                       >
                         Trocar
                       </button>
@@ -5544,8 +5544,8 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
                           setRefPlane((p) => ({ ...p, active: false, dataUrl: '', name: '' }));
                           setShowReferencePopover(false);
                         }}
-                        title="Remover referência"
-                        className="px-2 py-1 rounded bg-[#090C12] border border-slate-800 hover:border-red-500 text-[10px] text-red-300 cursor-pointer"
+                        title="Remover referÃªncia"
+                        className="px-2 py-1 rounded bg-[#090C12] border border-[#231F1D]/15 hover:border-red-500 text-[10px] text-red-300 cursor-pointer"
                       >
                         Limpar
                       </button>
@@ -5556,10 +5556,10 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
             </div>
 
             {/* Subtle Blender Context Breadcrumb */}
-            <div className="pointer-events-none inline-flex items-center gap-1.5 px-2 py-0.5 rounded bg-[#0D1017]/80 border border-slate-800/70 text-[10px] font-mono text-slate-400 w-fit">
+            <div className="pointer-events-none inline-flex items-center gap-1.5 px-2 py-0.5 rounded bg-[#0D1017]/80 border border-[#231F1D]/15/70 text-[10px] font-mono text-[#635B54] w-fit">
               <span>Perspectiva</span>
               <ChevronRight className="w-3 h-3 text-slate-600" />
-              <span className="text-slate-300">Coleção</span>
+              <span className="text-slate-300">ColeÃ§Ã£o</span>
               <ChevronRight className="w-3 h-3 text-slate-600" />
               <span className="text-orange-300 truncate max-w-[200px]">
                 {selectedBoneName || selectedInspector?.name || activeAssetName}
@@ -5578,8 +5578,8 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
                   onClick={() => setWeightBrushMode(m)}
                   className={`px-2 py-0.5 rounded text-[10px] font-semibold cursor-pointer ${
                     weightBrushMode === m
-                      ? 'bg-orange-600 text-white'
-                      : 'bg-[#0D1017] text-slate-300 hover:text-white'
+                      ? 'bg-orange-600 text-[#231F1D]'
+                      : 'bg-[#0D1017] text-slate-300 hover:text-[#231F1D]'
                   }`}
                 >
                   {m === 'add' ? 'Add' : m === 'smooth' ? 'Smooth' : 'Subtract'}
@@ -5598,7 +5598,7 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
                 />
               </label>
               <label className="flex items-center gap-1 text-[10px] text-slate-300">
-                <span>Força</span>
+                <span>ForÃ§a</span>
                 <input
                   type="range"
                   min={0.1}
@@ -5612,7 +5612,7 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
               <button
                 type="button"
                 onClick={() => setWeightPaintMode(false)}
-                className="px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 text-[10px] cursor-pointer"
+                className="px-2 py-0.5 rounded bg-[#FAF8F5] hover:bg-slate-700 text-slate-200 text-[10px] cursor-pointer"
               >
                 Concluir
               </button>
@@ -5626,12 +5626,12 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
               <div
                 role="group"
                 aria-label="Modos de Sombreamento"
-                className="flex items-center gap-1 rounded-full border border-slate-800 bg-[#141923] p-1"
+                className="flex items-center gap-1 rounded-full border border-[#231F1D]/15 bg-[#141923] p-1"
               >
                 {(
                   [
                     { id: 'wireframe', label: 'Wireframe', icon: <Grid3X3 className="w-3.5 h-3.5" /> },
-                    { id: 'solid', label: 'Sólido (Clay)', icon: <CircleDot className="w-3.5 h-3.5" /> },
+                    { id: 'solid', label: 'SÃ³lido (Clay)', icon: <CircleDot className="w-3.5 h-3.5" /> },
                     { id: 'material', label: 'Preview Material (PBR)', icon: <Palette className="w-3.5 h-3.5" /> },
                     { id: 'rendered', label: 'Renderizado (Luz & HDRI)', icon: <Sun className="w-3.5 h-3.5" /> },
                   ] as { id: ViewportShadingMode; label: string; icon: React.ReactNode }[]
@@ -5643,8 +5643,8 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
                       aria-label={s.label}
                       className={`w-7 h-7 rounded-full flex items-center justify-center cursor-pointer transition-colors ${
                         shadingMode === s.id
-                          ? 'bg-orange-600 text-white'
-                          : 'text-slate-400 hover:text-white hover:bg-slate-800'
+                          ? 'bg-orange-600 text-[#231F1D]'
+                          : 'text-[#635B54] hover:text-[#231F1D] hover:bg-[#FAF8F5]'
                       }`}
                     >
                       {s.icon}
@@ -5657,7 +5657,7 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
                 <button
                   type="button"
                   onClick={() => setDockExpanded(true)}
-                  className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg bg-orange-600 hover:bg-orange-500 text-[11px] font-semibold text-white cursor-pointer"
+                  className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg bg-orange-600 hover:bg-orange-500 text-[11px] font-semibold text-[#231F1D] cursor-pointer"
                 >
                   <ChevronUp className="w-3.5 h-3.5" />
                   <span>Abrir Outliner</span>
@@ -5667,13 +5667,13 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
 
             <div className="flex flex-col items-center gap-1.5">
               <AxisGizmo3D quaternionRef={cameraQuatRef} onSnapView={setCameraPreset} />
-              <div className="flex flex-col gap-1 rounded-lg border border-slate-800 bg-[#141923]/90 p-1">
+              <div className="flex flex-col gap-1 rounded-lg border border-[#231F1D]/15 bg-[#141923]/90 p-1">
                 <ShortcutTooltip label="Aproximar Zoom" placement="top">
                   <button
                     type="button"
                     onClick={() => dollyCamera(0.8)}
                     aria-label="Aproximar Zoom"
-                    className="w-6 h-6 rounded flex items-center justify-center text-slate-300 hover:text-white hover:bg-slate-800 cursor-pointer"
+                    className="w-6 h-6 rounded flex items-center justify-center text-slate-300 hover:text-[#231F1D] hover:bg-[#FAF8F5] cursor-pointer"
                   >
                     <Plus className="w-3 h-3" />
                   </button>
@@ -5683,7 +5683,7 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
                     type="button"
                     onClick={() => dollyCamera(1.25)}
                     aria-label="Afastar Zoom"
-                    className="w-6 h-6 rounded flex items-center justify-center text-slate-300 hover:text-white hover:bg-slate-800 cursor-pointer"
+                    className="w-6 h-6 rounded flex items-center justify-center text-slate-300 hover:text-[#231F1D] hover:bg-[#FAF8F5] cursor-pointer"
                   >
                     <Minus className="w-3 h-3" />
                   </button>
@@ -5693,17 +5693,17 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
                     type="button"
                     onClick={frameCameraToScene}
                     aria-label="Enquadrar Cena"
-                    className="w-6 h-6 rounded flex items-center justify-center text-sky-400 hover:bg-slate-800 cursor-pointer"
+                    className="w-6 h-6 rounded flex items-center justify-center text-sky-400 hover:bg-[#FAF8F5] cursor-pointer"
                   >
                     <Maximize2 className="w-3 h-3" />
                   </button>
                 </ShortcutTooltip>
-                <ShortcutTooltip label="Câmera 3/4" placement="top">
+                <ShortcutTooltip label="CÃ¢mera 3/4" placement="top">
                   <button
                     type="button"
                     onClick={() => setCameraPreset('q34')}
-                    aria-label="Câmera 3/4"
-                    className="w-6 h-6 rounded flex items-center justify-center text-slate-300 hover:text-white hover:bg-slate-800 cursor-pointer"
+                    aria-label="CÃ¢mera 3/4"
+                    className="w-6 h-6 rounded flex items-center justify-center text-slate-300 hover:text-[#231F1D] hover:bg-[#FAF8F5] cursor-pointer"
                   >
                     <Camera className="w-3 h-3" />
                   </button>
@@ -5716,11 +5716,11 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
           {showPrimitivesDrawer && (
             <div className="absolute top-16 left-3 z-20 w-[330px] max-h-[68vh] overflow-y-auto rounded-xl bg-[#111622] border border-slate-700 shadow-2xl p-3 space-y-3 text-xs">
               <div className="flex items-center justify-between">
-                <span className="font-semibold text-white">Primitivas, CSG & PBR Procedural</span>
+                <span className="font-semibold text-[#231F1D]">Primitivas, CSG & PBR Procedural</span>
                 <button
                   type="button"
                   onClick={() => setShowPrimitivesDrawer(false)}
-                  className="text-[11px] text-slate-400 hover:text-white cursor-pointer"
+                  className="text-[11px] text-[#635B54] hover:text-[#231F1D] cursor-pointer"
                 >
                   Fechar
                 </button>
@@ -5755,18 +5755,18 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
                   particleSpriteInputRef.current?.click();
                 }}
               />
-              <div className="rounded-xl bg-[#141923] border border-slate-800 p-2.5 space-y-2">
-                <div className="text-[11px] font-semibold text-white">Materiais Procedurais PBR</div>
+              <div className="rounded-xl bg-[#141923] border border-[#231F1D]/15 p-2.5 space-y-2">
+                <div className="text-[11px] font-semibold text-[#231F1D]">Materiais Procedurais PBR</div>
                 <div className="grid grid-cols-2 gap-1.5">
                   {PROCEDURAL_MATERIAL_PRESETS.map((pr) => (
                     <button
                       key={pr.id}
                       type="button"
                       onClick={() => handleApplyProceduralMaterial(pr.defaultParams)}
-                      className="p-2 rounded-lg bg-[#0D1017] border border-slate-800 hover:border-orange-500 text-left cursor-pointer"
+                      className="p-2 rounded-lg bg-[#0D1017] border border-[#231F1D]/15 hover:border-orange-500 text-left cursor-pointer"
                     >
-                      <div className="font-semibold text-slate-100 truncate text-[11px]">{pr.label}</div>
-                      <div className="text-[9px] text-slate-400 truncate">{pr.subtitle}</div>
+                      <div className="font-semibold text-[#231F1D] truncate text-[11px]">{pr.label}</div>
+                      <div className="text-[9px] text-[#635B54] truncate">{pr.subtitle}</div>
                     </button>
                   ))}
                 </div>
@@ -5777,14 +5777,14 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
           {/* Selected Bone HUD Badge */}
           {selectedBoneName && (
             <div
-              className={`absolute top-20 left-3 z-10 pointer-events-none px-2 py-0.5 rounded bg-[#0D1017]/85 border border-slate-800 font-mono text-xs drop-shadow ${
+              className={`absolute top-20 left-3 z-10 pointer-events-none px-2 py-0.5 rounded bg-[#0D1017]/85 border border-[#231F1D]/15 font-mono text-xs drop-shadow ${
                 activeClipTracks.some(
                   (tr) =>
                     tr.name.startsWith(`${selectedBoneName}.`) &&
                     tr.times.some((t) => Math.abs(t - animProgress * animDuration) < 0.04)
                 )
                   ? 'text-[#ffd633] border-amber-500/50'
-                  : 'text-slate-100'
+                  : 'text-[#231F1D]'
               }`}
             >
               Osso: {selectedBoneName}
@@ -5792,27 +5792,27 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
           )}
 
           {/* Smart Contextual Bottom Status Bar */}
-          <div className="absolute bottom-2.5 left-3 right-3 z-10 pointer-events-none flex items-center justify-between gap-2 text-[11px] text-slate-400">
-            <span className="px-2.5 py-1 rounded bg-[#141923] border border-slate-800/90 font-mono truncate max-w-[65%]">
+          <div className="absolute bottom-2.5 left-3 right-3 z-10 pointer-events-none flex items-center justify-between gap-2 text-[11px] text-[#635B54]">
+            <span className="px-2.5 py-1 rounded bg-[#141923] border border-[#231F1D]/15/90 font-mono truncate max-w-[65%]">
               {isImporting
                 ? 'Importando modelo 3D...'
-                : statusBanner || `${activeAssetName} · ${sceneMeshes.length} malha(s)`}
+                : statusBanner || `${activeAssetName} Â· ${sceneMeshes.length} malha(s)`}
             </span>
-            <span className="hidden md:inline px-2.5 py-1 rounded bg-[#141923] border border-slate-800/90 font-mono">
+            <span className="hidden md:inline px-2.5 py-1 rounded bg-[#141923] border border-[#231F1D]/15/90 font-mono">
               {toolMode === 'weight_paint'
-                ? 'Arraste sobre a malha: Pintar Pesos · Azul=0 Vermelho=1'
+                ? 'Arraste sobre a malha: Pintar Pesos Â· Azul=0 Vermelho=1'
                 : toolMode === 'paint'
-                ? 'Clique e arraste: Pintar Textura 3D · B: Pincel'
+                ? 'Clique e arraste: Pintar Textura 3D Â· B: Pincel'
                 : toolMode === 'translate' || toolMode === 'rotate' || toolMode === 'scale'
-                ? 'Arraste eixos RGB · Tab: Modo · F: Enquadrar · Del: Excluir'
-                : 'Arraste: Orbitar · Scroll: Zoom · Q/W/E/R/B · Arraste GLB/glTF'}
+                ? 'Arraste eixos RGB Â· Tab: Modo Â· F: Enquadrar Â· Del: Excluir'
+                : 'Arraste: Orbitar Â· Scroll: Zoom Â· Q/W/E/R/B Â· Arraste GLB/glTF'}
             </span>
           </div>
         </div>
 
         {/* Docked ActionForge Timeline / Dope Sheet Below 3D Scene */}
         {(currentStage === 'stage9' || currentStage === 'stage12' || currentStage === 'stage13') && (
-          <div className="border-t border-slate-800 bg-[#0F131B] px-2.5 py-1.5 max-h-[42vh] overflow-y-auto shrink-0">
+          <div className="border-t border-[#231F1D]/15 bg-[#0F131B] px-2.5 py-1.5 max-h-[42vh] overflow-y-auto shrink-0">
             <div className="flex items-center justify-between mb-1">
               <span className="text-[11px] font-semibold text-slate-300">
                 Timeline & Dope Sheet ActionForge (84 Clipes & NLA)
@@ -6124,3 +6124,4 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
     </div>
   );
 };
+

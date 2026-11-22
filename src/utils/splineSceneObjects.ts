@@ -1,4 +1,4 @@
-import * as THREE from 'three';
+﻿import * as THREE from 'three';
 
 export type PrimitiveShapeKind =
   | 'cube'
@@ -65,34 +65,34 @@ export const PRIMITIVE_CATALOG: PrimitiveCatalogItem[] = [
   { kind: 'torus', label: 'Toro', defaultColor: '#A855F7', category: 'primitive' },
   { kind: 'cylinder', label: 'Cilindro', defaultColor: '#10B981', category: 'primitive' },
   { kind: 'cone', label: 'Cone', defaultColor: '#F43F5E', category: 'primitive' },
-  { kind: 'capsule', label: 'Cápsula', defaultColor: '#FACC15', category: 'primitive' },
+  { kind: 'capsule', label: 'CÃ¡psula', defaultColor: '#FACC15', category: 'primitive' },
   { kind: 'icosahedron', label: 'Cristal', defaultColor: '#06B6D4', category: 'primitive' },
-  { kind: 'torus_knot', label: 'Nó 3D', defaultColor: '#EC4899', category: 'primitive' },
+  { kind: 'torus_knot', label: 'NÃ³ 3D', defaultColor: '#EC4899', category: 'primitive' },
   { kind: 'star', label: 'Estrela 3D', defaultColor: '#F59E0B', category: 'vector' },
-  { kind: 'hex', label: 'Hexágono', defaultColor: '#6366F1', category: 'vector' },
+  { kind: 'hex', label: 'HexÃ¡gono', defaultColor: '#6366F1', category: 'vector' },
   { kind: 'ring_bevel', label: 'Anel Vetor', defaultColor: '#14B8A6', category: 'vector' },
-  { kind: 'heart', label: 'Coração 3D', defaultColor: '#FB7185', category: 'vector' },
+  { kind: 'heart', label: 'CoraÃ§Ã£o 3D', defaultColor: '#FB7185', category: 'vector' },
 ];
 
 export const SPLINE_TEMPLATES: { id: SplineTemplateId; label: string; subtitle: string }[] = [
-  { id: 'glass_neon', label: 'Vidro & Neon', subtitle: 'Nó de vidro refrativo + esferas luminosas' },
-  { id: 'product_showcase', label: 'Vitrine Produto', subtitle: 'Pedestal metálico + forma escultural' },
-  { id: 'floating_shapes', label: 'Formas Flutuantes', subtitle: 'Composição interativa com levitação' },
-  { id: 'character_rig', label: 'Estúdio Personagem', subtitle: 'Ativo articulado com rig e animações' },
+  { id: 'glass_neon', label: 'Vidro & Neon', subtitle: 'NÃ³ de vidro refrativo + esferas luminosas' },
+  { id: 'product_showcase', label: 'Vitrine Produto', subtitle: 'Pedestal metÃ¡lico + forma escultural' },
+  { id: 'floating_shapes', label: 'Formas Flutuantes', subtitle: 'ComposiÃ§Ã£o interativa com levitaÃ§Ã£o' },
+  { id: 'character_rig', label: 'EstÃºdio Personagem', subtitle: 'Ativo articulado com rig e animaÃ§Ãµes' },
 ];
 
 export const SPLINE_MATERIAL_STYLES: { id: SplineMaterialStyle; label: string }[] = [
-  { id: 'physical', label: 'Padrão PBR' },
+  { id: 'physical', label: 'PadrÃ£o PBR' },
   { id: 'glass', label: 'Vidro (Glass)' },
   { id: 'chrome', label: 'Cromado' },
   { id: 'clay', label: 'Argila Fosca' },
-  { id: 'ceramic', label: 'Cerâmica' },
+  { id: 'ceramic', label: 'CerÃ¢mica' },
   { id: 'neon', label: 'Neon Glow' },
 ];
 
 export const SPLINE_INTERACTION_OPTIONS: { id: SplineInteractionType; label: string }[] = [
-  { id: 'none', label: 'Estático' },
-  { id: 'spin', label: 'Girar Contínuo' },
+  { id: 'none', label: 'EstÃ¡tico' },
+  { id: 'spin', label: 'Girar ContÃ­nuo' },
   { id: 'float', label: 'Flutuar Suave' },
   { id: 'hover_pulse', label: 'Pulso no Hover' },
   { id: 'click_toggle', label: 'Alternar no Clique' },
@@ -472,7 +472,7 @@ ${meshesJsx}
 
 export function generateHtmlEmbedCode(assetName: string | null, bgHex: string): string {
   const safeFile = assetName || 'cena-alexdesign.glb';
-  return `<!-- Incorpore sua cena 3D em qualquer site com uma única tag HTML -->
+  return `<!-- Incorpore sua cena 3D em qualquer site com uma Ãºnica tag HTML -->
 <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
 
 <model-viewer
@@ -583,7 +583,7 @@ const AlexDesignCanvas = dynamic(
   {
     ssr: false,
     loading: () => (
-      <div className="h-[480px] w-full rounded-2xl bg-[${bgHex}] flex items-center justify-center text-sm text-slate-400">
+      <div className="h-[480px] w-full rounded-2xl bg-[${bgHex}] flex items-center justify-center text-sm text-[#635B54]">
         Carregando cena 3D (${safeFile})...
       </div>
     ),
@@ -603,3 +603,4 @@ export default function Page() {
   );
 }`;
 }
+

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+﻿import React, { useEffect, useState } from 'react';
 import { Check, Code2, Copy, Download, Link2, X } from 'lucide-react';
 import {
   CodeExportObjectSpec,
@@ -94,23 +94,23 @@ export const SplineCodeExportModal: React.FC<SplineCodeExportModalProps> = ({
 
   return (
     <div
-      className="fixed inset-0 z-50 bg-black/75 flex items-center justify-center p-4"
+      className="fixed inset-0 z-50 bg-[#F5F1EA]/75 flex items-center justify-center p-4"
       onClick={onClose}
       role="dialog"
-      aria-label="3D interativo feito para a web — exportar código"
+      aria-label="3D interativo feito para a web â€” exportar cÃ³digo"
     >
       <div
         className="w-full max-w-4xl rounded-xl bg-[#141923] border border-slate-700 shadow-2xl overflow-hidden flex flex-col max-h-[88vh]"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="px-4 py-3 border-b border-slate-800 flex flex-wrap items-center justify-between gap-3">
+        <div className="px-4 py-3 border-b border-[#231F1D]/15 flex flex-wrap items-center justify-between gap-3">
           <div>
             <div className="flex items-center gap-2">
               <Code2 className="w-4 h-4 text-orange-400" />
-              <span className="text-sm font-semibold text-white">3D interativo, feito para a web</span>
+              <span className="text-sm font-semibold text-[#231F1D]">3D interativo, feito para a web</span>
             </div>
-            <p className="text-[11px] text-slate-400 mt-0.5">
-              Incorpore via iframe/link público ou exporte código Vanilla JS, React, Next.js e Three.js.
+            <p className="text-[11px] text-[#635B54] mt-0.5">
+              Incorpore via iframe/link pÃºblico ou exporte cÃ³digo Vanilla JS, React, Next.js e Three.js.
             </p>
           </div>
           <div className="flex items-center gap-1.5">
@@ -121,13 +121,13 @@ export const SplineCodeExportModal: React.FC<SplineCodeExportModalProps> = ({
                 className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-md bg-sky-600/20 border border-sky-500/50 hover:bg-sky-600/30 text-xs font-medium text-sky-200 cursor-pointer whitespace-nowrap"
               >
                 <Link2 className="w-3.5 h-3.5" />
-                <span>Gerar Link Público</span>
+                <span>Gerar Link PÃºblico</span>
               </button>
             )}
             <button
               type="button"
               onClick={handleCopy}
-              className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-md bg-slate-800 hover:bg-slate-700 text-xs font-medium text-slate-100 cursor-pointer whitespace-nowrap"
+              className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-md bg-[#FAF8F5] hover:bg-slate-700 text-xs font-medium text-[#231F1D] cursor-pointer whitespace-nowrap"
             >
               {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
               <span>{copied ? 'Copiado' : 'Copiar'}</span>
@@ -135,7 +135,7 @@ export const SplineCodeExportModal: React.FC<SplineCodeExportModalProps> = ({
             <button
               type="button"
               onClick={handleDownloadSnippet}
-              className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-md bg-orange-600 hover:bg-orange-500 text-xs font-semibold text-white cursor-pointer whitespace-nowrap"
+              className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-md bg-orange-600 hover:bg-orange-500 text-xs font-semibold text-[#231F1D] cursor-pointer whitespace-nowrap"
             >
               <Download className="w-3.5 h-3.5" />
               <span>Baixar {activeMeta.filename}</span>
@@ -144,14 +144,14 @@ export const SplineCodeExportModal: React.FC<SplineCodeExportModalProps> = ({
               type="button"
               onClick={onClose}
               aria-label="Fechar modal"
-              className="w-7 h-7 rounded-md hover:bg-slate-800 text-slate-400 hover:text-white flex items-center justify-center cursor-pointer"
+              className="w-7 h-7 rounded-md hover:bg-[#FAF8F5] text-[#635B54] hover:text-[#231F1D] flex items-center justify-center cursor-pointer"
             >
               <X className="w-4 h-4" />
             </button>
           </div>
         </div>
 
-        <div className="px-4 py-2 bg-[#0F131B] border-b border-slate-800 flex items-center gap-1.5 overflow-x-auto no-scrollbar">
+        <div className="px-4 py-2 bg-[#0F131B] border-b border-[#231F1D]/15 flex items-center gap-1.5 overflow-x-auto no-scrollbar">
           {EXPORT_TABS.map((t) => (
             <button
               key={t.id}
@@ -159,8 +159,8 @@ export const SplineCodeExportModal: React.FC<SplineCodeExportModalProps> = ({
               onClick={() => setTab(t.id)}
               className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
                 tab === t.id
-                  ? 'bg-orange-600 text-white'
-                  : 'bg-slate-800/80 text-slate-300 hover:text-white hover:bg-slate-700'
+                  ? 'bg-orange-600 text-[#231F1D]'
+                  : 'bg-[#FAF8F5]/80 text-slate-300 hover:text-[#231F1D] hover:bg-slate-700'
               }`}
             >
               {t.label}
@@ -177,3 +177,4 @@ export const SplineCodeExportModal: React.FC<SplineCodeExportModalProps> = ({
     </div>
   );
 };
+

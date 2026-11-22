@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { Box, Camera, Sun } from 'lucide-react';
 import { HdriEnvironmentPanel } from './HdriEnvironmentPanel';
 import { LightingRenderPanel } from './LightingRenderPanel';
@@ -57,14 +57,14 @@ export const LightingStudioPage: React.FC<LightingStudioPageProps> = ({
 }) => {
   return (
     <div className="max-w-[1440px] mx-auto p-3.5 sm:p-4 space-y-4">
-      <div className="rounded-xl bg-[#141923] border border-slate-800 p-4 flex flex-wrap items-center justify-between gap-3">
+      <div className="rounded-xl bg-[#141923] border border-[#231F1D]/15 p-4 flex flex-wrap items-center justify-between gap-3">
         <div className="space-y-1 min-w-0">
-          <h1 className="text-base font-bold text-white flex items-center gap-2">
+          <h1 className="text-base font-bold text-[#231F1D] flex items-center gap-2">
             <Sun className="w-4 h-4 text-amber-400 shrink-0" />
-            <span>Estúdio de Luz HDRI, Pós-Processamento & Render PNG 4K</span>
+            <span>EstÃºdio de Luz HDRI, PÃ³s-Processamento & Render PNG 4K</span>
           </h1>
-          <p className="text-xs text-slate-400">
-            Ajuste iluminação IBL, Bloom, Depth of Field, Motion Blur e Tone Mapping (ACES / AgX) para{' '}
+          <p className="text-xs text-[#635B54]">
+            Ajuste iluminaÃ§Ã£o IBL, Bloom, Depth of Field, Motion Blur e Tone Mapping (ACES / AgX) para{' '}
             <span className="font-mono text-slate-200">{assetName}</span>.
           </p>
         </div>
@@ -74,7 +74,7 @@ export const LightingStudioPage: React.FC<LightingStudioPageProps> = ({
             type="button"
             onClick={onRenderPng}
             disabled={isRendering}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-xs font-semibold text-white cursor-pointer whitespace-nowrap"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-xs font-semibold text-[#231F1D] cursor-pointer whitespace-nowrap"
           >
             <Camera className="w-3.5 h-3.5" />
             <span>{isRendering ? 'Renderizando...' : 'Capturar Render PNG'}</span>
@@ -82,10 +82,10 @@ export const LightingStudioPage: React.FC<LightingStudioPageProps> = ({
           <button
             type="button"
             onClick={onOpenViewport}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-orange-600 hover:bg-orange-500 text-xs font-semibold text-white cursor-pointer whitespace-nowrap"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-orange-600 hover:bg-orange-500 text-xs font-semibold text-[#231F1D] cursor-pointer whitespace-nowrap"
           >
             <Box className="w-3.5 h-3.5" />
-            <span>Estúdio 3D</span>
+            <span>EstÃºdio 3D</span>
           </button>
         </div>
       </div>
@@ -162,3 +162,4 @@ export const LightingStudioPage: React.FC<LightingStudioPageProps> = ({
     </div>
   );
 };
+

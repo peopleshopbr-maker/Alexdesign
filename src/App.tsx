@@ -1,4 +1,4 @@
-import { Component, ReactNode, useCallback, useEffect, useRef, useState } from 'react';
+﻿import { Component, ReactNode, useCallback, useEffect, useRef, useState } from 'react';
 import gsap from 'gsap';
 import {
   Archive,
@@ -61,19 +61,19 @@ class ViewportErrorBoundary extends Component<{ children: ReactNode }, ErrorBoun
   state: ErrorBoundaryState = { errorMessage: null };
 
   static getDerivedStateFromError(error: Error): ErrorBoundaryState {
-    return { errorMessage: error?.message || 'Erro inesperado no estúdio 3D.' };
+    return { errorMessage: error?.message || 'Erro inesperado no estÃºdio 3D.' };
   }
 
   render() {
     if (this.state.errorMessage) {
       return (
         <div className="flex-1 min-h-[360px] flex flex-col items-center justify-center gap-3 bg-[#0D1017] p-6 text-center">
-          <div className="text-sm font-semibold text-red-300">Falha ao inicializar o Estúdio 3D</div>
-          <div className="max-w-md text-xs text-slate-400">{this.state.errorMessage}</div>
+          <div className="text-sm font-semibold text-red-300">Falha ao inicializar o EstÃºdio 3D</div>
+          <div className="max-w-md text-xs text-[#635B54]">{this.state.errorMessage}</div>
           <button
             type="button"
             onClick={() => this.setState({ errorMessage: null })}
-            className="inline-flex items-center gap-1.5 min-h-[40px] px-4 py-2 rounded-lg bg-orange-600 hover:bg-orange-500 text-xs font-semibold text-white cursor-pointer"
+            className="inline-flex items-center gap-1.5 min-h-[40px] px-4 py-2 rounded-lg bg-orange-600 hover:bg-orange-500 text-xs font-semibold text-[#231F1D] cursor-pointer"
           >
             <RotateCcw className="w-3.5 h-3.5" />
             <span>Recarregar Viewport</span>
@@ -120,7 +120,7 @@ const UNIFIED_WORKSPACE_LINKS: { id: UnifiedWorkspaceChipId; label: string }[] =
 const RIGHT_DOCK_TITLES: Partial<Record<WorkspacePageTab, string>> = {
   rigging: 'Rig & Anim (ActionForge)',
   lighting: 'Luz & Render 4K',
-  studio_notes: 'Variáveis & Notas (MoGraph)',
+  studio_notes: 'VariÃ¡veis & Notas (MoGraph)',
   guide: 'Fluxo de Trabalho 3D',
   export: 'Exportar Blender (API Atual) / GLB / PNG',
 };
@@ -515,14 +515,14 @@ export default function App() {
 
   return (
     <div
-      className={`h-dvh overflow-hidden flex flex-col bg-[#0D1017] text-slate-100 ${
+      className={`h-dvh overflow-hidden flex flex-col bg-[#0D1017] text-[#231F1D] ${
         highContrast ? 'contrast-125' : ''
       } ${largeText ? 'text-[15px]' : ''}`}
     >
       {/* Unified Studio Top Bar */}
       <header
         ref={headerRef}
-        className="h-12 sm:h-14 px-3 sm:px-4 border-b border-slate-800/90 bg-[#0D1017] flex items-center gap-2 sm:gap-3 shrink-0"
+        className="h-12 sm:h-14 px-3 sm:px-4 border-b border-[#231F1D]/15/90 bg-[#0D1017] flex items-center gap-2 sm:gap-3 shrink-0"
       >
         <div className="gsap-nav-item flex items-center gap-2 shrink-0 mr-1 sm:mr-2">
           <a
@@ -531,7 +531,7 @@ export default function App() {
               e.preventDefault();
               setActiveTab('home');
             }}
-            className="inline-flex items-center gap-1.5 font-display text-base sm:text-lg font-bold tracking-tight text-white whitespace-nowrap"
+            className="inline-flex items-center gap-1.5 font-display text-base sm:text-lg font-bold tracking-tight text-[#231F1D] whitespace-nowrap"
           >
             <svg
               aria-hidden="true"
@@ -548,19 +548,19 @@ export default function App() {
               Alex<span className="text-orange-500">Design</span>
             </span>
           </a>
-          <span className="hidden xl:inline text-[11px] font-mono text-slate-400 truncate max-w-[170px]">
-            {activeTab === 'home' ? 'Página Inicial' : stats.activeAssetName}
+          <span className="hidden xl:inline text-[11px] font-mono text-[#635B54] truncate max-w-[170px]">
+            {activeTab === 'home' ? 'PÃ¡gina Inicial' : stats.activeAssetName}
           </span>
         </div>
 
-        <div className="gsap-nav-item flex items-center gap-0.5 shrink-0" role="group" aria-label="Histórico">
+        <div className="gsap-nav-item flex items-center gap-0.5 shrink-0" role="group" aria-label="HistÃ³rico">
           <button
             type="button"
             disabled={activeTab === 'home' || !viewportStatus.canUndo}
             onClick={() => globalActionsRef.current?.undo()}
             title="Desfazer (Ctrl+Z)"
             aria-label="Desfazer"
-            className="w-8 h-8 inline-flex items-center justify-center rounded-lg text-slate-300 hover:text-white hover:bg-slate-800 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent"
+            className="w-8 h-8 inline-flex items-center justify-center rounded-lg text-slate-300 hover:text-[#231F1D] hover:bg-[#FAF8F5] cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent"
           >
             <Undo2 className="w-4 h-4" />
           </button>
@@ -570,7 +570,7 @@ export default function App() {
             onClick={() => globalActionsRef.current?.redo()}
             title="Refazer (Ctrl+Shift+Z)"
             aria-label="Refazer"
-            className="w-8 h-8 inline-flex items-center justify-center rounded-lg text-slate-300 hover:text-white hover:bg-slate-800 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent"
+            className="w-8 h-8 inline-flex items-center justify-center rounded-lg text-slate-300 hover:text-[#231F1D] hover:bg-[#FAF8F5] cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent"
           >
             <Redo2 className="w-4 h-4" />
           </button>
@@ -605,7 +605,7 @@ export default function App() {
             }
           }}
           title="Importar modelo .glb ou .gltf"
-          className="gsap-nav-item inline-flex items-center gap-1.5 h-8 px-2.5 rounded-lg border border-slate-800 bg-slate-900/70 text-slate-200 hover:border-slate-600 hover:text-white text-[11px] font-medium shrink-0 cursor-pointer whitespace-nowrap"
+          className="gsap-nav-item inline-flex items-center gap-1.5 h-8 px-2.5 rounded-lg border border-[#231F1D]/15 bg-[#EDE6DA]/70 text-slate-200 hover:border-slate-600 hover:text-[#231F1D] text-[11px] font-medium shrink-0 cursor-pointer whitespace-nowrap"
         >
           <Upload className="w-3.5 h-3.5 text-sky-400" />
           <span className="hidden sm:inline">Importar</span>
@@ -614,12 +614,12 @@ export default function App() {
         <button
           type="button"
           onClick={() => setSearchOpen(true)}
-          title="Buscar ferramentas e páginas (Ctrl+K)"
-          className="gsap-nav-item inline-flex items-center gap-1.5 h-8 px-2.5 rounded-lg border border-slate-800 bg-slate-900/70 text-slate-300 hover:border-slate-700 hover:text-white text-[11px] font-medium transition-colors shrink-0 cursor-pointer whitespace-nowrap"
+          title="Buscar ferramentas e pÃ¡ginas (Ctrl+K)"
+          className="gsap-nav-item inline-flex items-center gap-1.5 h-8 px-2.5 rounded-lg border border-[#231F1D]/15 bg-[#EDE6DA]/70 text-slate-300 hover:border-slate-700 hover:text-[#231F1D] text-[11px] font-medium transition-colors shrink-0 cursor-pointer whitespace-nowrap"
         >
           <Search className="w-3.5 h-3.5 text-orange-400" />
           <span className="hidden lg:inline">Buscar</span>
-          <kbd className="hidden xl:inline text-[9px] font-mono px-1 py-0.5 rounded bg-slate-800 text-slate-400">
+          <kbd className="hidden xl:inline text-[9px] font-mono px-1 py-0.5 rounded bg-[#FAF8F5] text-[#635B54]">
             Ctrl+K
           </kbd>
         </button>
@@ -627,7 +627,7 @@ export default function App() {
         <button
           type="button"
           onClick={() => handleSelectWorkspaceTab('export')}
-          className={`gsap-nav-item inline-flex items-center gap-1.5 h-8 px-3 rounded-lg text-white text-xs font-semibold shrink-0 cursor-pointer whitespace-nowrap ${
+          className={`gsap-nav-item inline-flex items-center gap-1.5 h-8 px-3 rounded-lg text-[#231F1D] text-xs font-semibold shrink-0 cursor-pointer whitespace-nowrap ${
             activeTab === 'export'
               ? 'bg-orange-500 ring-2 ring-orange-400/50'
               : 'bg-orange-600 hover:bg-orange-500'
@@ -638,14 +638,14 @@ export default function App() {
         </button>
       </header>
 
-      {/* STUDIO UNIFICADO Quick Workspace Links Bar (Página 2) */}
+      {/* STUDIO UNIFICADO Quick Workspace Links Bar (PÃ¡gina 2) */}
       {activeTab !== 'home' && (
         <nav
           aria-label="Links do Studio Unificado"
-          className="px-3 py-1.5 border-b border-slate-800/90 bg-[#0A0D12] flex items-center justify-between gap-2 shrink-0"
+          className="px-3 py-1.5 border-b border-[#231F1D]/15/90 bg-[#0A0D12] flex items-center justify-between gap-2 shrink-0"
         >
           <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar min-w-0">
-            <span className="px-2 py-1 rounded-md bg-slate-800/90 text-[10px] font-bold tracking-wider text-slate-200 uppercase whitespace-nowrap shrink-0">
+            <span className="px-2 py-1 rounded-md bg-[#FAF8F5]/90 text-[10px] font-bold tracking-wider text-slate-200 uppercase whitespace-nowrap shrink-0">
               STUDIO UNIFICADO
             </span>
             {UNIFIED_WORKSPACE_LINKS.map((chip) => {
@@ -658,7 +658,7 @@ export default function App() {
                   className={`px-2.5 py-1 rounded-full text-[11px] font-medium whitespace-nowrap shrink-0 cursor-pointer transition-colors ${
                     active
                       ? 'bg-slate-100 text-slate-950 font-semibold shadow-sm'
-                      : 'text-slate-400 hover:text-white hover:bg-slate-800/70'
+                      : 'text-[#635B54] hover:text-[#231F1D] hover:bg-[#FAF8F5]/70'
                   }`}
                 >
                   {chip.label}
@@ -672,7 +672,7 @@ export default function App() {
               globalActionsRef.current = null;
               setActiveTab('home');
             }}
-            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md border border-slate-700/80 bg-[#141923] hover:border-slate-500 text-[11px] font-medium text-slate-200 hover:text-white whitespace-nowrap shrink-0 cursor-pointer"
+            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md border border-slate-700/80 bg-[#141923] hover:border-slate-500 text-[11px] font-medium text-slate-200 hover:text-[#231F1D] whitespace-nowrap shrink-0 cursor-pointer"
           >
             <Home className="w-3 h-3 text-orange-400" />
             <span>Tela Inicial</span>
@@ -680,7 +680,7 @@ export default function App() {
         </nav>
       )}
 
-      {/* Main Content Area: Página 1 (Welcome) OR Página 2 (Persistent 3D Engine + Contextual Dock) */}
+      {/* Main Content Area: PÃ¡gina 1 (Welcome) OR PÃ¡gina 2 (Persistent 3D Engine + Contextual Dock) */}
       <main className="relative flex-1 flex flex-col min-h-0 overflow-hidden pb-12 sm:pb-0">
         {activeTab === 'home' ? (
           <WelcomeLandingPage
@@ -748,31 +748,31 @@ export default function App() {
               aria-label={RIGHT_DOCK_TITLES[activeTab] || 'Comandos da aba ativa'}
               className={`w-full ${
                 bottomDockExpanded ? 'h-[58vh] min-h-[300px]' : 'h-[43vh] min-h-[250px]'
-              } border-t border-slate-800 bg-[#111622] flex flex-col shrink-0 min-h-0`}
+              } border-t border-[#231F1D]/15 bg-[#111622] flex flex-col shrink-0 min-h-0`}
             >
-              <div className="px-3 py-1.5 border-b border-slate-800 bg-[#0F131B] flex items-center justify-between gap-2 shrink-0">
-                <span className="text-xs font-semibold text-slate-100 truncate">
+              <div className="px-3 py-1.5 border-b border-[#231F1D]/15 bg-[#0F131B] flex items-center justify-between gap-2 shrink-0">
+                <span className="text-xs font-semibold text-[#231F1D] truncate">
                   {RIGHT_DOCK_TITLES[activeTab] || 'Comandos'}
                 </span>
                 <div className="flex items-center gap-1 shrink-0">
                   <button
                     type="button"
                     onClick={() => setBottomDockExpanded((v) => !v)}
-                    title={bottomDockExpanded ? 'Altura padrão' : 'Expandir área de comandos'}
-                    className="inline-flex items-center gap-1 h-7 px-2.5 rounded-md bg-slate-800/80 hover:bg-slate-700 text-[11px] text-slate-300 hover:text-white cursor-pointer whitespace-nowrap"
+                    title={bottomDockExpanded ? 'Altura padrÃ£o' : 'Expandir Ã¡rea de comandos'}
+                    className="inline-flex items-center gap-1 h-7 px-2.5 rounded-md bg-[#FAF8F5]/80 hover:bg-slate-700 text-[11px] text-slate-300 hover:text-[#231F1D] cursor-pointer whitespace-nowrap"
                   >
                     {bottomDockExpanded ? (
                       <ChevronDown className="w-3.5 h-3.5 text-orange-400" />
                     ) : (
                       <ChevronUp className="w-3.5 h-3.5 text-orange-400" />
                     )}
-                    <span>{bottomDockExpanded ? 'Tamanho Padrão' : 'Expandir Comandos'}</span>
+                    <span>{bottomDockExpanded ? 'Tamanho PadrÃ£o' : 'Expandir Comandos'}</span>
                   </button>
                   <button
                     type="button"
                     onClick={() => setBottomDockOpen(false)}
                     title="Recolher comandos abaixo da cena"
-                    className="w-7 h-7 rounded-md hover:bg-slate-800 text-slate-400 hover:text-white flex items-center justify-center cursor-pointer"
+                    className="w-7 h-7 rounded-md hover:bg-[#FAF8F5] text-[#635B54] hover:text-[#231F1D] flex items-center justify-center cursor-pointer"
                   >
                     <ChevronDown className="w-4 h-4" />
                   </button>
@@ -967,14 +967,14 @@ export default function App() {
             </div>
           </section>
           ) : (
-            <div className="w-full border-t border-slate-800 bg-[#0F131B] px-3 py-1.5 flex items-center justify-between gap-2 shrink-0">
-              <span className="text-xs text-slate-400 truncate">
+            <div className="w-full border-t border-[#231F1D]/15 bg-[#0F131B] px-3 py-1.5 flex items-center justify-between gap-2 shrink-0">
+              <span className="text-xs text-[#635B54] truncate">
                 {RIGHT_DOCK_TITLES[activeTab] || 'Comandos'}
               </span>
               <button
                 type="button"
                 onClick={() => setBottomDockOpen(true)}
-                className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg bg-orange-600 hover:bg-orange-500 text-[11px] font-semibold text-white cursor-pointer whitespace-nowrap"
+                className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg bg-orange-600 hover:bg-orange-500 text-[11px] font-semibold text-[#231F1D] cursor-pointer whitespace-nowrap"
               >
                 <ChevronUp className="w-3.5 h-3.5" />
                 <span>Abrir {RIGHT_DOCK_TITLES[activeTab] || 'Painel'}</span>
@@ -987,8 +987,8 @@ export default function App() {
 
       {/* Mobile Fixed Thumb-Zone Bottom Tab Bar */}
       <nav
-        aria-label="Navegação móvel do estúdio"
-        className="sm:hidden fixed bottom-0 left-0 right-0 z-40 bg-[#0D1017] border-t border-slate-800/90 pb-safe"
+        aria-label="NavegaÃ§Ã£o mÃ³vel do estÃºdio"
+        className="sm:hidden fixed bottom-0 left-0 right-0 z-40 bg-[#0D1017] border-t border-[#231F1D]/15/90 pb-safe"
       >
         <div className="flex items-center gap-1 h-12 px-1.5 overflow-x-auto no-scrollbar">
           {INSPECTOR_TABS.map((tab) => {
@@ -999,7 +999,7 @@ export default function App() {
                 type="button"
                 onClick={() => handleSelectWorkspaceTab(tab.stages[0].stage)}
                 className={`h-11 flex-1 min-w-[56px] px-1.5 flex flex-col items-center justify-center gap-0.5 rounded-lg transition-colors cursor-pointer ${
-                  isActive ? 'text-orange-400 bg-orange-500/10' : 'text-slate-400 hover:text-slate-200'
+                  isActive ? 'text-orange-400 bg-orange-500/10' : 'text-[#635B54] hover:text-slate-200'
                 }`}
               >
                 {tab.icon}
@@ -1025,3 +1025,4 @@ export default function App() {
     </div>
   );
 }
+

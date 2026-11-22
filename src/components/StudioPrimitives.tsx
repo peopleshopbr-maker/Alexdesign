@@ -1,7 +1,7 @@
-import React, { useEffect, useRef, useState } from 'react';
+﻿import React, { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 
-/* ── 1. Tooltip with 0.4s delay showing Name + Keyboard Shortcut ── */
+/* â”€â”€ 1. Tooltip with 0.4s delay showing Name + Keyboard Shortcut â”€â”€ */
 interface ShortcutTooltipProps {
   label: string;
   shortcut?: string;
@@ -49,13 +49,13 @@ export const ShortcutTooltip: React.FC<ShortcutTooltipProps> = ({
       {visible && (
         <div
           role="tooltip"
-          className={`pointer-events-none absolute left-1/2 -translate-x-1/2 z-50 px-2 py-1 rounded-md bg-[#090C12] border border-slate-700 shadow-xl text-[10px] text-slate-100 whitespace-nowrap flex items-center gap-1.5 ${
+          className={`pointer-events-none absolute left-1/2 -translate-x-1/2 z-50 px-2 py-1 rounded-md bg-[#090C12] border border-slate-700 shadow-xl text-[10px] text-[#231F1D] whitespace-nowrap flex items-center gap-1.5 ${
             placement === 'top' ? 'bottom-full mb-1.5' : 'top-full mt-1.5'
           }`}
         >
           <span>{label}</span>
           {shortcut && (
-            <kbd className="px-1 py-0.5 rounded bg-slate-800 border border-slate-700 font-mono text-[9px] text-orange-300">
+            <kbd className="px-1 py-0.5 rounded bg-[#FAF8F5] border border-slate-700 font-mono text-[9px] text-orange-300">
               {shortcut}
             </kbd>
           )}
@@ -65,7 +65,7 @@ export const ShortcutTooltip: React.FC<ShortcutTooltipProps> = ({
   );
 };
 
-/* ── 2. Draggable Number Scrubber with XYZ Axis Colors + Shift Fine Precision ── */
+/* â”€â”€ 2. Draggable Number Scrubber with XYZ Axis Colors + Shift Fine Precision â”€â”€ */
 export type AxisCode = 'X' | 'Y' | 'Z';
 
 const AXIS_STYLE: Record<AxisCode, { bar: string; text: string }> = {
@@ -173,8 +173,8 @@ export const NumberScrubber: React.FC<NumberScrubberProps> = ({
             if (e.key === 'Enter') commitDraft();
             if (e.key === 'Escape') setEditing(false);
           }}
-          aria-label={label || (axis ? `Eixo ${axis}` : 'Valor numérico')}
-          className="w-full px-1.5 bg-transparent text-[11px] font-mono text-white focus:outline-none tabular-nums"
+          aria-label={label || (axis ? `Eixo ${axis}` : 'Valor numÃ©rico')}
+          className="w-full px-1.5 bg-transparent text-[11px] font-mono text-[#231F1D] focus:outline-none tabular-nums"
         />
       </div>
     );
@@ -187,11 +187,11 @@ export const NumberScrubber: React.FC<NumberScrubberProps> = ({
         e.stopPropagation();
         if (defaultValue !== undefined) onChange(clamp(defaultValue));
       }}
-      title="Arraste para ajustar (Shift = fino 0.01) · Clique para digitar · Duplo clique reseta"
+      title="Arraste para ajustar (Shift = fino 0.01) Â· Clique para digitar Â· Duplo clique reseta"
       className={`group flex items-center justify-between gap-1 rounded h-7 bg-[#0D1017] border transition-colors select-none cursor-ew-resize overflow-hidden pr-1.5 ${
         dragging
           ? 'border-orange-500 bg-orange-500/10'
-          : 'border-slate-800 hover:border-slate-600'
+          : 'border-[#231F1D]/15 hover:border-slate-600'
       }`}
     >
       <div className="flex items-center gap-1 h-full min-w-0">
@@ -203,10 +203,10 @@ export const NumberScrubber: React.FC<NumberScrubberProps> = ({
             </span>
           </>
         ) : label ? (
-          <span className="text-[10px] text-slate-400 pl-1.5 truncate">{label}</span>
+          <span className="text-[10px] text-[#635B54] pl-1.5 truncate">{label}</span>
         ) : null}
       </div>
-      <span className="text-[11px] font-mono text-slate-100 tabular-nums truncate">
+      <span className="text-[11px] font-mono text-[#231F1D] tabular-nums truncate">
         {value.toFixed(decimals)}
         {unit}
       </span>
@@ -214,7 +214,7 @@ export const NumberScrubber: React.FC<NumberScrubberProps> = ({
   );
 };
 
-/* ── 3. PBR Filled Slider with Double-Click Reset ── */
+/* â”€â”€ 3. PBR Filled Slider with Double-Click Reset â”€â”€ */
 interface PbrSliderProps {
   label: string;
   blenderSocket?: string;
@@ -246,15 +246,15 @@ export const PbrSlider: React.FC<PbrSliderProps> = ({
     <div
       className="flex flex-col gap-1 select-none"
       onDoubleClick={() => onChange(defaultValue)}
-      title={`Duplo clique para restaurar padrão (${defaultValue.toFixed(decimals)})${
-        blenderSocket ? ` · Blender: ${blenderSocket}` : ''
+      title={`Duplo clique para restaurar padrÃ£o (${defaultValue.toFixed(decimals)})${
+        blenderSocket ? ` Â· Blender: ${blenderSocket}` : ''
       }`}
     >
-      <div className="flex items-center justify-between text-[10px] text-slate-400">
+      <div className="flex items-center justify-between text-[10px] text-[#635B54]">
         <span className="truncate">{label}</span>
         <span className="font-mono text-slate-200 tabular-nums">{value.toFixed(decimals)}</span>
       </div>
-      <div className="relative h-2 rounded-full bg-[#090C12] border border-slate-800 overflow-hidden">
+      <div className="relative h-2 rounded-full bg-[#090C12] border border-[#231F1D]/15 overflow-hidden">
         <div
           className="absolute inset-y-0 left-0 rounded-full pointer-events-none"
           style={{ width: `${pct}%`, backgroundColor: accentHex }}
@@ -274,7 +274,7 @@ export const PbrSlider: React.FC<PbrSliderProps> = ({
   );
 };
 
-/* ── 4. Blender-style Interactive 3D Axis Gizmo ── */
+/* â”€â”€ 4. Blender-style Interactive 3D Axis Gizmo â”€â”€ */
 export type CameraSnapDirection = 'q34' | 'front' | 'back' | 'side' | 'left' | 'top' | 'bottom';
 
 interface AxisGizmo3DProps {
@@ -338,8 +338,8 @@ export const AxisGizmo3D: React.FC<AxisGizmo3DProps> = ({ quaternionRef, onSnapV
 
   return (
     <div
-      className="relative w-[76px] h-[76px] rounded-full bg-[#0D1017]/65 border border-slate-800/80 backdrop-blur-sm select-none"
-      title="Gizmo 3D de Eixos — clique em X (Lado), Y (Topo), Z (Frente) ou no centro (3/4)"
+      className="relative w-[76px] h-[76px] rounded-full bg-[#0D1017]/65 border border-[#231F1D]/15/80 backdrop-blur-sm select-none"
+      title="Gizmo 3D de Eixos â€” clique em X (Lado), Y (Topo), Z (Frente) ou no centro (3/4)"
     >
       <svg viewBox="0 0 76 76" className="w-full h-full">
         {/* Center 3/4 Reset Sphere */}
@@ -399,3 +399,4 @@ export const AxisGizmo3D: React.FC<AxisGizmo3DProps> = ({ quaternionRef, onSnapV
     </div>
   );
 };
+

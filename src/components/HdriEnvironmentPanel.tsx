@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { ChevronDown, ChevronUp, Sun, Upload } from 'lucide-react';
 import {
   HDRI_ENVIRONMENT_OPTIONS,
@@ -35,7 +35,7 @@ export const HdriEnvironmentPanel: React.FC<HdriEnvironmentPanelProps> = ({
   const [expanded, setExpanded] = useState(true);
 
   return (
-    <div className="rounded-xl bg-[#141923] border border-slate-800 p-3 space-y-3 text-xs">
+    <div className="rounded-xl bg-[#141923] border border-[#231F1D]/15 p-3 space-y-3 text-xs">
       <button
         type="button"
         onClick={() => setExpanded((v) => !v)}
@@ -43,12 +43,12 @@ export const HdriEnvironmentPanel: React.FC<HdriEnvironmentPanelProps> = ({
       >
         <div className="flex items-center gap-2">
           <Sun className="w-4 h-4 text-amber-400" />
-          <span className="font-semibold text-white">Ambiente HDRI & Reflexos</span>
+          <span className="font-semibold text-[#231F1D]">Ambiente HDRI & Reflexos</span>
         </div>
         {expanded ? (
-          <ChevronUp className="w-4 h-4 text-slate-400" />
+          <ChevronUp className="w-4 h-4 text-[#635B54]" />
         ) : (
-          <ChevronDown className="w-4 h-4 text-slate-400" />
+          <ChevronDown className="w-4 h-4 text-[#635B54]" />
         )}
       </button>
 
@@ -64,8 +64,8 @@ export const HdriEnvironmentPanel: React.FC<HdriEnvironmentPanelProps> = ({
                   onClick={() => onSelectHdri(opt.id)}
                   className={`p-2 rounded-lg border text-left transition-colors cursor-pointer ${
                     active
-                      ? 'border-orange-500 bg-orange-500/15 text-white'
-                      : 'border-slate-800 bg-[#0D1017] text-slate-300 hover:border-slate-600'
+                      ? 'border-orange-500 bg-orange-500/15 text-[#231F1D]'
+                      : 'border-[#231F1D]/15 bg-[#0D1017] text-slate-300 hover:border-slate-600'
                   }`}
                 >
                   <div className="flex items-center gap-1 mb-1">
@@ -78,18 +78,18 @@ export const HdriEnvironmentPanel: React.FC<HdriEnvironmentPanelProps> = ({
                     ))}
                   </div>
                   <div className="text-[11px] font-semibold truncate">{opt.label}</div>
-                  <div className="text-[10px] text-slate-400 truncate">{opt.subtitle}</div>
+                  <div className="text-[10px] text-[#635B54] truncate">{opt.subtitle}</div>
                 </button>
               );
             })}
           </div>
 
-          <div className="flex flex-wrap items-center justify-between gap-2 pt-1 border-t border-slate-800/80">
+          <div className="flex flex-wrap items-center justify-between gap-2 pt-1 border-t border-[#231F1D]/15/80">
             <button
               type="button"
               onClick={onUploadHdriClick}
               disabled={hdriLoading}
-              className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-[11px] font-medium text-slate-100 cursor-pointer disabled:opacity-50"
+              className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-[#FAF8F5] hover:bg-slate-700 text-[11px] font-medium text-[#231F1D] cursor-pointer disabled:opacity-50"
             >
               <Upload className="w-3.5 h-3.5 text-sky-400" />
               <span>{hdriLoading ? 'Carregando HDR...' : 'Carregar .hdr / .exr'}</span>
@@ -103,7 +103,7 @@ export const HdriEnvironmentPanel: React.FC<HdriEnvironmentPanelProps> = ({
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <label className="flex flex-col gap-1">
-              <span className="flex justify-between text-slate-400 text-[11px]">
+              <span className="flex justify-between text-[#635B54] text-[11px]">
                 <span>Intensidade IBL</span>
                 <span className="font-mono text-slate-200 tabular-nums">{envIntensity.toFixed(2)}</span>
               </span>
@@ -118,7 +118,7 @@ export const HdriEnvironmentPanel: React.FC<HdriEnvironmentPanelProps> = ({
             </label>
 
             <label className="flex flex-col gap-1">
-              <span className="flex justify-between text-slate-400 text-[11px]">
+              <span className="flex justify-between text-[#635B54] text-[11px]">
                 <span>Desfoque Fundo</span>
                 <span className="font-mono text-slate-200 tabular-nums">{envBlur.toFixed(2)}</span>
               </span>
@@ -140,10 +140,11 @@ export const HdriEnvironmentPanel: React.FC<HdriEnvironmentPanelProps> = ({
               onChange={(e) => onBgAsEnvironmentChange(e.target.checked)}
               className="accent-orange-500"
             />
-            <span>Usar HDRI como plano de fundo visível</span>
+            <span>Usar HDRI como plano de fundo visÃ­vel</span>
           </label>
         </div>
       )}
     </div>
   );
 };
+

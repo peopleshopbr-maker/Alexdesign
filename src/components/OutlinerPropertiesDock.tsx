@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+﻿import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Activity,
   Bone,
@@ -319,10 +319,10 @@ export const ExplorerOutlinerDock: React.FC<ExplorerOutlinerDockProps> = ({
 
   return (
     <aside
-      aria-label="Explorer Armature, Malhas e Referências"
-      className="w-full lg:w-[270px] xl:w-[290px] max-h-[40vh] lg:max-h-none border-b lg:border-b-0 lg:border-r border-slate-800 bg-[#0F131B] flex flex-col shrink-0 min-h-0"
+      aria-label="Explorer Armature, Malhas e ReferÃªncias"
+      className="w-full lg:w-[270px] xl:w-[290px] max-h-[40vh] lg:max-h-none border-b lg:border-b-0 lg:border-r border-[#231F1D]/15 bg-[#0F131B] flex flex-col shrink-0 min-h-0"
     >
-      <div className="px-2.5 py-1.5 border-b border-slate-800 flex items-center justify-between gap-2">
+      <div className="px-2.5 py-1.5 border-b border-[#231F1D]/15 flex items-center justify-between gap-2">
         <span className="text-[11px] font-bold tracking-wider text-slate-200 uppercase flex items-center gap-1.5">
           <Layers className="w-3.5 h-3.5 text-orange-400" />
           <span>EXPLORER</span>
@@ -332,7 +332,7 @@ export const ExplorerOutlinerDock: React.FC<ExplorerOutlinerDockProps> = ({
             type="button"
             onClick={onShowAllMeshes}
             title="Exibir todas as malhas"
-            className="px-1.5 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-[10px] text-slate-300 cursor-pointer"
+            className="px-1.5 py-0.5 rounded bg-[#FAF8F5] hover:bg-slate-700 text-[10px] text-slate-300 cursor-pointer"
           >
             Tudo
           </button>
@@ -340,21 +340,21 @@ export const ExplorerOutlinerDock: React.FC<ExplorerOutlinerDockProps> = ({
             type="button"
             onClick={onCollapse}
             title="Recolher Explorer"
-            className="w-6 h-6 rounded hover:bg-slate-800 text-slate-400 hover:text-white flex items-center justify-center cursor-pointer"
+            className="w-6 h-6 rounded hover:bg-[#FAF8F5] text-[#635B54] hover:text-[#231F1D] flex items-center justify-center cursor-pointer"
           >
             <ChevronLeft className="w-3.5 h-3.5" />
           </button>
         </div>
       </div>
 
-      <div className="px-2 py-1.5 border-b border-slate-800 flex items-center gap-1 overflow-x-auto no-scrollbar">
+      <div className="px-2 py-1.5 border-b border-[#231F1D]/15 flex items-center gap-1 overflow-x-auto no-scrollbar">
         <button
           type="button"
           onClick={() => setOutlinerMode('armature')}
           className={`inline-flex items-center gap-1 px-1.5 py-1 rounded text-[10px] font-semibold cursor-pointer transition-colors whitespace-nowrap ${
             outlinerMode === 'armature'
               ? 'bg-cyan-600/20 text-cyan-300 border border-cyan-500/45'
-              : 'text-slate-400 hover:text-white hover:bg-slate-800/80 border border-transparent'
+              : 'text-[#635B54] hover:text-[#231F1D] hover:bg-[#FAF8F5]/80 border border-transparent'
           }`}
         >
           <Bone className="w-3 h-3 shrink-0" />
@@ -366,7 +366,7 @@ export const ExplorerOutlinerDock: React.FC<ExplorerOutlinerDockProps> = ({
           className={`inline-flex items-center gap-1 px-1.5 py-1 rounded text-[10px] font-semibold cursor-pointer transition-colors whitespace-nowrap ${
             outlinerMode === 'meshes'
               ? 'bg-orange-600/25 text-orange-300 border border-orange-500/40'
-              : 'text-slate-400 hover:text-white hover:bg-slate-800/80 border border-transparent'
+              : 'text-[#635B54] hover:text-[#231F1D] hover:bg-[#FAF8F5]/80 border border-transparent'
           }`}
         >
           <Layers className="w-3 h-3 shrink-0" />
@@ -378,7 +378,7 @@ export const ExplorerOutlinerDock: React.FC<ExplorerOutlinerDockProps> = ({
           className={`inline-flex items-center gap-1 px-1.5 py-1 rounded text-[10px] font-semibold cursor-pointer transition-colors whitespace-nowrap ${
             outlinerMode === 'references'
               ? 'bg-sky-600/20 text-sky-300 border border-sky-500/45'
-              : 'text-slate-400 hover:text-white hover:bg-slate-800/80 border border-transparent'
+              : 'text-[#635B54] hover:text-[#231F1D] hover:bg-[#FAF8F5]/80 border border-transparent'
           }`}
         >
           <ImageIcon className="w-3 h-3 shrink-0" />
@@ -386,8 +386,8 @@ export const ExplorerOutlinerDock: React.FC<ExplorerOutlinerDockProps> = ({
         </button>
       </div>
 
-      <div className="px-2 py-1.5 border-b border-slate-800/80">
-        <div className="flex items-center gap-1.5 px-2 py-1 rounded bg-[#090C12] border border-slate-800 focus-within:border-orange-500">
+      <div className="px-2 py-1.5 border-b border-[#231F1D]/15/80">
+        <div className="flex items-center gap-1.5 px-2 py-1 rounded bg-[#090C12] border border-[#231F1D]/15 focus-within:border-orange-500">
           <Search className="w-3 h-3 text-slate-500 shrink-0" />
           <input
             type="text"
@@ -397,8 +397,8 @@ export const ExplorerOutlinerDock: React.FC<ExplorerOutlinerDockProps> = ({
               outlinerMode === 'armature'
                 ? 'Filtrar osso da Armature...'
                 : outlinerMode === 'references'
-                ? 'Filtrar referências...'
-                : 'Filtrar coleção ou objeto...'
+                ? 'Filtrar referÃªncias...'
+                : 'Filtrar coleÃ§Ã£o ou objeto...'
             }
             className="w-full bg-transparent text-[11px] text-slate-200 placeholder-slate-500 focus:outline-none"
           />
@@ -416,7 +416,7 @@ export const ExplorerOutlinerDock: React.FC<ExplorerOutlinerDockProps> = ({
                   onClick={() =>
                     setCollapsedCols((prev) => ({ ...prev, [colName]: !prev[colName] }))
                   }
-                  className="w-full flex items-center gap-1 px-1.5 py-1 rounded hover:bg-slate-800/60 text-[10px] font-mono uppercase tracking-wider text-slate-400 cursor-pointer"
+                  className="w-full flex items-center gap-1 px-1.5 py-1 rounded hover:bg-[#FAF8F5]/60 text-[10px] font-mono uppercase tracking-wider text-[#635B54] cursor-pointer"
                 >
                   {isCollapsed ? (
                     <ChevronRight className="w-3 h-3 shrink-0" />
@@ -437,8 +437,8 @@ export const ExplorerOutlinerDock: React.FC<ExplorerOutlinerDockProps> = ({
                         key={item.id}
                         className={`group flex items-center gap-1 pl-4 pr-1.5 py-1 rounded-md border transition-colors ${
                           isSelected
-                            ? 'bg-orange-600/20 border-orange-500/60 text-white'
-                            : 'bg-transparent border-transparent hover:bg-slate-800/50 text-slate-300'
+                            ? 'bg-orange-600/20 border-orange-500/60 text-[#231F1D]'
+                            : 'bg-transparent border-transparent hover:bg-[#FAF8F5]/50 text-slate-300'
                         }`}
                       >
                         <button
@@ -447,7 +447,7 @@ export const ExplorerOutlinerDock: React.FC<ExplorerOutlinerDockProps> = ({
                           className={`flex-1 min-w-0 text-left truncate ${
                             item.locked ? 'opacity-55 cursor-not-allowed' : 'cursor-pointer'
                           }`}
-                          title={`${item.name} · ${item.triCount.toLocaleString()} tris`}
+                          title={`${item.name} Â· ${item.triCount.toLocaleString()} tris`}
                         >
                           {item.name}
                         </button>
@@ -497,13 +497,13 @@ export const ExplorerOutlinerDock: React.FC<ExplorerOutlinerDockProps> = ({
                               beginDragToggle('lock', item.id, !item.locked);
                             }}
                             onPointerEnter={() => applyDragEnter(item.id)}
-                            title={item.locked ? 'Destravar seleção' : 'Travar seleção'}
+                            title={item.locked ? 'Destravar seleÃ§Ã£o' : 'Travar seleÃ§Ã£o'}
                             className="w-5 h-5 rounded hover:bg-slate-700 flex items-center justify-center cursor-pointer"
                           >
                             {item.locked ? (
                               <Lock className="w-3 h-3 text-amber-400" />
                             ) : (
-                              <Unlock className="w-3 h-3 text-slate-400" />
+                              <Unlock className="w-3 h-3 text-[#635B54]" />
                             )}
                           </button>
                         </div>
@@ -532,8 +532,8 @@ export const ExplorerOutlinerDock: React.FC<ExplorerOutlinerDockProps> = ({
                       onClick={() => onSelectBone(bn.name)}
                       className={`w-full flex items-center gap-1.5 px-2 py-1 rounded text-left text-[10px] font-mono cursor-pointer ${
                         isSelected
-                          ? 'bg-orange-600/25 border border-orange-500/60 text-white'
-                          : 'hover:bg-slate-800/60 text-slate-300 border border-transparent'
+                          ? 'bg-orange-600/25 border border-orange-500/60 text-[#231F1D]'
+                          : 'hover:bg-[#FAF8F5]/60 text-slate-300 border border-transparent'
                       }`}
                     >
                       <Bone
@@ -563,8 +563,8 @@ export const ExplorerOutlinerDock: React.FC<ExplorerOutlinerDockProps> = ({
                         style={{ paddingLeft: `${Math.min(depth, 6) * 12 + 4}px` }}
                         className={`flex items-center gap-1 pr-1.5 py-0.5 rounded-md border transition-colors ${
                           isSelected
-                            ? 'bg-orange-600/25 border-orange-500/60 text-white'
-                            : 'border-transparent hover:bg-slate-800/50 text-slate-300'
+                            ? 'bg-orange-600/25 border-orange-500/60 text-[#231F1D]'
+                            : 'border-transparent hover:bg-[#FAF8F5]/50 text-slate-300'
                         }`}
                       >
                         {hasKids ? (
@@ -576,7 +576,7 @@ export const ExplorerOutlinerDock: React.FC<ExplorerOutlinerDockProps> = ({
                                 [node.name]: !prev[node.name],
                               }))
                             }
-                            className="w-4 h-4 rounded hover:bg-slate-700/70 flex items-center justify-center text-slate-400 shrink-0 cursor-pointer"
+                            className="w-4 h-4 rounded hover:bg-slate-700/70 flex items-center justify-center text-[#635B54] shrink-0 cursor-pointer"
                           >
                             {isCollapsed ? (
                               <ChevronRight className="w-3 h-3" />
@@ -625,13 +625,13 @@ export const ExplorerOutlinerDock: React.FC<ExplorerOutlinerDockProps> = ({
 
         {outlinerMode === 'armature' && riggedBoneNames.length === 0 && (
           <div className="p-3 text-center space-y-2">
-            <p className="text-[10px] text-slate-400">
+            <p className="text-[10px] text-[#635B54]">
               Nenhum esqueleto ativo na cena. Aplique o Auto-Rig para gerar a Armature.
             </p>
             <button
               type="button"
               onClick={onRunAutoRig}
-              className="px-3 py-1.5 rounded-lg bg-orange-600 hover:bg-orange-500 text-white font-semibold text-[10px] cursor-pointer"
+              className="px-3 py-1.5 rounded-lg bg-orange-600 hover:bg-orange-500 text-[#231F1D] font-semibold text-[10px] cursor-pointer"
             >
               Aplicar Auto-Rig
             </button>
@@ -645,7 +645,7 @@ export const ExplorerOutlinerDock: React.FC<ExplorerOutlinerDockProps> = ({
                 <button
                   type="button"
                   onClick={onImportReferenceImage}
-                  className="inline-flex items-center justify-center gap-1 py-1.5 px-2 rounded-lg bg-[#090C12] border border-slate-800 hover:border-sky-500 text-[10px] font-medium text-slate-200 cursor-pointer"
+                  className="inline-flex items-center justify-center gap-1 py-1.5 px-2 rounded-lg bg-[#090C12] border border-[#231F1D]/15 hover:border-sky-500 text-[10px] font-medium text-slate-200 cursor-pointer"
                 >
                   <ImageIcon className="w-3 h-3 text-sky-400 shrink-0" />
                   <span className="truncate">Ref. Imagem 3D</span>
@@ -655,26 +655,26 @@ export const ExplorerOutlinerDock: React.FC<ExplorerOutlinerDockProps> = ({
                 <button
                   type="button"
                   onClick={onOpenHtmlTo3d}
-                  className="inline-flex items-center justify-center gap-1 py-1.5 px-2 rounded-lg bg-[#090C12] border border-slate-800 hover:border-orange-500 text-[10px] font-medium text-slate-200 cursor-pointer"
+                  className="inline-flex items-center justify-center gap-1 py-1.5 px-2 rounded-lg bg-[#090C12] border border-[#231F1D]/15 hover:border-orange-500 text-[10px] font-medium text-slate-200 cursor-pointer"
                 >
                   <Code2 className="w-3 h-3 text-orange-400 shrink-0" />
-                  <span className="truncate">HTML → 3D</span>
+                  <span className="truncate">HTML â†’ 3D</span>
                 </button>
               )}
             </div>
 
             {refPlane?.active && (
-              <div className="rounded-lg bg-[#141923] border border-slate-800 p-2 space-y-1.5">
+              <div className="rounded-lg bg-[#141923] border border-[#231F1D]/15 p-2 space-y-1.5">
                 <div className="flex items-center justify-between gap-1.5">
                   <span className="text-[10px] font-semibold text-sky-300 truncate flex-1">
-                    Plano: {refPlane.name || 'Imagem de Referência'}
+                    Plano: {refPlane.name || 'Imagem de ReferÃªncia'}
                   </span>
                   {onUpdateRefPlane && (
                     <button
                       type="button"
                       onClick={() => onUpdateRefPlane({ visible: !refPlane.visible })}
                       title={refPlane.visible ? 'Ocultar' : 'Exibir'}
-                      className="w-5 h-5 rounded hover:bg-slate-800 flex items-center justify-center cursor-pointer"
+                      className="w-5 h-5 rounded hover:bg-[#FAF8F5] flex items-center justify-center cursor-pointer"
                     >
                       {refPlane.visible ? (
                         <Eye className="w-3 h-3 text-emerald-400" />
@@ -687,7 +687,7 @@ export const ExplorerOutlinerDock: React.FC<ExplorerOutlinerDockProps> = ({
                     <button
                       type="button"
                       onClick={onClearRefPlane}
-                      title="Remover referência"
+                      title="Remover referÃªncia"
                       className="w-5 h-5 rounded hover:bg-red-950 text-red-400 flex items-center justify-center cursor-pointer"
                     >
                       <Trash2 className="w-3 h-3" />
@@ -710,15 +710,15 @@ export const ExplorerOutlinerDock: React.FC<ExplorerOutlinerDockProps> = ({
                           onClick={() => onUpdateRefPlane({ axis: ax.id })}
                           className={`py-0.5 rounded border text-[9px] font-medium cursor-pointer ${
                             refPlane.axis === ax.id
-                              ? 'bg-sky-600 border-sky-500 text-white'
-                              : 'bg-[#090C12] border-slate-800 text-slate-300'
+                              ? 'bg-sky-600 border-sky-500 text-[#231F1D]'
+                              : 'bg-[#090C12] border-[#231F1D]/15 text-slate-300'
                           }`}
                         >
                           {ax.label}
                         </button>
                       ))}
                     </div>
-                    <div className="grid grid-cols-2 gap-2 text-[9px] text-slate-400">
+                    <div className="grid grid-cols-2 gap-2 text-[9px] text-[#635B54]">
                       <label className="flex flex-col gap-0.5">
                         <span>Opacidade ({Math.round(refPlane.opacity * 100)}%)</span>
                         <input
@@ -764,8 +764,8 @@ export const ExplorerOutlinerDock: React.FC<ExplorerOutlinerDockProps> = ({
                   key={hr.id}
                   className={`flex items-center gap-1.5 px-2 py-1 rounded-md border ${
                     selectedMeshId === hr.id
-                      ? 'bg-orange-600/20 border-orange-500/60 text-white'
-                      : 'bg-[#141923] border-slate-800 text-slate-300'
+                      ? 'bg-orange-600/20 border-orange-500/60 text-[#231F1D]'
+                      : 'bg-[#141923] border-[#231F1D]/15 text-slate-300'
                   }`}
                 >
                   <Code2 className="w-3 h-3 text-orange-400 shrink-0" />
@@ -780,7 +780,7 @@ export const ExplorerOutlinerDock: React.FC<ExplorerOutlinerDockProps> = ({
                     <button
                       type="button"
                       onClick={() => onToggleHtmlReferenceVisible(hr.id)}
-                      className="w-5 h-5 rounded hover:bg-slate-800 flex items-center justify-center cursor-pointer"
+                      className="w-5 h-5 rounded hover:bg-[#FAF8F5] flex items-center justify-center cursor-pointer"
                     >
                       {hr.visible ? (
                         <Eye className="w-3 h-3 text-emerald-400" />
@@ -803,7 +803,7 @@ export const ExplorerOutlinerDock: React.FC<ExplorerOutlinerDockProps> = ({
 
             {!refPlane?.active && htmlReferences.length === 0 && (
               <p className="px-2 py-3 text-center text-[10px] text-slate-500 leading-relaxed">
-                Nenhuma referência ainda. Importe uma imagem 3D ou painel HTML — referências
+                Nenhuma referÃªncia ainda. Importe uma imagem 3D ou painel HTML â€” referÃªncias
                 ficam apenas na viewport.
               </p>
             )}
@@ -1012,7 +1012,7 @@ export const OutlinerPropertiesDock: React.FC<OutlinerPropertiesDockProps> = ({
     { id: 'material', label: 'PBR & Shader', icon: <Palette className="w-3.5 h-3.5" /> },
     { id: 'rig', label: 'Rig & Morphs', icon: <Bone className="w-3.5 h-3.5" /> },
     { id: 'lighting', label: 'Luz & Render', icon: <Sun className="w-3.5 h-3.5" /> },
-    { id: 'vfx', label: 'VFX & Partículas', icon: <Flame className="w-3.5 h-3.5" /> },
+    { id: 'vfx', label: 'VFX & PartÃ­culas', icon: <Flame className="w-3.5 h-3.5" /> },
   ];
 
   const refCount = (refPlane?.active ? 1 : 0) + htmlReferences.length;
@@ -1021,10 +1021,10 @@ export const OutlinerPropertiesDock: React.FC<OutlinerPropertiesDockProps> = ({
   return (
     <aside
       aria-label="Propriedades Estilo Blender"
-      className="w-full lg:w-[350px] xl:w-[375px] max-h-[52vh] lg:max-h-none border-t lg:border-t-0 lg:border-l border-slate-800 bg-[#111622] flex flex-col shrink-0 min-h-0"
+      className="w-full lg:w-[350px] xl:w-[375px] max-h-[52vh] lg:max-h-none border-t lg:border-t-0 lg:border-l border-[#231F1D]/15 bg-[#111622] flex flex-col shrink-0 min-h-0"
     >
       {hideOutliner ? (
-        <div className="px-2.5 py-1.5 border-b border-slate-800 bg-[#0F131B] flex items-center justify-between gap-2 shrink-0">
+        <div className="px-2.5 py-1.5 border-b border-[#231F1D]/15 bg-[#0F131B] flex items-center justify-between gap-2 shrink-0">
           <span className="text-[11px] font-bold tracking-wider text-slate-200 uppercase truncate">
             {activeTabTitle}
           </span>
@@ -1032,15 +1032,15 @@ export const OutlinerPropertiesDock: React.FC<OutlinerPropertiesDockProps> = ({
             type="button"
             onClick={onCollapseDock}
             title="Recolher coluna de propriedades"
-            className="w-6 h-6 rounded hover:bg-slate-800 text-slate-400 hover:text-white flex items-center justify-center cursor-pointer"
+            className="w-6 h-6 rounded hover:bg-[#FAF8F5] text-[#635B54] hover:text-[#231F1D] flex items-center justify-center cursor-pointer"
           >
             <ChevronRight className="w-3.5 h-3.5" />
           </button>
         </div>
       ) : (
-      /* TOP HALF — FIXED OUTLINER (Armature / Malhas / Referências) */
-      <div className="flex flex-col h-[40%] min-h-[175px] border-b border-slate-800 bg-[#0F131B]">
-        <div className="px-2 py-1.5 border-b border-slate-800 flex items-center justify-between gap-1.5">
+      /* TOP HALF â€” FIXED OUTLINER (Armature / Malhas / ReferÃªncias) */
+      <div className="flex flex-col h-[40%] min-h-[175px] border-b border-[#231F1D]/15 bg-[#0F131B]">
+        <div className="px-2 py-1.5 border-b border-[#231F1D]/15 flex items-center justify-between gap-1.5">
           <div className="flex items-center gap-1 min-w-0 overflow-x-auto no-scrollbar">
             <button
               type="button"
@@ -1048,7 +1048,7 @@ export const OutlinerPropertiesDock: React.FC<OutlinerPropertiesDockProps> = ({
               className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-semibold cursor-pointer transition-colors whitespace-nowrap ${
                 outlinerMode === 'armature'
                   ? 'bg-cyan-600/20 text-cyan-300 border border-cyan-500/45'
-                  : 'text-slate-400 hover:text-white hover:bg-slate-800/80 border border-transparent'
+                  : 'text-[#635B54] hover:text-[#231F1D] hover:bg-[#FAF8F5]/80 border border-transparent'
               }`}
             >
               <Bone className="w-3 h-3 shrink-0" />
@@ -1060,7 +1060,7 @@ export const OutlinerPropertiesDock: React.FC<OutlinerPropertiesDockProps> = ({
               className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-semibold cursor-pointer transition-colors whitespace-nowrap ${
                 outlinerMode === 'meshes'
                   ? 'bg-orange-600/25 text-orange-300 border border-orange-500/40'
-                  : 'text-slate-400 hover:text-white hover:bg-slate-800/80 border border-transparent'
+                  : 'text-[#635B54] hover:text-[#231F1D] hover:bg-[#FAF8F5]/80 border border-transparent'
               }`}
             >
               <Layers className="w-3 h-3 shrink-0" />
@@ -1072,7 +1072,7 @@ export const OutlinerPropertiesDock: React.FC<OutlinerPropertiesDockProps> = ({
               className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-semibold cursor-pointer transition-colors whitespace-nowrap ${
                 outlinerMode === 'references'
                   ? 'bg-sky-600/20 text-sky-300 border border-sky-500/45'
-                  : 'text-slate-400 hover:text-white hover:bg-slate-800/80 border border-transparent'
+                  : 'text-[#635B54] hover:text-[#231F1D] hover:bg-[#FAF8F5]/80 border border-transparent'
               }`}
             >
               <ImageIcon className="w-3 h-3 shrink-0" />
@@ -1084,7 +1084,7 @@ export const OutlinerPropertiesDock: React.FC<OutlinerPropertiesDockProps> = ({
               type="button"
               onClick={onShowAllMeshes}
               title="Exibir todas as malhas"
-              className="px-1.5 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-[10px] text-slate-300 cursor-pointer"
+              className="px-1.5 py-0.5 rounded bg-[#FAF8F5] hover:bg-slate-700 text-[10px] text-slate-300 cursor-pointer"
             >
               Tudo
             </button>
@@ -1092,15 +1092,15 @@ export const OutlinerPropertiesDock: React.FC<OutlinerPropertiesDockProps> = ({
               type="button"
               onClick={onCollapseDock}
               title="Recolher coluna direita"
-              className="w-6 h-6 rounded hover:bg-slate-800 text-slate-400 hover:text-white flex items-center justify-center cursor-pointer"
+              className="w-6 h-6 rounded hover:bg-[#FAF8F5] text-[#635B54] hover:text-[#231F1D] flex items-center justify-center cursor-pointer"
             >
               <ChevronDown className="w-3.5 h-3.5" />
             </button>
           </div>
         </div>
 
-        <div className="px-2 py-1.5 border-b border-slate-800/80">
-          <div className="flex items-center gap-1.5 px-2 py-1 rounded bg-[#090C12] border border-slate-800 focus-within:border-orange-500">
+        <div className="px-2 py-1.5 border-b border-[#231F1D]/15/80">
+          <div className="flex items-center gap-1.5 px-2 py-1 rounded bg-[#090C12] border border-[#231F1D]/15 focus-within:border-orange-500">
             <Search className="w-3 h-3 text-slate-500 shrink-0" />
             <input
               type="text"
@@ -1110,8 +1110,8 @@ export const OutlinerPropertiesDock: React.FC<OutlinerPropertiesDockProps> = ({
                 outlinerMode === 'armature'
                   ? 'Filtrar osso da Armature...'
                   : outlinerMode === 'references'
-                  ? 'Filtrar referências...'
-                  : 'Filtrar coleção ou objeto...'
+                  ? 'Filtrar referÃªncias...'
+                  : 'Filtrar coleÃ§Ã£o ou objeto...'
               }
               className="w-full bg-transparent text-[11px] text-slate-200 placeholder-slate-500 focus:outline-none"
             />
@@ -1129,7 +1129,7 @@ export const OutlinerPropertiesDock: React.FC<OutlinerPropertiesDockProps> = ({
                     onClick={() =>
                       setCollapsedCols((prev) => ({ ...prev, [colName]: !prev[colName] }))
                     }
-                    className="w-full flex items-center gap-1 px-1.5 py-1 rounded hover:bg-slate-800/60 text-[10px] font-mono uppercase tracking-wider text-slate-400 cursor-pointer"
+                    className="w-full flex items-center gap-1 px-1.5 py-1 rounded hover:bg-[#FAF8F5]/60 text-[10px] font-mono uppercase tracking-wider text-[#635B54] cursor-pointer"
                   >
                     {isCollapsed ? (
                       <ChevronRight className="w-3 h-3 shrink-0" />
@@ -1150,8 +1150,8 @@ export const OutlinerPropertiesDock: React.FC<OutlinerPropertiesDockProps> = ({
                           key={item.id}
                           className={`group flex items-center gap-1 pl-4 pr-1.5 py-1 rounded-md border transition-colors ${
                             isSelected
-                              ? 'bg-orange-600/20 border-orange-500/60 text-white'
-                              : 'bg-transparent border-transparent hover:bg-slate-800/50 text-slate-300'
+                              ? 'bg-orange-600/20 border-orange-500/60 text-[#231F1D]'
+                              : 'bg-transparent border-transparent hover:bg-[#FAF8F5]/50 text-slate-300'
                           }`}
                         >
                           <button
@@ -1160,7 +1160,7 @@ export const OutlinerPropertiesDock: React.FC<OutlinerPropertiesDockProps> = ({
                             className={`flex-1 min-w-0 text-left truncate ${
                               item.locked ? 'opacity-55 cursor-not-allowed' : 'cursor-pointer'
                             }`}
-                            title={`${item.name} · ${item.triCount.toLocaleString()} tris`}
+                            title={`${item.name} Â· ${item.triCount.toLocaleString()} tris`}
                           >
                             {item.name}
                           </button>
@@ -1214,13 +1214,13 @@ export const OutlinerPropertiesDock: React.FC<OutlinerPropertiesDockProps> = ({
                                 beginDragToggle('lock', item.id, !item.locked);
                               }}
                               onPointerEnter={() => applyDragEnter(item.id)}
-                              title={item.locked ? 'Destravar seleção' : 'Travar seleção'}
+                              title={item.locked ? 'Destravar seleÃ§Ã£o' : 'Travar seleÃ§Ã£o'}
                               className="w-5 h-5 rounded hover:bg-slate-700 flex items-center justify-center cursor-pointer"
                             >
                               {item.locked ? (
                                 <Lock className="w-3 h-3 text-amber-400" />
                               ) : (
-                                <Unlock className="w-3 h-3 text-slate-400" />
+                                <Unlock className="w-3 h-3 text-[#635B54]" />
                               )}
                             </button>
                           </div>
@@ -1249,8 +1249,8 @@ export const OutlinerPropertiesDock: React.FC<OutlinerPropertiesDockProps> = ({
                         onClick={() => onSelectBone(bn.name)}
                         className={`w-full flex items-center gap-1.5 px-2 py-1 rounded text-left text-[10px] font-mono cursor-pointer ${
                           isSelected
-                            ? 'bg-orange-600/25 border border-orange-500/60 text-white'
-                            : 'hover:bg-slate-800/60 text-slate-300 border border-transparent'
+                            ? 'bg-orange-600/25 border border-orange-500/60 text-[#231F1D]'
+                            : 'hover:bg-[#FAF8F5]/60 text-slate-300 border border-transparent'
                         }`}
                       >
                         <Bone
@@ -1280,8 +1280,8 @@ export const OutlinerPropertiesDock: React.FC<OutlinerPropertiesDockProps> = ({
                           style={{ paddingLeft: `${Math.min(depth, 6) * 12 + 4}px` }}
                           className={`flex items-center gap-1 pr-1.5 py-0.5 rounded-md border transition-colors ${
                             isSelected
-                              ? 'bg-orange-600/25 border-orange-500/60 text-white'
-                              : 'border-transparent hover:bg-slate-800/50 text-slate-300'
+                              ? 'bg-orange-600/25 border-orange-500/60 text-[#231F1D]'
+                              : 'border-transparent hover:bg-[#FAF8F5]/50 text-slate-300'
                           }`}
                         >
                           {hasKids ? (
@@ -1293,7 +1293,7 @@ export const OutlinerPropertiesDock: React.FC<OutlinerPropertiesDockProps> = ({
                                   [node.name]: !prev[node.name],
                                 }))
                               }
-                              className="w-4 h-4 rounded hover:bg-slate-700/70 flex items-center justify-center text-slate-400 shrink-0 cursor-pointer"
+                              className="w-4 h-4 rounded hover:bg-slate-700/70 flex items-center justify-center text-[#635B54] shrink-0 cursor-pointer"
                             >
                               {isCollapsed ? (
                                 <ChevronRight className="w-3 h-3" />
@@ -1341,13 +1341,13 @@ export const OutlinerPropertiesDock: React.FC<OutlinerPropertiesDockProps> = ({
           )}
           {outlinerMode === 'armature' && riggedBoneNames.length === 0 && (
             <div className="p-3 text-center space-y-2">
-              <p className="text-[10px] text-slate-400">
+              <p className="text-[10px] text-[#635B54]">
                 Nenhum esqueleto ativo na cena. Aplique o Auto-Rig para gerar a Armature.
               </p>
               <button
                 type="button"
                 onClick={onRunAutoRig}
-                className="px-3 py-1.5 rounded-lg bg-orange-600 hover:bg-orange-500 text-white font-semibold text-[10px] cursor-pointer"
+                className="px-3 py-1.5 rounded-lg bg-orange-600 hover:bg-orange-500 text-[#231F1D] font-semibold text-[10px] cursor-pointer"
               >
                 Aplicar Auto-Rig
               </button>
@@ -1361,7 +1361,7 @@ export const OutlinerPropertiesDock: React.FC<OutlinerPropertiesDockProps> = ({
                   <button
                     type="button"
                     onClick={onImportReferenceImage}
-                    className="inline-flex items-center justify-center gap-1 py-1.5 px-2 rounded-lg bg-[#090C12] border border-slate-800 hover:border-sky-500 text-[10px] font-medium text-slate-200 cursor-pointer"
+                    className="inline-flex items-center justify-center gap-1 py-1.5 px-2 rounded-lg bg-[#090C12] border border-[#231F1D]/15 hover:border-sky-500 text-[10px] font-medium text-slate-200 cursor-pointer"
                   >
                     <ImageIcon className="w-3 h-3 text-sky-400 shrink-0" />
                     <span className="truncate">Ref. Imagem 3D</span>
@@ -1371,26 +1371,26 @@ export const OutlinerPropertiesDock: React.FC<OutlinerPropertiesDockProps> = ({
                   <button
                     type="button"
                     onClick={onOpenHtmlTo3d}
-                    className="inline-flex items-center justify-center gap-1 py-1.5 px-2 rounded-lg bg-[#090C12] border border-slate-800 hover:border-orange-500 text-[10px] font-medium text-slate-200 cursor-pointer"
+                    className="inline-flex items-center justify-center gap-1 py-1.5 px-2 rounded-lg bg-[#090C12] border border-[#231F1D]/15 hover:border-orange-500 text-[10px] font-medium text-slate-200 cursor-pointer"
                   >
                     <Code2 className="w-3 h-3 text-orange-400 shrink-0" />
-                    <span className="truncate">HTML → 3D</span>
+                    <span className="truncate">HTML â†’ 3D</span>
                   </button>
                 )}
               </div>
 
               {refPlane?.active && (
-                <div className="rounded-lg bg-[#141923] border border-slate-800 p-2 space-y-1.5">
+                <div className="rounded-lg bg-[#141923] border border-[#231F1D]/15 p-2 space-y-1.5">
                   <div className="flex items-center justify-between gap-1.5">
                     <span className="text-[10px] font-semibold text-sky-300 truncate flex-1">
-                      Plano: {refPlane.name || 'Imagem de Referência'}
+                      Plano: {refPlane.name || 'Imagem de ReferÃªncia'}
                     </span>
                     {onUpdateRefPlane && (
                       <button
                         type="button"
                         onClick={() => onUpdateRefPlane({ visible: !refPlane.visible })}
                         title={refPlane.visible ? 'Ocultar' : 'Exibir'}
-                        className="w-5 h-5 rounded hover:bg-slate-800 flex items-center justify-center cursor-pointer"
+                        className="w-5 h-5 rounded hover:bg-[#FAF8F5] flex items-center justify-center cursor-pointer"
                       >
                         {refPlane.visible ? (
                           <Eye className="w-3 h-3 text-emerald-400" />
@@ -1403,7 +1403,7 @@ export const OutlinerPropertiesDock: React.FC<OutlinerPropertiesDockProps> = ({
                       <button
                         type="button"
                         onClick={onClearRefPlane}
-                        title="Remover referência"
+                        title="Remover referÃªncia"
                         className="w-5 h-5 rounded hover:bg-red-950 text-red-400 flex items-center justify-center cursor-pointer"
                       >
                         <Trash2 className="w-3 h-3" />
@@ -1426,15 +1426,15 @@ export const OutlinerPropertiesDock: React.FC<OutlinerPropertiesDockProps> = ({
                             onClick={() => onUpdateRefPlane({ axis: ax.id })}
                             className={`py-0.5 rounded border text-[9px] font-medium cursor-pointer ${
                               refPlane.axis === ax.id
-                                ? 'bg-sky-600 border-sky-500 text-white'
-                                : 'bg-[#090C12] border-slate-800 text-slate-300'
+                                ? 'bg-sky-600 border-sky-500 text-[#231F1D]'
+                                : 'bg-[#090C12] border-[#231F1D]/15 text-slate-300'
                             }`}
                           >
                             {ax.label}
                           </button>
                         ))}
                       </div>
-                      <div className="grid grid-cols-2 gap-2 text-[9px] text-slate-400">
+                      <div className="grid grid-cols-2 gap-2 text-[9px] text-[#635B54]">
                         <label className="flex flex-col gap-0.5">
                           <span>Opacidade ({Math.round(refPlane.opacity * 100)}%)</span>
                           <input
@@ -1480,8 +1480,8 @@ export const OutlinerPropertiesDock: React.FC<OutlinerPropertiesDockProps> = ({
                     key={hr.id}
                     className={`flex items-center gap-1.5 px-2 py-1 rounded-md border ${
                       selectedMeshId === hr.id
-                        ? 'bg-orange-600/20 border-orange-500/60 text-white'
-                        : 'bg-[#141923] border-slate-800 text-slate-300'
+                        ? 'bg-orange-600/20 border-orange-500/60 text-[#231F1D]'
+                        : 'bg-[#141923] border-[#231F1D]/15 text-slate-300'
                     }`}
                   >
                     <Code2 className="w-3 h-3 text-orange-400 shrink-0" />
@@ -1496,7 +1496,7 @@ export const OutlinerPropertiesDock: React.FC<OutlinerPropertiesDockProps> = ({
                       <button
                         type="button"
                         onClick={() => onToggleHtmlReferenceVisible(hr.id)}
-                        className="w-5 h-5 rounded hover:bg-slate-800 flex items-center justify-center cursor-pointer"
+                        className="w-5 h-5 rounded hover:bg-[#FAF8F5] flex items-center justify-center cursor-pointer"
                       >
                         {hr.visible ? (
                           <Eye className="w-3 h-3 text-emerald-400" />
@@ -1519,7 +1519,7 @@ export const OutlinerPropertiesDock: React.FC<OutlinerPropertiesDockProps> = ({
 
               {!refPlane?.active && htmlReferences.length === 0 && (
                 <p className="px-2 py-3 text-center text-[10px] text-slate-500 leading-relaxed">
-                  Nenhuma referência ainda. Importe uma imagem 3D ou painel HTML — referências
+                  Nenhuma referÃªncia ainda. Importe uma imagem 3D ou painel HTML â€” referÃªncias
                   ficam apenas na viewport.
                 </p>
               )}
@@ -1534,7 +1534,7 @@ export const OutlinerPropertiesDock: React.FC<OutlinerPropertiesDockProps> = ({
         {/* Vertical Icon Rail (Blender Properties Style) */}
         <nav
           aria-label="Abas de propriedades"
-          className="w-10 border-r border-slate-800 bg-[#0B0E14] py-2 flex flex-col items-center gap-1.5 shrink-0"
+          className="w-10 border-r border-[#231F1D]/15 bg-[#0B0E14] py-2 flex flex-col items-center gap-1.5 shrink-0"
         >
           {RAIL_TABS.map((t) => {
             const active = activePropTab === t.id;
@@ -1547,8 +1547,8 @@ export const OutlinerPropertiesDock: React.FC<OutlinerPropertiesDockProps> = ({
                 aria-label={t.label}
                 className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors cursor-pointer ${
                   active
-                    ? 'bg-orange-600 text-white shadow'
-                    : 'text-slate-400 hover:text-white hover:bg-slate-800'
+                    ? 'bg-orange-600 text-[#231F1D] shadow'
+                    : 'text-[#635B54] hover:text-[#231F1D] hover:bg-[#FAF8F5]'
                 }`}
               >
                 {t.icon}
@@ -1559,32 +1559,32 @@ export const OutlinerPropertiesDock: React.FC<OutlinerPropertiesDockProps> = ({
 
         {/* Properties Body */}
         <div className="flex-1 min-w-0 overflow-y-auto p-2.5 space-y-2.5 text-xs">
-          {/* TAB 0: CENA & MODELAGEM 3D (Templates, Gizmo, Primitivas, Vetor 3D, CSG, Física & Bloom) */}
+          {/* TAB 0: CENA & MODELAGEM 3D (Templates, Gizmo, Primitivas, Vetor 3D, CSG, FÃ­sica & Bloom) */}
           {activePropTab === 'scene' && (
             <div className="space-y-2.5">
-              <div className="rounded-lg bg-[#141923] border border-slate-800 p-2.5 space-y-2.5">
+              <div className="rounded-lg bg-[#141923] border border-[#231F1D]/15 p-2.5 space-y-2.5">
                 <div className="flex items-center justify-between gap-2">
                   <div>
-                    <div className="text-[11px] font-bold tracking-wide text-white uppercase flex items-center gap-1.5">
+                    <div className="text-[11px] font-bold tracking-wide text-[#231F1D] uppercase flex items-center gap-1.5">
                       <Shapes className="w-3.5 h-3.5 text-sky-400" />
                       <span>CENA &amp; MODELAGEM 3D</span>
                     </div>
-                    <div className="text-[10px] text-slate-400">
-                      {playMode ? 'Play Interativo' : 'Editar'} · {meshes.length} objeto(s)
+                    <div className="text-[10px] text-[#635B54]">
+                      {playMode ? 'Play Interativo' : 'Editar'} Â· {meshes.length} objeto(s)
                     </div>
                   </div>
                 </div>
 
                 {/* Editar / Play */}
                 {onTogglePlayMode && (
-                  <div className="grid grid-cols-2 rounded-lg bg-[#090C12] border border-slate-800 p-0.5 gap-0.5">
+                  <div className="grid grid-cols-2 rounded-lg bg-[#090C12] border border-[#231F1D]/15 p-0.5 gap-0.5">
                     <button
                       type="button"
                       onClick={() => onTogglePlayMode(false)}
                       className={`py-1 rounded-md text-[10px] font-semibold cursor-pointer ${
                         !playMode
                           ? 'bg-sky-600/30 border border-sky-500/50 text-sky-200'
-                          : 'text-slate-400 hover:text-slate-200'
+                          : 'text-[#635B54] hover:text-slate-200'
                       }`}
                     >
                       Editar
@@ -1594,8 +1594,8 @@ export const OutlinerPropertiesDock: React.FC<OutlinerPropertiesDockProps> = ({
                       onClick={() => onTogglePlayMode(true)}
                       className={`inline-flex items-center justify-center gap-1 py-1 rounded-md text-[10px] font-semibold cursor-pointer ${
                         playMode
-                          ? 'bg-emerald-600 text-white'
-                          : 'text-slate-400 hover:text-slate-200'
+                          ? 'bg-emerald-600 text-[#231F1D]'
+                          : 'text-[#635B54] hover:text-slate-200'
                       }`}
                     >
                       {playMode ? <Square className="w-3 h-3" /> : <Play className="w-3 h-3" />}
@@ -1607,12 +1607,12 @@ export const OutlinerPropertiesDock: React.FC<OutlinerPropertiesDockProps> = ({
                 {/* Templates Procedurais 3D */}
                 {onSelectTemplate && onApplyTemplate && (
                   <div className="space-y-1">
-                    <span className="text-[10px] text-slate-400">Templates Procedurais 3D</span>
+                    <span className="text-[10px] text-[#635B54]">Templates Procedurais 3D</span>
                     <div className="flex items-center gap-1.5">
                       <select
                         value={activeTemplate}
                         onChange={(e) => onSelectTemplate(e.target.value as SplineTemplateId)}
-                        className="flex-1 min-w-0 px-2 py-1.5 rounded-lg bg-[#090C12] border border-slate-800 text-[11px] text-slate-100"
+                        className="flex-1 min-w-0 px-2 py-1.5 rounded-lg bg-[#090C12] border border-[#231F1D]/15 text-[11px] text-[#231F1D]"
                       >
                         {SPLINE_TEMPLATES.map((tpl) => (
                           <option key={tpl.id} value={tpl.id}>
@@ -1623,7 +1623,7 @@ export const OutlinerPropertiesDock: React.FC<OutlinerPropertiesDockProps> = ({
                       <button
                         type="button"
                         onClick={() => onApplyTemplate(activeTemplate)}
-                        className="px-3 py-1.5 rounded-lg bg-sky-600/25 border border-sky-500/60 hover:bg-sky-600 text-sky-200 hover:text-white font-semibold text-[11px] cursor-pointer shrink-0"
+                        className="px-3 py-1.5 rounded-lg bg-sky-600/25 border border-sky-500/60 hover:bg-sky-600 text-sky-200 hover:text-[#231F1D] font-semibold text-[11px] cursor-pointer shrink-0"
                       >
                         Aplicar
                       </button>
@@ -1631,30 +1631,30 @@ export const OutlinerPropertiesDock: React.FC<OutlinerPropertiesDockProps> = ({
                   </div>
                 )}
 
-                {/* Gizmo 3D (Transformação) */}
+                {/* Gizmo 3D (TransformaÃ§Ã£o) */}
                 {onSelectToolMode && (
-                  <div className="space-y-1.5 pt-1.5 border-t border-slate-800">
+                  <div className="space-y-1.5 pt-1.5 border-t border-[#231F1D]/15">
                     <div className="flex items-center justify-between text-[10px]">
-                      <span className="text-slate-400">Gizmo 3D (Transformação)</span>
+                      <span className="text-[#635B54]">Gizmo 3D (TransformaÃ§Ã£o)</span>
                       {onToggleHideDefaultBase && (
                         <button
                           type="button"
                           onClick={onToggleHideDefaultBase}
-                          className="inline-flex items-center gap-1 text-slate-300 hover:text-white cursor-pointer"
+                          className="inline-flex items-center gap-1 text-slate-300 hover:text-[#231F1D] cursor-pointer"
                         >
                           {hideDefaultBase ? (
                             <EyeOff className="w-3 h-3 text-slate-500" />
                           ) : (
                             <Eye className="w-3 h-3 text-emerald-400" />
                           )}
-                          <span>{hideDefaultBase ? 'Base oculta' : 'Base visível'}</span>
+                          <span>{hideDefaultBase ? 'Base oculta' : 'Base visÃ­vel'}</span>
                         </button>
                       )}
                     </div>
                     <div className="grid grid-cols-4 gap-1">
                       {(
                         [
-                          { id: 'orbit', label: 'Órbita', icon: <MousePointer className="w-3 h-3" /> },
+                          { id: 'orbit', label: 'Ã“rbita', icon: <MousePointer className="w-3 h-3" /> },
                           { id: 'translate', label: 'Mover', icon: <Move className="w-3 h-3" /> },
                           { id: 'rotate', label: 'Girar', icon: <RotateCw className="w-3 h-3" /> },
                           { id: 'scale', label: 'Escala', icon: <Scaling className="w-3 h-3" /> },
@@ -1667,7 +1667,7 @@ export const OutlinerPropertiesDock: React.FC<OutlinerPropertiesDockProps> = ({
                           className={`flex flex-col items-center justify-center gap-0.5 py-1.5 rounded-lg border text-[10px] font-medium cursor-pointer ${
                             toolMode === g.id
                               ? 'bg-orange-600/25 border-orange-500 text-orange-200'
-                              : 'bg-[#090C12] border-slate-800 text-slate-300 hover:border-slate-600'
+                              : 'bg-[#090C12] border-[#231F1D]/15 text-slate-300 hover:border-slate-600'
                           }`}
                         >
                           {g.icon}
@@ -1680,17 +1680,17 @@ export const OutlinerPropertiesDock: React.FC<OutlinerPropertiesDockProps> = ({
 
                 {/* Adicionar Forma (Primitivas | Vetor 3D) */}
                 {onAddPrimitive && (
-                  <div className="space-y-1.5 pt-1.5 border-t border-slate-800">
+                  <div className="space-y-1.5 pt-1.5 border-t border-[#231F1D]/15">
                     <div className="flex items-center justify-between gap-2">
-                      <span className="text-[10px] text-slate-400">Adicionar Forma</span>
-                      <div className="inline-flex rounded bg-[#090C12] border border-slate-800 p-0.5">
+                      <span className="text-[10px] text-[#635B54]">Adicionar Forma</span>
+                      <div className="inline-flex rounded bg-[#090C12] border border-[#231F1D]/15 p-0.5">
                         <button
                           type="button"
                           onClick={() => setShapeFilter('primitive')}
                           className={`px-2 py-0.5 rounded text-[9px] font-semibold cursor-pointer ${
                             shapeFilter === 'primitive'
-                              ? 'bg-slate-700 text-white'
-                              : 'text-slate-400'
+                              ? 'bg-slate-700 text-[#231F1D]'
+                              : 'text-[#635B54]'
                           }`}
                         >
                           Primitivas
@@ -1700,8 +1700,8 @@ export const OutlinerPropertiesDock: React.FC<OutlinerPropertiesDockProps> = ({
                           onClick={() => setShapeFilter('vector')}
                           className={`px-2 py-0.5 rounded text-[9px] font-semibold cursor-pointer ${
                             shapeFilter === 'vector'
-                              ? 'bg-slate-700 text-white'
-                              : 'text-slate-400'
+                              ? 'bg-slate-700 text-[#231F1D]'
+                              : 'text-[#635B54]'
                           }`}
                         >
                           Vetor 3D
@@ -1716,7 +1716,7 @@ export const OutlinerPropertiesDock: React.FC<OutlinerPropertiesDockProps> = ({
                             key={item.kind}
                             type="button"
                             onClick={() => onAddPrimitive(item.kind)}
-                            className="inline-flex items-center justify-center gap-1 py-1.5 px-1.5 rounded-lg bg-[#090C12] border border-slate-800 hover:border-sky-500 text-[10px] font-medium text-slate-200 cursor-pointer"
+                            className="inline-flex items-center justify-center gap-1 py-1.5 px-1.5 rounded-lg bg-[#090C12] border border-[#231F1D]/15 hover:border-sky-500 text-[10px] font-medium text-slate-200 cursor-pointer"
                           >
                             <Plus className="w-3 h-3 text-sky-400 shrink-0" />
                             <span className="truncate">{item.label}</span>
@@ -1729,7 +1729,7 @@ export const OutlinerPropertiesDock: React.FC<OutlinerPropertiesDockProps> = ({
 
                 {/* Booleana CSG */}
                 {onRunBoolean && (
-                  <div className="space-y-1.5 pt-1.5 border-t border-slate-800">
+                  <div className="space-y-1.5 pt-1.5 border-t border-[#231F1D]/15">
                     <div className="flex items-center justify-between text-[10px]">
                       <span className="text-slate-300 font-medium flex items-center gap-1">
                         <Sparkles className="w-3 h-3 text-purple-400" />
@@ -1741,34 +1741,34 @@ export const OutlinerPropertiesDock: React.FC<OutlinerPropertiesDockProps> = ({
                         <button
                           type="button"
                           onClick={() => onRunBoolean('union')}
-                          className="py-1 rounded-lg bg-[#090C12] border border-slate-800 hover:border-cyan-500 text-[10px] text-slate-200 cursor-pointer"
+                          className="py-1 rounded-lg bg-[#090C12] border border-[#231F1D]/15 hover:border-cyan-500 text-[10px] text-slate-200 cursor-pointer"
                         >
-                          União
+                          UniÃ£o
                         </button>
                         <button
                           type="button"
                           onClick={() => onRunBoolean('subtract')}
-                          className="py-1 rounded-lg bg-[#090C12] border border-slate-800 hover:border-cyan-500 text-[10px] text-slate-200 cursor-pointer"
+                          className="py-1 rounded-lg bg-[#090C12] border border-[#231F1D]/15 hover:border-cyan-500 text-[10px] text-slate-200 cursor-pointer"
                         >
                           Subtrair
                         </button>
                         <button
                           type="button"
                           onClick={() => onRunBoolean('intersect')}
-                          className="py-1 rounded-lg bg-[#090C12] border border-slate-800 hover:border-cyan-500 text-[10px] text-slate-200 cursor-pointer"
+                          className="py-1 rounded-lg bg-[#090C12] border border-[#231F1D]/15 hover:border-cyan-500 text-[10px] text-slate-200 cursor-pointer"
                         >
-                          Interseção
+                          InterseÃ§Ã£o
                         </button>
                       </div>
                     ) : (
-                      <div className="p-2 rounded-lg bg-[#090C12] border border-slate-800 text-[10px] text-slate-400 leading-relaxed">
+                      <div className="p-2 rounded-lg bg-[#090C12] border border-[#231F1D]/15 text-[10px] text-[#635B54] leading-relaxed">
                         Adicione 2+ formas acima para combinar via Booleana CSG.
                       </div>
                     )}
                   </div>
                 )}
 
-                {/* Física: Gravidade & Bloom: Pós-FX */}
+                {/* FÃ­sica: Gravidade & Bloom: PÃ³s-FX */}
                 {(onTogglePhysicsActive || onToggleBloom) && (
                   <div className="grid grid-cols-2 gap-1.5 pt-1">
                     {onTogglePhysicsActive && (
@@ -1778,10 +1778,10 @@ export const OutlinerPropertiesDock: React.FC<OutlinerPropertiesDockProps> = ({
                         className={`py-1.5 px-2 rounded-lg border text-[10px] font-semibold cursor-pointer ${
                           physicsActive
                             ? 'bg-emerald-600/20 border-emerald-500 text-emerald-300'
-                            : 'bg-[#090C12] border-slate-800 text-slate-300 hover:border-slate-600'
+                            : 'bg-[#090C12] border-[#231F1D]/15 text-slate-300 hover:border-slate-600'
                         }`}
                       >
-                        Física: Gravidade
+                        FÃ­sica: Gravidade
                       </button>
                     )}
                     {onToggleBloom && (
@@ -1791,10 +1791,10 @@ export const OutlinerPropertiesDock: React.FC<OutlinerPropertiesDockProps> = ({
                         className={`py-1.5 px-2 rounded-lg border text-[10px] font-semibold cursor-pointer ${
                           bloomEnabled
                             ? 'bg-pink-600/20 border-pink-500 text-pink-300'
-                            : 'bg-[#090C12] border-slate-800 text-slate-300 hover:border-slate-600'
+                            : 'bg-[#090C12] border-[#231F1D]/15 text-slate-300 hover:border-slate-600'
                         }`}
                       >
-                        Bloom: Pós-FX
+                        Bloom: PÃ³s-FX
                       </button>
                     )}
                   </div>
@@ -1814,13 +1814,13 @@ export const OutlinerPropertiesDock: React.FC<OutlinerPropertiesDockProps> = ({
                       value={selectedInspector.name}
                       onChange={(e) => onUpdateInspector({ name: e.target.value })}
                       aria-label="Nome do objeto"
-                      className="flex-1 min-w-0 px-2 py-1 rounded bg-[#090C12] border border-slate-800 focus:border-orange-500 outline-none text-xs font-semibold text-white"
+                      className="flex-1 min-w-0 px-2 py-1 rounded bg-[#090C12] border border-[#231F1D]/15 focus:border-orange-500 outline-none text-xs font-semibold text-[#231F1D]"
                     />
                     <button
                       type="button"
                       onClick={onFrameSelected}
                       title="Enquadrar (F)"
-                      className="w-7 h-7 rounded bg-slate-800 hover:bg-slate-700 text-sky-400 flex items-center justify-center cursor-pointer"
+                      className="w-7 h-7 rounded bg-[#FAF8F5] hover:bg-slate-700 text-sky-400 flex items-center justify-center cursor-pointer"
                     >
                       <Focus className="w-3.5 h-3.5" />
                     </button>
@@ -1828,7 +1828,7 @@ export const OutlinerPropertiesDock: React.FC<OutlinerPropertiesDockProps> = ({
                       type="button"
                       onClick={onDuplicateSelected}
                       title="Duplicar"
-                      className="w-7 h-7 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 flex items-center justify-center cursor-pointer"
+                      className="w-7 h-7 rounded bg-[#FAF8F5] hover:bg-slate-700 text-slate-200 flex items-center justify-center cursor-pointer"
                     >
                       <Copy className="w-3.5 h-3.5" />
                     </button>
@@ -1836,7 +1836,7 @@ export const OutlinerPropertiesDock: React.FC<OutlinerPropertiesDockProps> = ({
                       type="button"
                       onClick={onDeleteSelected}
                       title="Remover (Del)"
-                      className="w-7 h-7 rounded bg-slate-800 hover:bg-red-950 text-red-400 flex items-center justify-center cursor-pointer"
+                      className="w-7 h-7 rounded bg-[#FAF8F5] hover:bg-red-950 text-red-400 flex items-center justify-center cursor-pointer"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>
@@ -1848,13 +1848,13 @@ export const OutlinerPropertiesDock: React.FC<OutlinerPropertiesDockProps> = ({
                         <span className="font-mono font-semibold text-cyan-300 truncate">
                           PoseBone: {selectedBoneName}
                         </span>
-                        <span className="text-slate-400">W/E/R · K</span>
+                        <span className="text-[#635B54]">W/E/R Â· K</span>
                       </div>
                       <div className="grid grid-cols-3 gap-1">
                         <button
                           type="button"
                           onClick={onAddKeyframeAtCurrent}
-                          className="inline-flex items-center justify-center gap-1 py-1 rounded bg-amber-600 hover:bg-amber-500 text-[10px] font-semibold text-white cursor-pointer"
+                          className="inline-flex items-center justify-center gap-1 py-1 rounded bg-amber-600 hover:bg-amber-500 text-[10px] font-semibold text-[#231F1D] cursor-pointer"
                         >
                           <Diamond className="w-3 h-3" />
                           <span>Key (K)</span>
@@ -1867,7 +1867,7 @@ export const OutlinerPropertiesDock: React.FC<OutlinerPropertiesDockProps> = ({
                             className="inline-flex items-center justify-center gap-1 py-1 rounded bg-[#090C12] border border-slate-700 hover:border-cyan-400 text-[10px] text-slate-200 cursor-pointer"
                           >
                             <FlipHorizontal2 className="w-3 h-3 text-cyan-400" />
-                            <span>L↔R</span>
+                            <span>Lâ†”R</span>
                           </button>
                         )}
                         {onResetBone && (
@@ -1886,13 +1886,13 @@ export const OutlinerPropertiesDock: React.FC<OutlinerPropertiesDockProps> = ({
                   )}
 
                   {/* Accordion: Transform Pills */}
-                  <div className="rounded-lg bg-[#141923] border border-slate-800 overflow-hidden">
+                  <div className="rounded-lg bg-[#141923] border border-[#231F1D]/15 overflow-hidden">
                     <button
                       type="button"
                       onClick={() => toggleAccordion('transform')}
-                      className="w-full px-2.5 py-1.5 flex items-center justify-between bg-[#0F131B] text-[11px] font-semibold text-white cursor-pointer"
+                      className="w-full px-2.5 py-1.5 flex items-center justify-between bg-[#0F131B] text-[11px] font-semibold text-[#231F1D] cursor-pointer"
                     >
-                      <span>Transform (Blender Z↔Y Auto)</span>
+                      <span>Transform (Blender Zâ†”Y Auto)</span>
                       <ChevronDown
                         className={`w-3.5 h-3.5 transition-transform ${
                           openAccordions.transform ? 'rotate-0' : '-rotate-90'
@@ -1903,19 +1903,19 @@ export const OutlinerPropertiesDock: React.FC<OutlinerPropertiesDockProps> = ({
                       <div className="p-2.5 space-y-2.5">
                         {(
                           [
-                            { key: 'position', label: 'Localização (m)', vals: selectedInspector.position, step: 0.05, def: 0 },
-                            { key: 'rotationDeg', label: 'Rotação (°)', vals: selectedInspector.rotationDeg, step: 1.5, def: 0 },
+                            { key: 'position', label: 'LocalizaÃ§Ã£o (m)', vals: selectedInspector.position, step: 0.05, def: 0 },
+                            { key: 'rotationDeg', label: 'RotaÃ§Ã£o (Â°)', vals: selectedInspector.rotationDeg, step: 1.5, def: 0 },
                             { key: 'scale', label: 'Escala', vals: selectedInspector.scale, step: 0.04, def: 1 },
                           ] as const
                         ).map((grp) => (
                           <div key={grp.key} className="space-y-1">
-                            <div className="flex items-center justify-between text-[10px] text-slate-400">
+                            <div className="flex items-center justify-between text-[10px] text-[#635B54]">
                               <span>{grp.label}</span>
                               <button
                                 type="button"
                                 onClick={onAddKeyframeAtCurrent}
-                                title="Inserir Keyframe no frame atual (◆)"
-                                className="p-0.5 rounded hover:bg-slate-800 cursor-pointer"
+                                title="Inserir Keyframe no frame atual (â—†)"
+                                className="p-0.5 rounded hover:bg-[#FAF8F5] cursor-pointer"
                               >
                                 <Diamond className={`w-3 h-3 ${keyDiamondClass}`} />
                               </button>
@@ -1943,13 +1943,13 @@ export const OutlinerPropertiesDock: React.FC<OutlinerPropertiesDockProps> = ({
                   </div>
 
                   {/* Accordion: Rigid Body Physics */}
-                  <div className="rounded-lg bg-[#141923] border border-slate-800 overflow-hidden">
+                  <div className="rounded-lg bg-[#141923] border border-[#231F1D]/15 overflow-hidden">
                     <button
                       type="button"
                       onClick={() => toggleAccordion('physics')}
-                      className="w-full px-2.5 py-1.5 flex items-center justify-between bg-[#0F131B] text-[11px] font-semibold text-white cursor-pointer"
+                      className="w-full px-2.5 py-1.5 flex items-center justify-between bg-[#0F131B] text-[11px] font-semibold text-[#231F1D] cursor-pointer"
                     >
-                      <span>Física (RigidBodyObject)</span>
+                      <span>FÃ­sica (RigidBodyObject)</span>
                       <ChevronDown
                         className={`w-3.5 h-3.5 transition-transform ${
                           openAccordions.physics ? 'rotate-0' : '-rotate-90'
@@ -1961,9 +1961,9 @@ export const OutlinerPropertiesDock: React.FC<OutlinerPropertiesDockProps> = ({
                         <div className="grid grid-cols-3 gap-1">
                           {(
                             [
-                              { id: 'none', label: 'Sem Física' },
-                              { id: 'static', label: 'Estático' },
-                              { id: 'dynamic', label: 'Dinâmico' },
+                              { id: 'none', label: 'Sem FÃ­sica' },
+                              { id: 'static', label: 'EstÃ¡tico' },
+                              { id: 'dynamic', label: 'DinÃ¢mico' },
                             ] as { id: RigidBodyMode; label: string }[]
                           ).map((rb) => (
                             <button
@@ -1977,27 +1977,27 @@ export const OutlinerPropertiesDock: React.FC<OutlinerPropertiesDockProps> = ({
                               }
                               className={`py-1.5 rounded border text-[10px] font-medium cursor-pointer ${
                                 selectedInspector.rigidBodyMode === rb.id
-                                  ? 'bg-orange-600 border-orange-500 text-white'
-                                  : 'bg-[#090C12] border-slate-800 text-slate-300'
+                                  ? 'bg-orange-600 border-orange-500 text-[#231F1D]'
+                                  : 'bg-[#090C12] border-[#231F1D]/15 text-slate-300'
                               }`}
                             >
                               {rb.label}
                             </button>
                           ))}
                         </div>
-                        <p className="text-[10px] text-slate-400">
-                          Estático = colisor fixo (chão/parede); Dinâmico = cai com gravidade e colide.
+                        <p className="text-[10px] text-[#635B54]">
+                          EstÃ¡tico = colisor fixo (chÃ£o/parede); DinÃ¢mico = cai com gravidade e colide.
                         </p>
                       </div>
                     )}
                   </div>
 
                   {/* Accordion: Web Interaction */}
-                  <div className="rounded-lg bg-[#141923] border border-slate-800 overflow-hidden">
+                  <div className="rounded-lg bg-[#141923] border border-[#231F1D]/15 overflow-hidden">
                     <button
                       type="button"
                       onClick={() => toggleAccordion('interaction')}
-                      className="w-full px-2.5 py-1.5 flex items-center justify-between bg-[#0F131B] text-[11px] font-semibold text-white cursor-pointer"
+                      className="w-full px-2.5 py-1.5 flex items-center justify-between bg-[#0F131B] text-[11px] font-semibold text-[#231F1D] cursor-pointer"
                     >
                       <span>Interatividade Web</span>
                       <ChevronDown
@@ -2015,7 +2015,7 @@ export const OutlinerPropertiesDock: React.FC<OutlinerPropertiesDockProps> = ({
                               interaction: e.target.value as SplineInteractionType,
                             })
                           }
-                          className="w-full px-2 py-1.5 rounded bg-[#090C12] border border-slate-800 text-[11px] text-slate-200"
+                          className="w-full px-2 py-1.5 rounded bg-[#090C12] border border-[#231F1D]/15 text-[11px] text-slate-200"
                         >
                           {SPLINE_INTERACTION_OPTIONS.map((opt) => (
                             <option key={opt.id} value={opt.id}>
@@ -2028,8 +2028,8 @@ export const OutlinerPropertiesDock: React.FC<OutlinerPropertiesDockProps> = ({
                   </div>
                 </div>
               ) : (
-                <div className="p-4 rounded-lg bg-[#141923] border border-slate-800 text-[11px] text-slate-400 text-center">
-                  Clique em uma malha na cena 3D ou no Outliner acima para editar Transform, Física e Keyframes.
+                <div className="p-4 rounded-lg bg-[#141923] border border-[#231F1D]/15 text-[11px] text-[#635B54] text-center">
+                  Clique em uma malha na cena 3D ou no Outliner acima para editar Transform, FÃ­sica e Keyframes.
                 </div>
               )}
             </>
@@ -2040,9 +2040,9 @@ export const OutlinerPropertiesDock: React.FC<OutlinerPropertiesDockProps> = ({
             <>
               {selectedInspector ? (
                 <div className="space-y-2.5">
-                  <div className="rounded-lg bg-[#141923] border border-slate-800 p-2.5 space-y-2.5">
+                  <div className="rounded-lg bg-[#141923] border border-[#231F1D]/15 p-2.5 space-y-2.5">
                     <div className="flex items-center justify-between">
-                      <span className="text-[11px] font-semibold text-white">
+                      <span className="text-[11px] font-semibold text-[#231F1D]">
                         ShaderNodeBsdfPrincipled
                       </span>
                       <input
@@ -2061,7 +2061,7 @@ export const OutlinerPropertiesDock: React.FC<OutlinerPropertiesDockProps> = ({
                           materialStyle: e.target.value as SplineMaterialStyle,
                         })
                       }
-                      className="w-full px-2 py-1.5 rounded bg-[#090C12] border border-slate-800 text-[11px] text-slate-200"
+                      className="w-full px-2 py-1.5 rounded bg-[#090C12] border border-[#231F1D]/15 text-[11px] text-slate-200"
                     >
                       {SPLINE_MATERIAL_STYLES.map((st) => (
                         <option key={st.id} value={st.id}>
@@ -2089,7 +2089,7 @@ export const OutlinerPropertiesDock: React.FC<OutlinerPropertiesDockProps> = ({
                       onChange={(v) => onUpdateInspector({ roughness: v })}
                     />
                     <PbrSlider
-                      label="Transmissão (Vidro)"
+                      label="TransmissÃ£o (Vidro)"
                       blenderSocket="Transmission Weight"
                       value={selectedInspector.transmission}
                       min={0}
@@ -2099,7 +2099,7 @@ export const OutlinerPropertiesDock: React.FC<OutlinerPropertiesDockProps> = ({
                       onChange={(v) => onUpdateInspector({ transmission: v })}
                     />
                     <PbrSlider
-                      label="Emissão (Emission)"
+                      label="EmissÃ£o (Emission)"
                       blenderSocket="Emission Strength"
                       value={selectedInspector.emissiveIntensity}
                       min={0}
@@ -2113,7 +2113,7 @@ export const OutlinerPropertiesDock: React.FC<OutlinerPropertiesDockProps> = ({
 
                   {/* Per-Slot PBR Texture Maps & Batch Auto-Map */}
                   {(onUploadTextureChannel || onBatchUploadTextures) && (
-                    <div className="rounded-lg bg-[#141923] border border-slate-800 p-2.5 space-y-2">
+                    <div className="rounded-lg bg-[#141923] border border-[#231F1D]/15 p-2.5 space-y-2">
                       <input
                         ref={batchFileRef}
                         type="file"
@@ -2142,7 +2142,7 @@ export const OutlinerPropertiesDock: React.FC<OutlinerPropertiesDockProps> = ({
                       />
 
                       <div className="flex items-center justify-between gap-1.5">
-                        <span className="text-[11px] font-semibold text-white flex items-center gap-1">
+                        <span className="text-[11px] font-semibold text-[#231F1D] flex items-center gap-1">
                           <ImageIcon className="w-3.5 h-3.5 text-orange-400" />
                           <span>Mapas PBR (Slots & Lote)</span>
                         </span>
@@ -2150,8 +2150,8 @@ export const OutlinerPropertiesDock: React.FC<OutlinerPropertiesDockProps> = ({
                           <button
                             type="button"
                             onClick={() => batchFileRef.current?.click()}
-                            title="Selecionar múltiplos mapas PBR (_albedo, _normal, _roughness, _metallic, _ao)"
-                            className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-orange-600/20 border border-orange-500/50 hover:bg-orange-600 text-[10px] font-medium text-orange-200 hover:text-white cursor-pointer"
+                            title="Selecionar mÃºltiplos mapas PBR (_albedo, _normal, _roughness, _metallic, _ao)"
+                            className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-orange-600/20 border border-orange-500/50 hover:bg-orange-600 text-[10px] font-medium text-orange-200 hover:text-[#231F1D] cursor-pointer"
                           >
                             <Upload className="w-3 h-3" />
                             <span>Auto-Map Lote</span>
@@ -2177,7 +2177,7 @@ export const OutlinerPropertiesDock: React.FC<OutlinerPropertiesDockProps> = ({
                           className={`rounded-md border border-dashed px-2 py-1.5 text-center text-[10px] cursor-pointer transition-colors ${
                             batchDropOver
                               ? 'border-orange-400 bg-orange-500/15 text-orange-200'
-                              : 'border-slate-700 bg-[#090C12] text-slate-400 hover:border-slate-500'
+                              : 'border-slate-700 bg-[#090C12] text-[#635B54] hover:border-slate-500'
                           }`}
                         >
                           Arraste texturas PBR aqui para mapear canais automaticamente
@@ -2199,7 +2199,7 @@ export const OutlinerPropertiesDock: React.FC<OutlinerPropertiesDockProps> = ({
                           return (
                             <div
                               key={slot.id}
-                              className="flex items-center justify-between gap-2 px-2 py-1 rounded bg-[#090C12] border border-slate-800/90"
+                              className="flex items-center justify-between gap-2 px-2 py-1 rounded bg-[#090C12] border border-[#231F1D]/15/90"
                             >
                               <div className="flex items-center gap-2 min-w-0">
                                 {previewUrl ? (
@@ -2209,7 +2209,7 @@ export const OutlinerPropertiesDock: React.FC<OutlinerPropertiesDockProps> = ({
                                     className="w-5 h-5 rounded object-cover border border-slate-700 shrink-0"
                                   />
                                 ) : (
-                                  <span className="w-5 h-5 rounded bg-slate-800/80 border border-slate-700/80 flex items-center justify-center text-[9px] font-mono text-slate-500 shrink-0">
+                                  <span className="w-5 h-5 rounded bg-[#FAF8F5]/80 border border-slate-700/80 flex items-center justify-center text-[9px] font-mono text-slate-500 shrink-0">
                                     --
                                   </span>
                                 )}
@@ -2226,7 +2226,7 @@ export const OutlinerPropertiesDock: React.FC<OutlinerPropertiesDockProps> = ({
                                       slotFileRef.current?.click();
                                     }}
                                     title={`Carregar textura para ${slot.label}`}
-                                    className="px-1.5 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-[10px] text-slate-200 cursor-pointer"
+                                    className="px-1.5 py-0.5 rounded bg-[#FAF8F5] hover:bg-slate-700 text-[10px] text-slate-200 cursor-pointer"
                                   >
                                     {previewUrl ? 'Trocar' : 'Enviar'}
                                   </button>
@@ -2236,7 +2236,7 @@ export const OutlinerPropertiesDock: React.FC<OutlinerPropertiesDockProps> = ({
                                     type="button"
                                     onClick={() => onClearTextureChannel(slot.id)}
                                     title={`Remover textura de ${slot.label}`}
-                                    className="w-5 h-5 rounded hover:bg-red-950 text-slate-400 hover:text-red-300 flex items-center justify-center cursor-pointer"
+                                    className="w-5 h-5 rounded hover:bg-red-950 text-[#635B54] hover:text-red-300 flex items-center justify-center cursor-pointer"
                                   >
                                     <X className="w-3 h-3" />
                                   </button>
@@ -2250,9 +2250,9 @@ export const OutlinerPropertiesDock: React.FC<OutlinerPropertiesDockProps> = ({
                   )}
 
                   {/* Reactive Shader Effects */}
-                  <div className="rounded-lg bg-[#141923] border border-slate-800 p-2.5 space-y-2">
+                  <div className="rounded-lg bg-[#141923] border border-[#231F1D]/15 p-2.5 space-y-2">
                     <div className="flex items-center justify-between">
-                      <span className="text-[11px] font-semibold text-white flex items-center gap-1">
+                      <span className="text-[11px] font-semibold text-[#231F1D] flex items-center gap-1">
                         <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
                         <span>Shaders Reativos (GLSL)</span>
                       </span>
@@ -2276,9 +2276,9 @@ export const OutlinerPropertiesDock: React.FC<OutlinerPropertiesDockProps> = ({
                         [
                           { id: 'none', label: 'Desativado' },
                           { id: 'fresnel', label: 'Fresnel Borda' },
-                          { id: 'dissolve', label: 'Dissolve Ruído' },
+                          { id: 'dissolve', label: 'Dissolve RuÃ­do' },
                           { id: 'hologram', label: 'Holograma' },
-                          { id: 'distortion', label: 'Distorção Onda' },
+                          { id: 'distortion', label: 'DistorÃ§Ã£o Onda' },
                         ] as { id: ReactiveShaderEffect; label: string }[]
                       ).map((fx) => (
                         <button
@@ -2295,7 +2295,7 @@ export const OutlinerPropertiesDock: React.FC<OutlinerPropertiesDockProps> = ({
                           className={`px-2 py-1 rounded text-[10px] font-medium border cursor-pointer ${
                             selectedInspector.shaderEffect.effect === fx.id
                               ? 'bg-cyan-600/25 border-cyan-500 text-cyan-200'
-                              : 'bg-[#090C12] border-slate-800 text-slate-400'
+                              : 'bg-[#090C12] border-[#231F1D]/15 text-[#635B54]'
                           }`}
                         >
                           {fx.label}
@@ -2342,7 +2342,7 @@ export const OutlinerPropertiesDock: React.FC<OutlinerPropertiesDockProps> = ({
                   </div>
                 </div>
               ) : (
-                <div className="p-4 rounded-lg bg-[#141923] border border-slate-800 text-[11px] text-slate-400 text-center">
+                <div className="p-4 rounded-lg bg-[#141923] border border-[#231F1D]/15 text-[11px] text-[#635B54] text-center">
                   Selecione um objeto na cena para ajustar Base Color, Metallic, Roughness e Shaders Reativos.
                 </div>
               )}
@@ -2352,8 +2352,8 @@ export const OutlinerPropertiesDock: React.FC<OutlinerPropertiesDockProps> = ({
           {/* TAB 3: RIG, IK & MORPH TARGETS */}
           {activePropTab === 'rig' && (
             <div className="space-y-2.5">
-              <div className="rounded-lg bg-[#141923] border border-slate-800 p-2.5 space-y-2">
-                <div className="font-semibold text-white text-[11px] flex items-center gap-1.5">
+              <div className="rounded-lg bg-[#141923] border border-[#231F1D]/15 p-2.5 space-y-2">
+                <div className="font-semibold text-[#231F1D] text-[11px] flex items-center gap-1.5">
                   <Bone className="w-3.5 h-3.5 text-orange-400" />
                   <span>Controles IK / Pesos</span>
                 </div>
@@ -2362,9 +2362,9 @@ export const OutlinerPropertiesDock: React.FC<OutlinerPropertiesDockProps> = ({
                   <button
                     type="button"
                     onClick={onRunAutoRig}
-                    className="w-full py-2 rounded-lg bg-orange-600 hover:bg-orange-500 text-white font-semibold text-[11px] cursor-pointer"
+                    className="w-full py-2 rounded-lg bg-orange-600 hover:bg-orange-500 text-[#231F1D] font-semibold text-[11px] cursor-pointer"
                   >
-                    Aplicar Auto-Rig Automático
+                    Aplicar Auto-Rig AutomÃ¡tico
                   </button>
                 ) : (
                   <div className="space-y-1.5">
@@ -2375,7 +2375,7 @@ export const OutlinerPropertiesDock: React.FC<OutlinerPropertiesDockProps> = ({
                         className={`w-full py-1.5 px-2 rounded border text-[11px] font-medium cursor-pointer flex items-center justify-between ${
                           showSkeleton
                             ? 'bg-cyan-600/20 border-cyan-500 text-cyan-300'
-                            : 'bg-[#090C12] border-slate-800 text-slate-300'
+                            : 'bg-[#090C12] border-[#231F1D]/15 text-slate-300'
                         }`}
                       >
                         <span>Ossos X-Ray (Ciano + IK)</span>
@@ -2389,10 +2389,10 @@ export const OutlinerPropertiesDock: React.FC<OutlinerPropertiesDockProps> = ({
                       className={`w-full py-1.5 px-2 rounded border text-[11px] font-medium cursor-pointer flex items-center justify-between ${
                         ikEnabled
                           ? 'bg-emerald-600/20 border-emerald-500 text-emerald-300'
-                          : 'bg-[#090C12] border-slate-800 text-slate-300'
+                          : 'bg-[#090C12] border-[#231F1D]/15 text-slate-300'
                       }`}
                     >
-                      <span>Alvos IK (Mãos/Pés)</span>
+                      <span>Alvos IK (MÃ£os/PÃ©s)</span>
                       <span>{ikEnabled ? 'ON' : 'OFF'}</span>
                     </button>
 
@@ -2402,10 +2402,10 @@ export const OutlinerPropertiesDock: React.FC<OutlinerPropertiesDockProps> = ({
                       className={`w-full py-1.5 px-2 rounded border text-[11px] font-medium cursor-pointer flex items-center justify-between ${
                         floorContactEnabled
                           ? 'bg-sky-600/20 border-sky-500 text-sky-300'
-                          : 'bg-[#090C12] border-slate-800 text-slate-300'
+                          : 'bg-[#090C12] border-[#231F1D]/15 text-slate-300'
                       }`}
                     >
-                      <span>Fixar Pés no Chão</span>
+                      <span>Fixar PÃ©s no ChÃ£o</span>
                       <span>{floorContactEnabled ? 'ON' : 'OFF'}</span>
                     </button>
 
@@ -2415,7 +2415,7 @@ export const OutlinerPropertiesDock: React.FC<OutlinerPropertiesDockProps> = ({
                       className={`w-full py-1.5 px-2 rounded border text-[11px] font-medium cursor-pointer flex items-center justify-between ${
                         weightPaintActive
                           ? 'bg-amber-600/20 border-amber-500 text-amber-300'
-                          : 'bg-[#090C12] border-slate-800 text-slate-300'
+                          : 'bg-[#090C12] border-[#231F1D]/15 text-slate-300'
                       }`}
                     >
                       <span className="inline-flex items-center gap-1">
@@ -2429,7 +2429,7 @@ export const OutlinerPropertiesDock: React.FC<OutlinerPropertiesDockProps> = ({
                       <button
                         type="button"
                         onClick={onExportAnimatedGlb}
-                        className="w-full py-1.5 px-2 rounded-lg bg-orange-600 hover:bg-orange-500 text-white font-semibold text-[11px] cursor-pointer flex items-center justify-center gap-1.5 mt-1"
+                        className="w-full py-1.5 px-2 rounded-lg bg-orange-600 hover:bg-orange-500 text-[#231F1D] font-semibold text-[11px] cursor-pointer flex items-center justify-center gap-1.5 mt-1"
                       >
                         <Download className="w-3.5 h-3.5" />
                         <span>Exportar .GLB Animado</span>
@@ -2439,12 +2439,12 @@ export const OutlinerPropertiesDock: React.FC<OutlinerPropertiesDockProps> = ({
                 )}
               </div>
 
-              <div className="rounded-lg bg-[#141923] border border-slate-800 p-2.5 space-y-2">
-                <div className="font-semibold text-white text-[11px]">
+              <div className="rounded-lg bg-[#141923] border border-[#231F1D]/15 p-2.5 space-y-2">
+                <div className="font-semibold text-[#231F1D] text-[11px]">
                   Blendshapes / Shape Keys ({morphTargets.length})
                 </div>
                 {morphTargets.length === 0 ? (
-                  <p className="text-[10px] text-slate-400">
+                  <p className="text-[10px] text-[#635B54]">
                     Nenhum morph target ativo na malha selecionada.
                   </p>
                 ) : (
@@ -2471,11 +2471,11 @@ export const OutlinerPropertiesDock: React.FC<OutlinerPropertiesDockProps> = ({
           {/* TAB 4: RENDER & POST PROCESSING */}
           {activePropTab === 'lighting' && (
             <div className="space-y-2.5">
-              <div className="rounded-lg bg-[#141923] border border-slate-800 p-2.5 space-y-2.5">
-                <div className="font-semibold text-white text-[11px]">
-                  Scene EEVEE & Pós-Processamento
+              <div className="rounded-lg bg-[#141923] border border-[#231F1D]/15 p-2.5 space-y-2.5">
+                <div className="font-semibold text-[#231F1D] text-[11px]">
+                  Scene EEVEE & PÃ³s-Processamento
                 </div>
-                <label className="flex flex-col gap-1 text-[10px] text-slate-400">
+                <label className="flex flex-col gap-1 text-[10px] text-[#635B54]">
                   <span>View Transform (Tone Mapping)</span>
                   <select
                     value={lighting.toneMapping}
@@ -2484,7 +2484,7 @@ export const OutlinerPropertiesDock: React.FC<OutlinerPropertiesDockProps> = ({
                         toneMapping: e.target.value as StudioLightingState['toneMapping'],
                       })
                     }
-                    className="px-2 py-1 rounded bg-[#090C12] border border-slate-800 text-[11px] text-slate-200"
+                    className="px-2 py-1 rounded bg-[#090C12] border border-[#231F1D]/15 text-[11px] text-slate-200"
                   >
                     <option value="agx">AgX (Blender 5.3)</option>
                     <option value="aces">ACES Filmic</option>
@@ -2494,7 +2494,7 @@ export const OutlinerPropertiesDock: React.FC<OutlinerPropertiesDockProps> = ({
                 </label>
 
                 <PbrSlider
-                  label="Exposição EV"
+                  label="ExposiÃ§Ã£o EV"
                   value={lighting.exposure}
                   min={0.2}
                   max={2.4}
@@ -2502,7 +2502,7 @@ export const OutlinerPropertiesDock: React.FC<OutlinerPropertiesDockProps> = ({
                   onChange={(v) => onLightingChange({ exposure: v })}
                 />
 
-                <label className="flex items-center justify-between text-[11px] text-slate-200 cursor-pointer pt-1 border-t border-slate-800">
+                <label className="flex items-center justify-between text-[11px] text-slate-200 cursor-pointer pt-1 border-t border-[#231F1D]/15">
                   <span>Bloom (Brilho Neon)</span>
                   <input
                     type="checkbox"
@@ -2533,7 +2533,7 @@ export const OutlinerPropertiesDock: React.FC<OutlinerPropertiesDockProps> = ({
                 <button
                   type="button"
                   onClick={onRenderPng}
-                  className="w-full py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-[11px] cursor-pointer"
+                  className="w-full py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-[#231F1D] font-semibold text-[11px] cursor-pointer"
                 >
                   Capturar Render PNG
                 </button>
@@ -2544,24 +2544,24 @@ export const OutlinerPropertiesDock: React.FC<OutlinerPropertiesDockProps> = ({
           {/* TAB 5: VFX PARTICLE EMITTERS */}
           {activePropTab === 'vfx' && (
             <div className="space-y-2.5">
-              <div className="rounded-lg bg-[#141923] border border-slate-800 p-2.5 space-y-2">
+              <div className="rounded-lg bg-[#141923] border border-[#231F1D]/15 p-2.5 space-y-2">
                 <div className="flex items-center justify-between">
-                  <span className="text-[11px] font-semibold text-white flex items-center gap-1">
+                  <span className="text-[11px] font-semibold text-[#231F1D] flex items-center gap-1">
                     <Activity className="w-3.5 h-3.5 text-orange-400" />
-                    <span>Partículas ({emitters.length})</span>
+                    <span>PartÃ­culas ({emitters.length})</span>
                   </span>
                   <button
                     type="button"
                     onClick={onAddEmitter}
-                    className="px-2 py-0.5 rounded bg-orange-600 hover:bg-orange-500 text-[10px] font-semibold text-white cursor-pointer"
+                    className="px-2 py-0.5 rounded bg-orange-600 hover:bg-orange-500 text-[10px] font-semibold text-[#231F1D] cursor-pointer"
                   >
                     + Emissor
                   </button>
                 </div>
 
                 {emitters.length === 0 ? (
-                  <p className="text-[10px] text-slate-400">
-                    Crie um emissor de partículas para fogo, faíscas, fumaça ou energia mágica.
+                  <p className="text-[10px] text-[#635B54]">
+                    Crie um emissor de partÃ­culas para fogo, faÃ­scas, fumaÃ§a ou energia mÃ¡gica.
                   </p>
                 ) : (
                   <div className="flex flex-wrap gap-1">
@@ -2573,7 +2573,7 @@ export const OutlinerPropertiesDock: React.FC<OutlinerPropertiesDockProps> = ({
                         className={`px-2 py-1 rounded text-[10px] border cursor-pointer ${
                           activeEmitter?.id === em.id
                             ? 'bg-orange-600/20 border-orange-500 text-orange-200'
-                            : 'bg-[#090C12] border-slate-800 text-slate-300'
+                            : 'bg-[#090C12] border-[#231F1D]/15 text-slate-300'
                         }`}
                       >
                         {em.name}
@@ -2583,7 +2583,7 @@ export const OutlinerPropertiesDock: React.FC<OutlinerPropertiesDockProps> = ({
                 )}
 
                 {activeEmitter && (
-                  <div className="space-y-2 pt-2 border-t border-slate-800">
+                  <div className="space-y-2 pt-2 border-t border-[#231F1D]/15">
                     <div className="flex items-center justify-between gap-2">
                       <label className="flex items-center gap-1.5 text-[11px] text-slate-200 cursor-pointer">
                         <input
@@ -2612,17 +2612,17 @@ export const OutlinerPropertiesDock: React.FC<OutlinerPropertiesDockProps> = ({
                           spritePreset: e.target.value as ParticleSpritePreset,
                         })
                       }
-                      className="w-full px-2 py-1 rounded bg-[#090C12] border border-slate-800 text-[11px] text-slate-200"
+                      className="w-full px-2 py-1 rounded bg-[#090C12] border border-[#231F1D]/15 text-[11px] text-slate-200"
                     >
                       <option value="glow">Brilho Suave (Glow)</option>
-                      <option value="spark">Faísca (Spark)</option>
-                      <option value="smoke">Fumaça (Smoke)</option>
+                      <option value="spark">FaÃ­sca (Spark)</option>
+                      <option value="smoke">FumaÃ§a (Smoke)</option>
                       <option value="star">Estrela (Star)</option>
                       <option value="ring">Anel Energia (Ring)</option>
                     </select>
 
                     <PbrSlider
-                      label="Taxa Emissão (/s)"
+                      label="Taxa EmissÃ£o (/s)"
                       value={activeEmitter.rate}
                       min={5}
                       max={180}
@@ -2649,8 +2649,8 @@ export const OutlinerPropertiesDock: React.FC<OutlinerPropertiesDockProps> = ({
                       onChange={(v) => onUpdateEmitter(activeEmitter.id, { gravity: v })}
                     />
                     <div className="grid grid-cols-2 gap-2">
-                      <label className="flex items-center justify-between text-[10px] text-slate-400">
-                        <span>Início</span>
+                      <label className="flex items-center justify-between text-[10px] text-[#635B54]">
+                        <span>InÃ­cio</span>
                         <input
                           type="color"
                           value={activeEmitter.startColor}
@@ -2660,7 +2660,7 @@ export const OutlinerPropertiesDock: React.FC<OutlinerPropertiesDockProps> = ({
                           className="w-6 h-5 rounded border border-slate-700 bg-transparent cursor-pointer"
                         />
                       </label>
-                      <label className="flex items-center justify-between text-[10px] text-slate-400">
+                      <label className="flex items-center justify-between text-[10px] text-[#635B54]">
                         <span>Fim</span>
                         <input
                           type="color"
@@ -2682,3 +2682,4 @@ export const OutlinerPropertiesDock: React.FC<OutlinerPropertiesDockProps> = ({
     </aside>
   );
 };
+

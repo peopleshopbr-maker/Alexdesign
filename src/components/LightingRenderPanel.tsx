@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { Camera, Plus, Sparkles, Trash2 } from 'lucide-react';
 import {
   RenderResolutionPreset,
@@ -76,14 +76,14 @@ export const LightingRenderPanel: React.FC<LightingRenderPanelProps> = ({
   isRendering = false,
 }) => {
   return (
-    <div className="rounded-xl bg-[#141923] border border-slate-800 p-3 space-y-3 text-xs">
+    <div className="rounded-xl bg-[#141923] border border-[#231F1D]/15 p-3 space-y-3 text-xs">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <span className="font-semibold text-white">Luzes, Pós-Processamento & Render PNG</span>
+        <span className="font-semibold text-[#231F1D]">Luzes, PÃ³s-Processamento & Render PNG</span>
         <div className="flex items-center gap-1.5">
           <button
             type="button"
             onClick={onApplyThreePointPreset}
-            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-slate-800 hover:bg-slate-700 text-[11px] font-medium text-slate-200 cursor-pointer"
+            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-[#FAF8F5] hover:bg-slate-700 text-[11px] font-medium text-slate-200 cursor-pointer"
           >
             <Sparkles className="w-3.5 h-3.5 text-amber-400" />
             <span>3 Pontos</span>
@@ -103,14 +103,14 @@ export const LightingRenderPanel: React.FC<LightingRenderPanelProps> = ({
         {lights.map((light) => (
           <div
             key={light.id}
-            className="p-2 rounded-lg bg-[#0D1017] border border-slate-800 space-y-2"
+            className="p-2 rounded-lg bg-[#0D1017] border border-[#231F1D]/15 space-y-2"
           >
             <div className="flex items-center justify-between gap-2">
               <input
                 type="text"
                 value={light.name}
                 onChange={(e) => onUpdateLight(light.id, { name: e.target.value })}
-                className="flex-1 min-w-0 bg-transparent text-[11px] font-medium text-slate-100 focus:outline-none"
+                className="flex-1 min-w-0 bg-transparent text-[11px] font-medium text-[#231F1D] focus:outline-none"
               />
               <select
                 value={light.type}
@@ -133,14 +133,14 @@ export const LightingRenderPanel: React.FC<LightingRenderPanelProps> = ({
                 onClick={() => onRemoveLight(light.id)}
                 disabled={lights.length <= 1}
                 aria-label={`Remover ${light.name}`}
-                className="w-6 h-6 rounded hover:bg-slate-800 text-slate-400 hover:text-red-400 disabled:opacity-30 flex items-center justify-center cursor-pointer"
+                className="w-6 h-6 rounded hover:bg-[#FAF8F5] text-[#635B54] hover:text-red-400 disabled:opacity-30 flex items-center justify-center cursor-pointer"
               >
                 <Trash2 className="w-3.5 h-3.5" />
               </button>
             </div>
 
-            <label className="flex items-center gap-2 text-[11px] text-slate-400">
-              <span className="w-16 shrink-0">Força</span>
+            <label className="flex items-center gap-2 text-[11px] text-[#635B54]">
+              <span className="w-16 shrink-0">ForÃ§a</span>
               <input
                 type="range"
                 min={0}
@@ -158,13 +158,13 @@ export const LightingRenderPanel: React.FC<LightingRenderPanelProps> = ({
         ))}
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-slate-800">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-[#231F1D]/15">
         <label className="flex flex-col gap-1">
-          <span className="text-[11px] text-slate-400">Tone Mapping (View Transform)</span>
+          <span className="text-[11px] text-[#635B54]">Tone Mapping (View Transform)</span>
           <select
             value={toneMapping}
             onChange={(e) => onToneMappingChange(e.target.value as ToneMappingPreset)}
-            className="px-2 py-1.5 rounded-lg bg-[#0D1017] border border-slate-800 text-slate-100"
+            className="px-2 py-1.5 rounded-lg bg-[#0D1017] border border-[#231F1D]/15 text-[#231F1D]"
           >
             <option value="aces">ACES Filmic</option>
             <option value="agx">AgX (Blender 5.3)</option>
@@ -174,8 +174,8 @@ export const LightingRenderPanel: React.FC<LightingRenderPanelProps> = ({
         </label>
 
         <label className="flex flex-col gap-1">
-          <span className="flex justify-between text-[11px] text-slate-400">
-            <span>Exposição EV</span>
+          <span className="flex justify-between text-[11px] text-[#635B54]">
+            <span>ExposiÃ§Ã£o EV</span>
             <span className="font-mono text-slate-200 tabular-nums">{exposure.toFixed(2)}</span>
           </span>
           <input
@@ -193,8 +193,8 @@ export const LightingRenderPanel: React.FC<LightingRenderPanelProps> = ({
 
       {/* Real-time Post-Processing Pipeline */}
       {onPostProcessingChange && (
-        <div className="p-2.5 rounded-lg bg-[#0D1017] border border-slate-800 space-y-2.5">
-          <div className="text-[11px] font-semibold text-white">Pós-Processamento (Compositor WebGL)</div>
+        <div className="p-2.5 rounded-lg bg-[#0D1017] border border-[#231F1D]/15 space-y-2.5">
+          <div className="text-[11px] font-semibold text-[#231F1D]">PÃ³s-Processamento (Compositor WebGL)</div>
 
           <div className="space-y-1.5">
             <label className="flex items-center justify-between text-[11px] text-slate-200 cursor-pointer">
@@ -208,7 +208,7 @@ export const LightingRenderPanel: React.FC<LightingRenderPanelProps> = ({
             </label>
             {bloomEnabled && (
               <div className="grid grid-cols-2 gap-2 pl-2">
-                <label className="flex flex-col gap-0.5 text-[10px] text-slate-400">
+                <label className="flex flex-col gap-0.5 text-[10px] text-[#635B54]">
                   <span>Intensidade ({bloomStrength.toFixed(2)})</span>
                   <input
                     type="range"
@@ -220,7 +220,7 @@ export const LightingRenderPanel: React.FC<LightingRenderPanelProps> = ({
                     className="accent-pink-500"
                   />
                 </label>
-                <label className="flex flex-col gap-0.5 text-[10px] text-slate-400">
+                <label className="flex flex-col gap-0.5 text-[10px] text-[#635B54]">
                   <span>Limiar ({bloomThreshold.toFixed(2)})</span>
                   <input
                     type="range"
@@ -236,7 +236,7 @@ export const LightingRenderPanel: React.FC<LightingRenderPanelProps> = ({
             )}
           </div>
 
-          <div className="space-y-1.5 pt-1.5 border-t border-slate-800/80">
+          <div className="space-y-1.5 pt-1.5 border-t border-[#231F1D]/15/80">
             <label className="flex items-center justify-between text-[11px] text-slate-200 cursor-pointer">
               <span>Depth of Field (Desfoque Bokeh)</span>
               <input
@@ -248,7 +248,7 @@ export const LightingRenderPanel: React.FC<LightingRenderPanelProps> = ({
             </label>
             {dofEnabled && (
               <div className="grid grid-cols-2 gap-2 pl-2">
-                <label className="flex flex-col gap-0.5 text-[10px] text-slate-400">
+                <label className="flex flex-col gap-0.5 text-[10px] text-[#635B54]">
                   <span>Foco ({dofFocus.toFixed(1)}m)</span>
                   <input
                     type="range"
@@ -260,7 +260,7 @@ export const LightingRenderPanel: React.FC<LightingRenderPanelProps> = ({
                     className="accent-sky-400"
                   />
                 </label>
-                <label className="flex flex-col gap-0.5 text-[10px] text-slate-400">
+                <label className="flex flex-col gap-0.5 text-[10px] text-[#635B54]">
                   <span>Abertura ({(dofAperture * 1000).toFixed(1)})</span>
                   <input
                     type="range"
@@ -276,7 +276,7 @@ export const LightingRenderPanel: React.FC<LightingRenderPanelProps> = ({
             )}
           </div>
 
-          <div className="space-y-1.5 pt-1.5 border-t border-slate-800/80">
+          <div className="space-y-1.5 pt-1.5 border-t border-[#231F1D]/15/80">
             <label className="flex items-center justify-between text-[11px] text-slate-200 cursor-pointer">
               <span>Motion Blur (Arrasto de Movimento)</span>
               <input
@@ -287,8 +287,8 @@ export const LightingRenderPanel: React.FC<LightingRenderPanelProps> = ({
               />
             </label>
             {motionBlurEnabled && (
-              <label className="flex flex-col gap-0.5 text-[10px] text-slate-400 pl-2">
-                <span>Persistência ({Math.round(motionBlurDamp * 100)}%)</span>
+              <label className="flex flex-col gap-0.5 text-[10px] text-[#635B54] pl-2">
+                <span>PersistÃªncia ({Math.round(motionBlurDamp * 100)}%)</span>
                 <input
                   type="range"
                   min={0.35}
@@ -304,13 +304,13 @@ export const LightingRenderPanel: React.FC<LightingRenderPanelProps> = ({
         </div>
       )}
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-slate-800">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-[#231F1D]/15">
         <label className="flex flex-col gap-1">
-          <span className="text-[11px] text-slate-400">Resolução Render PNG</span>
+          <span className="text-[11px] text-[#635B54]">ResoluÃ§Ã£o Render PNG</span>
           <select
             value={resolution}
             onChange={(e) => onResolutionChange(e.target.value as RenderResolutionPreset)}
-            className="px-2 py-1.5 rounded-lg bg-[#0D1017] border border-slate-800 text-slate-100"
+            className="px-2 py-1.5 rounded-lg bg-[#0D1017] border border-[#231F1D]/15 text-[#231F1D]"
           >
             <option value="view">Tamanho do Viewport</option>
             <option value="1920x1080">Full HD (1920x1080)</option>
@@ -346,7 +346,7 @@ export const LightingRenderPanel: React.FC<LightingRenderPanelProps> = ({
         type="button"
         onClick={onRenderPng}
         disabled={isRendering}
-        className="w-full inline-flex items-center justify-center gap-2 h-9 px-3 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 disabled:opacity-50 text-xs font-semibold text-white cursor-pointer"
+        className="w-full inline-flex items-center justify-center gap-2 h-9 px-3 rounded-lg bg-[#FAF8F5] hover:bg-slate-700 border border-slate-700 disabled:opacity-50 text-xs font-semibold text-[#231F1D] cursor-pointer"
       >
         <Camera className="w-3.5 h-3.5 text-emerald-400" />
         <span>{isRendering ? 'Renderizando PNG...' : 'Capturar Render PNG'}</span>
@@ -354,3 +354,4 @@ export const LightingRenderPanel: React.FC<LightingRenderPanelProps> = ({
     </div>
   );
 };
+

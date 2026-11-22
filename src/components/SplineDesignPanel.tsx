@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import {
   Flame,
   ImagePlus,
@@ -87,11 +87,11 @@ export const SplineDesignPanel: React.FC<SplineDesignPanelProps> = ({
 
   if (section === 'create') {
     return (
-      <div className="rounded-xl bg-[#141923] border border-slate-800 p-3 space-y-3 text-xs">
+      <div className="rounded-xl bg-[#141923] border border-[#231F1D]/15 p-3 space-y-3 text-xs">
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2">
             <Shapes className="w-4 h-4 text-purple-400" />
-            <span className="font-semibold text-white">Primitivas, Vetores & Templates</span>
+            <span className="font-semibold text-[#231F1D]">Primitivas, Vetores & Templates</span>
           </div>
           <button
             type="button"
@@ -106,12 +106,12 @@ export const SplineDesignPanel: React.FC<SplineDesignPanelProps> = ({
           </button>
         </div>
 
-        <div className="inline-flex w-full items-center rounded-lg border border-slate-800 bg-[#0D1017] p-0.5">
+        <div className="inline-flex w-full items-center rounded-lg border border-[#231F1D]/15 bg-[#0D1017] p-0.5">
           <button
             type="button"
             onClick={() => onTogglePlayMode(false)}
             className={`flex-1 py-1.5 rounded-md text-[11px] font-medium cursor-pointer ${
-              !playMode ? 'bg-slate-700 text-white' : 'text-slate-400 hover:text-slate-200'
+              !playMode ? 'bg-slate-700 text-[#231F1D]' : 'text-[#635B54] hover:text-slate-200'
             }`}
           >
             Editar Cena
@@ -120,7 +120,7 @@ export const SplineDesignPanel: React.FC<SplineDesignPanelProps> = ({
             type="button"
             onClick={() => onTogglePlayMode(true)}
             className={`flex-1 inline-flex items-center justify-center gap-1 py-1.5 rounded-md text-[11px] font-medium cursor-pointer ${
-              playMode ? 'bg-emerald-600 text-white' : 'text-slate-400 hover:text-slate-200'
+              playMode ? 'bg-emerald-600 text-[#231F1D]' : 'text-[#635B54] hover:text-slate-200'
             }`}
           >
             {playMode ? <Square className="w-3 h-3" /> : <Play className="w-3 h-3" />}
@@ -132,25 +132,25 @@ export const SplineDesignPanel: React.FC<SplineDesignPanelProps> = ({
           <select
             value={activeTemplate}
             onChange={(e) => onSelectTemplate(e.target.value as SplineTemplateId)}
-            className="px-2.5 py-1.5 rounded-lg bg-[#0D1017] border border-slate-800 text-slate-100"
+            className="px-2.5 py-1.5 rounded-lg bg-[#0D1017] border border-[#231F1D]/15 text-[#231F1D]"
           >
             {SPLINE_TEMPLATES.map((tpl) => (
               <option key={tpl.id} value={tpl.id}>
-                {tpl.label} — {tpl.subtitle}
+                {tpl.label} â€” {tpl.subtitle}
               </option>
             ))}
           </select>
           <button
             type="button"
             onClick={() => onApplyTemplate(activeTemplate)}
-            className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg bg-purple-600 hover:bg-purple-500 text-white font-semibold cursor-pointer whitespace-nowrap"
+            className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg bg-purple-600 hover:bg-purple-500 text-[#231F1D] font-semibold cursor-pointer whitespace-nowrap"
           >
             <Sparkles className="w-3.5 h-3.5" />
             <span>Aplicar Cena</span>
           </button>
         </div>
 
-        <div className="space-y-2 pt-2 border-t border-slate-800">
+        <div className="space-y-2 pt-2 border-t border-[#231F1D]/15">
           <div className="flex items-center justify-between gap-2">
             <span className="text-[11px] font-medium text-slate-300">Adicionar Forma 3D</span>
             <div className="flex items-center gap-1">
@@ -158,7 +158,7 @@ export const SplineDesignPanel: React.FC<SplineDesignPanelProps> = ({
                 type="button"
                 onClick={() => setShapeFilter('primitive')}
                 className={`px-2 py-0.5 rounded text-[10px] cursor-pointer ${
-                  shapeFilter === 'primitive' ? 'bg-slate-700 text-white' : 'text-slate-400'
+                  shapeFilter === 'primitive' ? 'bg-slate-700 text-[#231F1D]' : 'text-[#635B54]'
                 }`}
               >
                 Primitivas
@@ -167,7 +167,7 @@ export const SplineDesignPanel: React.FC<SplineDesignPanelProps> = ({
                 type="button"
                 onClick={() => setShapeFilter('vector')}
                 className={`px-2 py-0.5 rounded text-[10px] cursor-pointer ${
-                  shapeFilter === 'vector' ? 'bg-slate-700 text-white' : 'text-slate-400'
+                  shapeFilter === 'vector' ? 'bg-slate-700 text-[#231F1D]' : 'text-[#635B54]'
                 }`}
               >
                 Vetores 3D
@@ -181,7 +181,7 @@ export const SplineDesignPanel: React.FC<SplineDesignPanelProps> = ({
                 key={item.kind}
                 type="button"
                 onClick={() => onAddPrimitive(item.kind)}
-                className="inline-flex items-center gap-1.5 px-2 py-1.5 rounded-lg bg-[#0D1017] border border-slate-800 hover:border-orange-500/70 text-[11px] text-slate-200 cursor-pointer"
+                className="inline-flex items-center gap-1.5 px-2 py-1.5 rounded-lg bg-[#0D1017] border border-[#231F1D]/15 hover:border-orange-500/70 text-[11px] text-slate-200 cursor-pointer"
               >
                 <Plus className="w-3 h-3 text-orange-400 shrink-0" />
                 <span className="truncate">{item.label}</span>
@@ -195,30 +195,30 @@ export const SplineDesignPanel: React.FC<SplineDesignPanelProps> = ({
 
   return (
     <div className="space-y-3 text-xs">
-      <div className="rounded-xl bg-[#141923] border border-slate-800 p-3 space-y-3">
+      <div className="rounded-xl bg-[#141923] border border-[#231F1D]/15 p-3 space-y-3">
         <div className="flex items-center gap-2">
           <Layers className="w-4 h-4 text-cyan-400" />
-          <span className="font-semibold text-white">CSG, Física Rigid Body & Shaders</span>
+          <span className="font-semibold text-[#231F1D]">CSG, FÃ­sica Rigid Body & Shaders</span>
         </div>
 
         <div className="space-y-1.5">
-          <div className="text-[11px] text-slate-400">
-            Combina as 2 últimas primitivas adicionadas na cena:
+          <div className="text-[11px] text-[#635B54]">
+            Combina as 2 Ãºltimas primitivas adicionadas na cena:
           </div>
           <div className="grid grid-cols-3 gap-1.5">
             <button
               type="button"
               disabled={!canRunBoolean}
               onClick={() => onRunBoolean('union')}
-              className="h-8 rounded-lg bg-[#0D1017] border border-slate-800 hover:border-cyan-500 disabled:opacity-40 text-[11px] font-medium text-slate-200 cursor-pointer"
+              className="h-8 rounded-lg bg-[#0D1017] border border-[#231F1D]/15 hover:border-cyan-500 disabled:opacity-40 text-[11px] font-medium text-slate-200 cursor-pointer"
             >
-              União
+              UniÃ£o
             </button>
             <button
               type="button"
               disabled={!canRunBoolean}
               onClick={() => onRunBoolean('subtract')}
-              className="h-8 rounded-lg bg-[#0D1017] border border-slate-800 hover:border-cyan-500 disabled:opacity-40 text-[11px] font-medium text-slate-200 cursor-pointer"
+              className="h-8 rounded-lg bg-[#0D1017] border border-[#231F1D]/15 hover:border-cyan-500 disabled:opacity-40 text-[11px] font-medium text-slate-200 cursor-pointer"
             >
               Subtrair
             </button>
@@ -226,14 +226,14 @@ export const SplineDesignPanel: React.FC<SplineDesignPanelProps> = ({
               type="button"
               disabled={!canRunBoolean}
               onClick={() => onRunBoolean('intersect')}
-              className="h-8 rounded-lg bg-[#0D1017] border border-slate-800 hover:border-cyan-500 disabled:opacity-40 text-[11px] font-medium text-slate-200 cursor-pointer"
+              className="h-8 rounded-lg bg-[#0D1017] border border-[#231F1D]/15 hover:border-cyan-500 disabled:opacity-40 text-[11px] font-medium text-slate-200 cursor-pointer"
             >
-              Interseção
+              InterseÃ§Ã£o
             </button>
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-2 pt-2 border-t border-slate-800">
+        <div className="grid grid-cols-2 gap-2 pt-2 border-t border-[#231F1D]/15">
           <button
             type="button"
             onClick={onTogglePhysicsActive}
@@ -243,7 +243,7 @@ export const SplineDesignPanel: React.FC<SplineDesignPanelProps> = ({
                 : 'border-slate-700 bg-[#0D1017] text-slate-300'
             }`}
           >
-            Simulação Física {physicsActive ? 'ON' : 'OFF'}
+            SimulaÃ§Ã£o FÃ­sica {physicsActive ? 'ON' : 'OFF'}
           </button>
           <button
             type="button"
@@ -259,19 +259,19 @@ export const SplineDesignPanel: React.FC<SplineDesignPanelProps> = ({
         </div>
 
         {selectedObject ? (
-          <div className="p-2.5 rounded-lg bg-[#0D1017] border border-slate-800 space-y-2.5">
+          <div className="p-2.5 rounded-lg bg-[#0D1017] border border-[#231F1D]/15 space-y-2.5">
             <div className="text-[11px] font-semibold text-slate-200 truncate">
               Objeto: {selectedObject.name}
             </div>
 
             <div className="space-y-1">
-              <span className="text-[10px] text-slate-400">Corpo Rígido (RigidBodyObject)</span>
+              <span className="text-[10px] text-[#635B54]">Corpo RÃ­gido (RigidBodyObject)</span>
               <div className="grid grid-cols-3 gap-1">
                 {(
                   [
-                    { id: 'none', label: 'Sem Física' },
-                    { id: 'static', label: 'Estático' },
-                    { id: 'dynamic', label: 'Dinâmico' },
+                    { id: 'none', label: 'Sem FÃ­sica' },
+                    { id: 'static', label: 'EstÃ¡tico' },
+                    { id: 'dynamic', label: 'DinÃ¢mico' },
                   ] as { id: RigidBodyMode; label: string }[]
                 ).map((rb) => (
                   <button
@@ -285,8 +285,8 @@ export const SplineDesignPanel: React.FC<SplineDesignPanelProps> = ({
                     }
                     className={`py-1 rounded border text-[10px] font-medium cursor-pointer ${
                       selectedObject.rigidBodyMode === rb.id
-                        ? 'bg-orange-600 border-orange-500 text-white'
-                        : 'bg-[#141923] border-slate-800 text-slate-300'
+                        ? 'bg-orange-600 border-orange-500 text-[#231F1D]'
+                        : 'bg-[#141923] border-[#231F1D]/15 text-slate-300'
                     }`}
                   >
                     {rb.label}
@@ -297,13 +297,13 @@ export const SplineDesignPanel: React.FC<SplineDesignPanelProps> = ({
 
             <div className="grid grid-cols-2 gap-2">
               <label className="flex flex-col gap-1">
-                <span className="text-[10px] text-slate-400">Interação Web</span>
+                <span className="text-[10px] text-[#635B54]">InteraÃ§Ã£o Web</span>
                 <select
                   value={selectedObject.interaction}
                   onChange={(e) =>
                     onUpdateSelectedObject({ interaction: e.target.value as SplineInteractionType })
                   }
-                  className="px-2 py-1 rounded bg-[#141923] border border-slate-700 text-[11px] text-slate-100"
+                  className="px-2 py-1 rounded bg-[#141923] border border-slate-700 text-[11px] text-[#231F1D]"
                 >
                   {SPLINE_INTERACTION_OPTIONS.map((opt) => (
                     <option key={opt.id} value={opt.id}>
@@ -314,7 +314,7 @@ export const SplineDesignPanel: React.FC<SplineDesignPanelProps> = ({
               </label>
 
               <label className="flex flex-col gap-1">
-                <span className="text-[10px] text-slate-400">Shader Reativo</span>
+                <span className="text-[10px] text-[#635B54]">Shader Reativo</span>
                 <select
                   value={selectedObject.shaderEffect.effect}
                   onChange={(e) =>
@@ -325,13 +325,13 @@ export const SplineDesignPanel: React.FC<SplineDesignPanelProps> = ({
                       },
                     })
                   }
-                  className="px-2 py-1 rounded bg-[#141923] border border-slate-700 text-[11px] text-slate-100"
+                  className="px-2 py-1 rounded bg-[#141923] border border-slate-700 text-[11px] text-[#231F1D]"
                 >
-                  <option value="none">Padrão PBR</option>
+                  <option value="none">PadrÃ£o PBR</option>
                   <option value="fresnel">Fresnel Borda</option>
-                  <option value="dissolve">Dissolve Ruído</option>
+                  <option value="dissolve">Dissolve RuÃ­do</option>
                   <option value="hologram">Holograma</option>
-                  <option value="distortion">Distorção Onda</option>
+                  <option value="distortion">DistorÃ§Ã£o Onda</option>
                 </select>
               </label>
             </div>
@@ -339,31 +339,31 @@ export const SplineDesignPanel: React.FC<SplineDesignPanelProps> = ({
             <button
               type="button"
               onClick={onUploadVideoTexture}
-              className="w-full inline-flex items-center justify-center gap-1.5 px-2.5 py-1.5 rounded bg-slate-800 hover:bg-slate-700 text-[11px] text-slate-200 cursor-pointer"
+              className="w-full inline-flex items-center justify-center gap-1.5 px-2.5 py-1.5 rounded bg-[#FAF8F5] hover:bg-slate-700 text-[11px] text-slate-200 cursor-pointer"
             >
               <Video className="w-3.5 h-3.5 text-sky-400" />
-              <span>Aplicar Textura Vídeo (MP4/WebM)</span>
+              <span>Aplicar Textura VÃ­deo (MP4/WebM)</span>
             </button>
           </div>
         ) : (
-          <div className="p-2.5 rounded-lg bg-[#0D1017] border border-slate-800 text-[11px] text-slate-400">
-            Clique em qualquer malha no viewport 3D para configurar física Static/Dynamic e shaders.
+          <div className="p-2.5 rounded-lg bg-[#0D1017] border border-[#231F1D]/15 text-[11px] text-[#635B54]">
+            Clique em qualquer malha no viewport 3D para configurar fÃ­sica Static/Dynamic e shaders.
           </div>
         )}
       </div>
 
       {/* Real-time VFX Particle Emitters */}
       {onAddEmitter && onUpdateEmitter && onSelectEmitter && onRemoveEmitter && (
-        <div className="rounded-xl bg-[#141923] border border-slate-800 p-3 space-y-2.5">
+        <div className="rounded-xl bg-[#141923] border border-[#231F1D]/15 p-3 space-y-2.5">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Flame className="w-4 h-4 text-orange-400" />
-              <span className="font-semibold text-white">Sistema de Partículas ({emitters.length})</span>
+              <span className="font-semibold text-[#231F1D]">Sistema de PartÃ­culas ({emitters.length})</span>
             </div>
             <button
               type="button"
               onClick={onAddEmitter}
-              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-orange-600 hover:bg-orange-500 text-[11px] font-semibold text-white cursor-pointer"
+              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-orange-600 hover:bg-orange-500 text-[11px] font-semibold text-[#231F1D] cursor-pointer"
             >
               <Plus className="w-3 h-3" />
               <span>Emissor</span>
@@ -380,7 +380,7 @@ export const SplineDesignPanel: React.FC<SplineDesignPanelProps> = ({
                   className={`px-2.5 py-1 rounded-md border text-[11px] cursor-pointer ${
                     activeEmitter?.id === em.id
                       ? 'bg-orange-600/20 border-orange-500 text-orange-200 font-semibold'
-                      : 'bg-[#0D1017] border-slate-800 text-slate-300'
+                      : 'bg-[#0D1017] border-[#231F1D]/15 text-slate-300'
                   }`}
                 >
                   {em.name}
@@ -390,7 +390,7 @@ export const SplineDesignPanel: React.FC<SplineDesignPanelProps> = ({
           )}
 
           {activeEmitter && (
-            <div className="p-2.5 rounded-lg bg-[#0D1017] border border-slate-800 space-y-2">
+            <div className="p-2.5 rounded-lg bg-[#0D1017] border border-[#231F1D]/15 space-y-2">
               <div className="flex items-center justify-between gap-2">
                 <label className="flex items-center gap-1.5 text-[11px] text-slate-200 cursor-pointer">
                   <input
@@ -399,14 +399,14 @@ export const SplineDesignPanel: React.FC<SplineDesignPanelProps> = ({
                     onChange={(e) => onUpdateEmitter(activeEmitter.id, { enabled: e.target.checked })}
                     className="accent-orange-500"
                   />
-                  <span>Emitir Partículas</span>
+                  <span>Emitir PartÃ­culas</span>
                 </label>
                 <div className="flex items-center gap-1.5">
                   {onUploadParticleSprite && (
                     <button
                       type="button"
                       onClick={() => onUploadParticleSprite(activeEmitter.id)}
-                      className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-[10px] text-sky-300 cursor-pointer"
+                      className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-[#FAF8F5] hover:bg-slate-700 text-[10px] text-sky-300 cursor-pointer"
                     >
                       <ImagePlus className="w-3 h-3" />
                       <span>Sprite PNG</span>
@@ -424,7 +424,7 @@ export const SplineDesignPanel: React.FC<SplineDesignPanelProps> = ({
               </div>
 
               <div className="grid grid-cols-2 gap-2">
-                <label className="flex flex-col gap-0.5 text-[10px] text-slate-400">
+                <label className="flex flex-col gap-0.5 text-[10px] text-[#635B54]">
                   <span>Sprite</span>
                   <select
                     value={activeEmitter.spritePreset}
@@ -433,17 +433,17 @@ export const SplineDesignPanel: React.FC<SplineDesignPanelProps> = ({
                         spritePreset: e.target.value as ParticleSpritePreset,
                       })
                     }
-                    className="px-2 py-1 rounded bg-[#141923] border border-slate-700 text-[11px] text-slate-100"
+                    className="px-2 py-1 rounded bg-[#141923] border border-slate-700 text-[11px] text-[#231F1D]"
                   >
                     <option value="glow">Brilho (Glow)</option>
-                    <option value="spark">Faísca (Spark)</option>
-                    <option value="smoke">Fumaça (Smoke)</option>
+                    <option value="spark">FaÃ­sca (Spark)</option>
+                    <option value="smoke">FumaÃ§a (Smoke)</option>
                     <option value="star">Estrela (Star)</option>
                     <option value="ring">Anel (Ring)</option>
                   </select>
                 </label>
 
-                <label className="flex flex-col gap-0.5 text-[10px] text-slate-400">
+                <label className="flex flex-col gap-0.5 text-[10px] text-[#635B54]">
                   <span>Vida ({activeEmitter.lifetime.toFixed(1)}s)</span>
                   <input
                     type="range"
@@ -459,7 +459,7 @@ export const SplineDesignPanel: React.FC<SplineDesignPanelProps> = ({
                 </label>
               </div>
 
-              <div className="grid grid-cols-3 gap-2 text-[10px] text-slate-400">
+              <div className="grid grid-cols-3 gap-2 text-[10px] text-[#635B54]">
                 <label className="flex flex-col gap-0.5">
                   <span>Taxa ({activeEmitter.rate}/s)</span>
                   <input
@@ -500,9 +500,9 @@ export const SplineDesignPanel: React.FC<SplineDesignPanelProps> = ({
                 </label>
               </div>
 
-              <div className="grid grid-cols-2 gap-2 text-[10px] text-slate-400 pt-1">
+              <div className="grid grid-cols-2 gap-2 text-[10px] text-[#635B54] pt-1">
                 <label className="flex items-center justify-between">
-                  <span>Cor Início</span>
+                  <span>Cor InÃ­cio</span>
                   <input
                     type="color"
                     value={activeEmitter.startColor}
@@ -531,3 +531,4 @@ export const SplineDesignPanel: React.FC<SplineDesignPanelProps> = ({
     </div>
   );
 };
+

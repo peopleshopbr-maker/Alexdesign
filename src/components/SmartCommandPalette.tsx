@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+﻿import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Archive,
   ArrowRight,
@@ -42,42 +42,42 @@ const COMMAND_ITEMS: CommandItem[] = [
   {
     id: 'stage1',
     title: 'Importar Modelo 3D (GLB / glTF / OBJ / STL / ZIP)',
-    subtitle: 'Carregar malha ou cena externa no estúdio',
+    subtitle: 'Carregar malha ou cena externa no estÃºdio',
     keywords: ['importar', 'glb', 'gltf', 'obj', 'stl', 'zip', 'arquivo'],
     icon: <Upload className="w-4 h-4 text-sky-400" />,
   },
   {
     id: 'viewport',
-    title: 'Estúdio 3D (Viewport Principal)',
-    subtitle: 'Modelagem, gizmos Q/W/E/R, pintura e câmera ao vivo',
+    title: 'EstÃºdio 3D (Viewport Principal)',
+    subtitle: 'Modelagem, gizmos Q/W/E/R, pintura e cÃ¢mera ao vivo',
     keywords: ['viewport', 'estudio', '3d', 'camera'],
     icon: <Box className="w-4 h-4 text-orange-400" />,
   },
   {
     id: 'stage5',
     title: 'Adicionar Primitivas, Vetores 3D & Templates',
-    subtitle: 'Cubo, esfera, nó 3D, estrela, coração, templates',
+    subtitle: 'Cubo, esfera, nÃ³ 3D, estrela, coraÃ§Ã£o, templates',
     keywords: ['primitiva', 'objeto', 'formas', 'vetor', 'cubo', 'esfera', 'template'],
     icon: <Shapes className="w-4 h-4 text-purple-400" />,
   },
   {
     id: 'html3d',
-    title: 'HTML → 3D (Criar Painel Web 3D PBR)',
-    subtitle: 'Converter código HTML em placa 3D exportável no .GLB',
+    title: 'HTML â†’ 3D (Criar Painel Web 3D PBR)',
+    subtitle: 'Converter cÃ³digo HTML em placa 3D exportÃ¡vel no .GLB',
     keywords: ['html', '3d', 'ui', 'placa', 'painel', 'card', 'web', 'texto'],
     icon: <Code2 className="w-4 h-4 text-orange-400" />,
   },
   {
     id: 'reference',
-    title: 'Importar Imagem de Referência (Frente / Lado / Topo)',
+    title: 'Importar Imagem de ReferÃªncia (Frente / Lado / Topo)',
     subtitle: 'Plano guia semi-transparente para modelagem e rigging',
     keywords: ['referencia', 'imagem', 'blueprint', 'trace', 'guia', 'foto'],
     icon: <ImageIcon className="w-4 h-4 text-sky-400" />,
   },
   {
     id: 'stage6',
-    title: 'Operações Booleanas CSG, Física & Eventos',
-    subtitle: 'União, subtração, interseção, gravidade e interações web',
+    title: 'OperaÃ§Ãµes Booleanas CSG, FÃ­sica & Eventos',
+    subtitle: 'UniÃ£o, subtraÃ§Ã£o, interseÃ§Ã£o, gravidade e interaÃ§Ãµes web',
     keywords: ['csg', 'booleano', 'uniao', 'subtrair', 'fisica', 'gravidade', 'eventos'],
     icon: <Box className="w-4 h-4 text-cyan-400" />,
   },
@@ -91,35 +91,35 @@ const COMMAND_ITEMS: CommandItem[] = [
   {
     id: 'rigging',
     title: 'Rig & Anim (Auto-Rig, IK/FK, Timeline & Motion Lab)',
-    subtitle: 'Marcadores Mixamo, IK mãos/pés, Dope Sheet, 84 clipes e blendshapes',
+    subtitle: 'Marcadores Mixamo, IK mÃ£os/pÃ©s, Dope Sheet, 84 clipes e blendshapes',
     keywords: ['rig', 'rigging', 'ossos', 'armature', 'skin', 'esqueleto', 'animacao', 'chest_open', 'actionforge', 'ik', 'motion'],
     icon: <Bone className="w-4 h-4 text-orange-400" />,
   },
   {
     id: 'lighting',
-    title: 'Luz & HDRI, Pós-Processamento & Render PNG 4K',
+    title: 'Luz & HDRI, PÃ³s-Processamento & Render PNG 4K',
     subtitle: 'Ambientes HDRI, Bloom, DOF, Motion Blur e Tone Mapping AgX / ACES',
     keywords: ['hdri', 'luz', 'render', 'png', 'aces', 'agx', 'sombra', '4k', 'bloom', 'dof'],
     icon: <Sun className="w-4 h-4 text-yellow-400" />,
   },
   {
     id: 'studio_notes',
-    title: 'Variáveis, Vínculos Web & Custom Properties (IDProperty)',
-    subtitle: 'Mouse/Scroll/Clique ligados a Shaders/VFX + notas de revisão',
+    title: 'VariÃ¡veis, VÃ­nculos Web & Custom Properties (IDProperty)',
+    subtitle: 'Mouse/Scroll/Clique ligados a Shaders/VFX + notas de revisÃ£o',
     keywords: ['variaveis', 'dados', 'notas', 'comentarios', 'revisao', 'idproperty', 'vfx', 'particulas'],
     icon: <Sliders className="w-4 h-4 text-sky-400" />,
   },
   {
     id: 'guide',
     title: 'Fluxo de Trabalho 3D Unificado (Passo a Passo)',
-    subtitle: 'Atalhos diretos para cada etapa de produção na cena',
+    subtitle: 'Atalhos diretos para cada etapa de produÃ§Ã£o na cena',
     keywords: ['fluxo', 'guia', 'pipeline', 'etapas'],
     icon: <BookOpen className="w-4 h-4 text-emerald-400" />,
   },
   {
     id: 'export',
-    title: 'Auditoria GLB, Blender 5.3 bpy & Exportação (.GLB / .FBX / .ZIP)',
-    subtitle: 'Auditoria completa, script Blender 5.3, embed HTML/React/Next/Three e link público',
+    title: 'Auditoria GLB, Blender 5.3 bpy & ExportaÃ§Ã£o (.GLB / .FBX / .ZIP)',
+    subtitle: 'Auditoria completa, script Blender 5.3, embed HTML/React/Next/Three e link pÃºblico',
     keywords: ['exportar', 'publicar', 'codigo', 'html', 'react', 'next', 'three', 'glb', 'fbx', 'zip', 'blender', 'auditoria'],
     icon: <Archive className="w-4 h-4 text-teal-400" />,
   },
@@ -190,30 +190,30 @@ export const SmartCommandPalette: React.FC<SmartCommandPaletteProps> = ({
 
   return (
     <div
-      className="fixed inset-0 z-50 bg-black/70 flex items-start justify-center pt-16 px-4"
+      className="fixed inset-0 z-50 bg-[#F5F1EA]/70 flex items-start justify-center pt-16 px-4"
       onClick={onClose}
       role="dialog"
-      aria-label="Busca de páginas, ferramentas e acessibilidade"
+      aria-label="Busca de pÃ¡ginas, ferramentas e acessibilidade"
     >
       <div
         className="w-full max-w-xl rounded-xl bg-[#141923] border border-slate-700 shadow-2xl overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center gap-2.5 px-4 py-3 border-b border-slate-800">
+        <div className="flex items-center gap-2.5 px-4 py-3 border-b border-[#231F1D]/15">
           <Search className="w-4 h-4 text-orange-400 shrink-0" />
           <input
             ref={inputRef}
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Buscar página ou ferramenta (ex: Rig, chest_open, HDRI, Código, Exportar)..."
-            className="flex-1 bg-transparent text-sm text-slate-100 placeholder-slate-500 focus:outline-none"
+            placeholder="Buscar pÃ¡gina ou ferramenta (ex: Rig, chest_open, HDRI, CÃ³digo, Exportar)..."
+            className="flex-1 bg-transparent text-sm text-[#231F1D] placeholder-slate-500 focus:outline-none"
           />
           <button
             type="button"
             onClick={onClose}
             aria-label="Fechar busca"
-            className="w-7 h-7 rounded-md hover:bg-slate-800 text-slate-400 hover:text-white flex items-center justify-center cursor-pointer"
+            className="w-7 h-7 rounded-md hover:bg-[#FAF8F5] text-[#635B54] hover:text-[#231F1D] flex items-center justify-center cursor-pointer"
           >
             <X className="w-4 h-4" />
           </button>
@@ -221,7 +221,7 @@ export const SmartCommandPalette: React.FC<SmartCommandPaletteProps> = ({
 
         <div className="max-h-80 overflow-y-auto divide-y divide-slate-800/70">
           {filtered.length === 0 ? (
-            <div className="px-4 py-8 text-center text-xs text-slate-400">
+            <div className="px-4 py-8 text-center text-xs text-[#635B54]">
               Nenhuma ferramenta encontrada para &ldquo;{query}&rdquo;.
             </div>
           ) : (
@@ -233,14 +233,14 @@ export const SmartCommandPalette: React.FC<SmartCommandPaletteProps> = ({
                   onSelect(item.id);
                   onClose();
                 }}
-                className="w-full px-4 py-2.5 flex items-center gap-3 text-left hover:bg-slate-800/70 transition-colors cursor-pointer"
+                className="w-full px-4 py-2.5 flex items-center gap-3 text-left hover:bg-[#FAF8F5]/70 transition-colors cursor-pointer"
               >
-                <div className="w-8 h-8 rounded-lg bg-[#0D1017] border border-slate-800 flex items-center justify-center shrink-0">
+                <div className="w-8 h-8 rounded-lg bg-[#0D1017] border border-[#231F1D]/15 flex items-center justify-center shrink-0">
                   {item.icon}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div className="text-xs font-semibold text-slate-100 truncate">{item.title}</div>
-                  <div className="text-[11px] text-slate-400 truncate">{item.subtitle}</div>
+                  <div className="text-xs font-semibold text-[#231F1D] truncate">{item.title}</div>
+                  <div className="text-[11px] text-[#635B54] truncate">{item.subtitle}</div>
                 </div>
                 {recentTargets.includes(item.id) && !query && (
                   <span className="text-[10px] font-mono text-orange-400 shrink-0">Recente</span>
@@ -251,7 +251,7 @@ export const SmartCommandPalette: React.FC<SmartCommandPaletteProps> = ({
           )}
         </div>
 
-        <div className="px-4 py-2.5 bg-[#0F131B] border-t border-slate-800 flex flex-wrap items-center justify-between gap-2 text-[11px]">
+        <div className="px-4 py-2.5 bg-[#0F131B] border-t border-[#231F1D]/15 flex flex-wrap items-center justify-between gap-2 text-[11px]">
           <div className="flex items-center gap-2">
             <button
               type="button"
@@ -280,9 +280,10 @@ export const SmartCommandPalette: React.FC<SmartCommandPaletteProps> = ({
               <span>Texto Ampliado</span>
             </button>
           </div>
-          <span className="text-slate-500 font-mono">Ctrl+K: Buscar · Esc: Fechar</span>
+          <span className="text-slate-500 font-mono">Ctrl+K: Buscar Â· Esc: Fechar</span>
         </div>
       </div>
     </div>
   );
 };
+
