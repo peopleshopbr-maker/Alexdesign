@@ -319,7 +319,7 @@ export const ExplorerOutlinerDock: React.FC<ExplorerOutlinerDockProps> = ({
 
   return (
     <aside
-      aria-label="Explorer Armature, Malhas e ReferÃªncias"
+      aria-label="Explorer Armature, Malhas e Referências"
       className="w-full lg:w-[270px] xl:w-[290px] max-h-[40vh] lg:max-h-none border-b lg:border-b-0 lg:border-r border-[#231F1D]/15 bg-[#0F131B] flex flex-col shrink-0 min-h-0"
     >
       <div className="px-2.5 py-1.5 border-b border-[#231F1D]/15 flex items-center justify-between gap-2">
@@ -397,8 +397,8 @@ export const ExplorerOutlinerDock: React.FC<ExplorerOutlinerDockProps> = ({
               outlinerMode === 'armature'
                 ? 'Filtrar osso da Armature...'
                 : outlinerMode === 'references'
-                ? 'Filtrar referÃªncias...'
-                : 'Filtrar coleÃ§Ã£o ou objeto...'
+                ? 'Filtrar referências...'
+                : 'Filtrar coleção ou objeto...'
             }
             className="w-full bg-transparent text-[11px] text-slate-200 placeholder-slate-500 focus:outline-none"
           />
@@ -497,7 +497,7 @@ export const ExplorerOutlinerDock: React.FC<ExplorerOutlinerDockProps> = ({
                               beginDragToggle('lock', item.id, !item.locked);
                             }}
                             onPointerEnter={() => applyDragEnter(item.id)}
-                            title={item.locked ? 'Destravar seleÃ§Ã£o' : 'Travar seleÃ§Ã£o'}
+                            title={item.locked ? 'Destravar seleção' : 'Travar seleção'}
                             className="w-5 h-5 rounded hover:bg-slate-700 flex items-center justify-center cursor-pointer"
                           >
                             {item.locked ? (
@@ -667,7 +667,7 @@ export const ExplorerOutlinerDock: React.FC<ExplorerOutlinerDockProps> = ({
               <div className="rounded-lg bg-[#141923] border border-[#231F1D]/15 p-2 space-y-1.5">
                 <div className="flex items-center justify-between gap-1.5">
                   <span className="text-[10px] font-semibold text-sky-300 truncate flex-1">
-                    Plano: {refPlane.name || 'Imagem de ReferÃªncia'}
+                    Plano: {refPlane.name || 'Imagem de Referência'}
                   </span>
                   {onUpdateRefPlane && (
                     <button
@@ -687,7 +687,7 @@ export const ExplorerOutlinerDock: React.FC<ExplorerOutlinerDockProps> = ({
                     <button
                       type="button"
                       onClick={onClearRefPlane}
-                      title="Remover referÃªncia"
+                      title="Remover referência"
                       className="w-5 h-5 rounded hover:bg-red-950 text-red-400 flex items-center justify-center cursor-pointer"
                     >
                       <Trash2 className="w-3 h-3" />
@@ -803,7 +803,7 @@ export const ExplorerOutlinerDock: React.FC<ExplorerOutlinerDockProps> = ({
 
             {!refPlane?.active && htmlReferences.length === 0 && (
               <p className="px-2 py-3 text-center text-[10px] text-slate-500 leading-relaxed">
-                Nenhuma referÃªncia ainda. Importe uma imagem 3D ou painel HTML â€” referÃªncias
+                Nenhuma referência ainda. Importe uma imagem 3D ou painel HTML â€” referências
                 ficam apenas na viewport.
               </p>
             )}
@@ -1012,7 +1012,7 @@ export const OutlinerPropertiesDock: React.FC<OutlinerPropertiesDockProps> = ({
     { id: 'material', label: 'PBR & Shader', icon: <Palette className="w-3.5 h-3.5" /> },
     { id: 'rig', label: 'Rig & Morphs', icon: <Bone className="w-3.5 h-3.5" /> },
     { id: 'lighting', label: 'Luz & Render', icon: <Sun className="w-3.5 h-3.5" /> },
-    { id: 'vfx', label: 'VFX & PartÃ­culas', icon: <Flame className="w-3.5 h-3.5" /> },
+    { id: 'vfx', label: 'VFX & Partículas', icon: <Flame className="w-3.5 h-3.5" /> },
   ];
 
   const refCount = (refPlane?.active ? 1 : 0) + htmlReferences.length;
@@ -1038,7 +1038,7 @@ export const OutlinerPropertiesDock: React.FC<OutlinerPropertiesDockProps> = ({
           </button>
         </div>
       ) : (
-      /* TOP HALF â€” FIXED OUTLINER (Armature / Malhas / ReferÃªncias) */
+      /* TOP HALF â€” FIXED OUTLINER (Armature / Malhas / Referências) */
       <div className="flex flex-col h-[40%] min-h-[175px] border-b border-[#231F1D]/15 bg-[#0F131B]">
         <div className="px-2 py-1.5 border-b border-[#231F1D]/15 flex items-center justify-between gap-1.5">
           <div className="flex items-center gap-1 min-w-0 overflow-x-auto no-scrollbar">
@@ -1110,8 +1110,8 @@ export const OutlinerPropertiesDock: React.FC<OutlinerPropertiesDockProps> = ({
                 outlinerMode === 'armature'
                   ? 'Filtrar osso da Armature...'
                   : outlinerMode === 'references'
-                  ? 'Filtrar referÃªncias...'
-                  : 'Filtrar coleÃ§Ã£o ou objeto...'
+                  ? 'Filtrar referências...'
+                  : 'Filtrar coleção ou objeto...'
               }
               className="w-full bg-transparent text-[11px] text-slate-200 placeholder-slate-500 focus:outline-none"
             />
@@ -1214,7 +1214,7 @@ export const OutlinerPropertiesDock: React.FC<OutlinerPropertiesDockProps> = ({
                                 beginDragToggle('lock', item.id, !item.locked);
                               }}
                               onPointerEnter={() => applyDragEnter(item.id)}
-                              title={item.locked ? 'Destravar seleÃ§Ã£o' : 'Travar seleÃ§Ã£o'}
+                              title={item.locked ? 'Destravar seleção' : 'Travar seleção'}
                               className="w-5 h-5 rounded hover:bg-slate-700 flex items-center justify-center cursor-pointer"
                             >
                               {item.locked ? (
@@ -1383,7 +1383,7 @@ export const OutlinerPropertiesDock: React.FC<OutlinerPropertiesDockProps> = ({
                 <div className="rounded-lg bg-[#141923] border border-[#231F1D]/15 p-2 space-y-1.5">
                   <div className="flex items-center justify-between gap-1.5">
                     <span className="text-[10px] font-semibold text-sky-300 truncate flex-1">
-                      Plano: {refPlane.name || 'Imagem de ReferÃªncia'}
+                      Plano: {refPlane.name || 'Imagem de Referência'}
                     </span>
                     {onUpdateRefPlane && (
                       <button
@@ -1403,7 +1403,7 @@ export const OutlinerPropertiesDock: React.FC<OutlinerPropertiesDockProps> = ({
                       <button
                         type="button"
                         onClick={onClearRefPlane}
-                        title="Remover referÃªncia"
+                        title="Remover referência"
                         className="w-5 h-5 rounded hover:bg-red-950 text-red-400 flex items-center justify-center cursor-pointer"
                       >
                         <Trash2 className="w-3 h-3" />
@@ -1519,7 +1519,7 @@ export const OutlinerPropertiesDock: React.FC<OutlinerPropertiesDockProps> = ({
 
               {!refPlane?.active && htmlReferences.length === 0 && (
                 <p className="px-2 py-3 text-center text-[10px] text-slate-500 leading-relaxed">
-                  Nenhuma referÃªncia ainda. Importe uma imagem 3D ou painel HTML â€” referÃªncias
+                  Nenhuma referência ainda. Importe uma imagem 3D ou painel HTML â€” referências
                   ficam apenas na viewport.
                 </p>
               )}
@@ -1559,7 +1559,7 @@ export const OutlinerPropertiesDock: React.FC<OutlinerPropertiesDockProps> = ({
 
         {/* Properties Body */}
         <div className="flex-1 min-w-0 overflow-y-auto p-2.5 space-y-2.5 text-xs">
-          {/* TAB 0: CENA & MODELAGEM 3D (Templates, Gizmo, Primitivas, Vetor 3D, CSG, FÃ­sica & Bloom) */}
+          {/* TAB 0: CENA & MODELAGEM 3D (Templates, Gizmo, Primitivas, Vetor 3D, CSG, Física & Bloom) */}
           {activePropTab === 'scene' && (
             <div className="space-y-2.5">
               <div className="rounded-lg bg-[#141923] border border-[#231F1D]/15 p-2.5 space-y-2.5">
@@ -1631,11 +1631,11 @@ export const OutlinerPropertiesDock: React.FC<OutlinerPropertiesDockProps> = ({
                   </div>
                 )}
 
-                {/* Gizmo 3D (TransformaÃ§Ã£o) */}
+                {/* Gizmo 3D (Transformação) */}
                 {onSelectToolMode && (
                   <div className="space-y-1.5 pt-1.5 border-t border-[#231F1D]/15">
                     <div className="flex items-center justify-between text-[10px]">
-                      <span className="text-[#635B54]">Gizmo 3D (TransformaÃ§Ã£o)</span>
+                      <span className="text-[#635B54]">Gizmo 3D (Transformação)</span>
                       {onToggleHideDefaultBase && (
                         <button
                           type="button"
@@ -1647,7 +1647,7 @@ export const OutlinerPropertiesDock: React.FC<OutlinerPropertiesDockProps> = ({
                           ) : (
                             <Eye className="w-3 h-3 text-emerald-400" />
                           )}
-                          <span>{hideDefaultBase ? 'Base oculta' : 'Base visÃ­vel'}</span>
+                          <span>{hideDefaultBase ? 'Base oculta' : 'Base visível'}</span>
                         </button>
                       )}
                     </div>
@@ -1743,7 +1743,7 @@ export const OutlinerPropertiesDock: React.FC<OutlinerPropertiesDockProps> = ({
                           onClick={() => onRunBoolean('union')}
                           className="py-1 rounded-lg bg-[#090C12] border border-[#231F1D]/15 hover:border-cyan-500 text-[10px] text-slate-200 cursor-pointer"
                         >
-                          UniÃ£o
+                          União
                         </button>
                         <button
                           type="button"
@@ -1757,7 +1757,7 @@ export const OutlinerPropertiesDock: React.FC<OutlinerPropertiesDockProps> = ({
                           onClick={() => onRunBoolean('intersect')}
                           className="py-1 rounded-lg bg-[#090C12] border border-[#231F1D]/15 hover:border-cyan-500 text-[10px] text-slate-200 cursor-pointer"
                         >
-                          InterseÃ§Ã£o
+                          Interseção
                         </button>
                       </div>
                     ) : (
@@ -1768,7 +1768,7 @@ export const OutlinerPropertiesDock: React.FC<OutlinerPropertiesDockProps> = ({
                   </div>
                 )}
 
-                {/* FÃ­sica: Gravidade & Bloom: PÃ³s-FX */}
+                {/* Física: Gravidade & Bloom: Pós-FX */}
                 {(onTogglePhysicsActive || onToggleBloom) && (
                   <div className="grid grid-cols-2 gap-1.5 pt-1">
                     {onTogglePhysicsActive && (
@@ -1781,7 +1781,7 @@ export const OutlinerPropertiesDock: React.FC<OutlinerPropertiesDockProps> = ({
                             : 'bg-[#090C12] border-[#231F1D]/15 text-slate-300 hover:border-slate-600'
                         }`}
                       >
-                        FÃ­sica: Gravidade
+                        Física: Gravidade
                       </button>
                     )}
                     {onToggleBloom && (
@@ -1794,7 +1794,7 @@ export const OutlinerPropertiesDock: React.FC<OutlinerPropertiesDockProps> = ({
                             : 'bg-[#090C12] border-[#231F1D]/15 text-slate-300 hover:border-slate-600'
                         }`}
                       >
-                        Bloom: PÃ³s-FX
+                        Bloom: Pós-FX
                       </button>
                     )}
                   </div>
@@ -1903,8 +1903,8 @@ export const OutlinerPropertiesDock: React.FC<OutlinerPropertiesDockProps> = ({
                       <div className="p-2.5 space-y-2.5">
                         {(
                           [
-                            { key: 'position', label: 'LocalizaÃ§Ã£o (m)', vals: selectedInspector.position, step: 0.05, def: 0 },
-                            { key: 'rotationDeg', label: 'RotaÃ§Ã£o (Â°)', vals: selectedInspector.rotationDeg, step: 1.5, def: 0 },
+                            { key: 'position', label: 'Localização (m)', vals: selectedInspector.position, step: 0.05, def: 0 },
+                            { key: 'rotationDeg', label: 'Rotação (Â°)', vals: selectedInspector.rotationDeg, step: 1.5, def: 0 },
                             { key: 'scale', label: 'Escala', vals: selectedInspector.scale, step: 0.04, def: 1 },
                           ] as const
                         ).map((grp) => (
@@ -1949,7 +1949,7 @@ export const OutlinerPropertiesDock: React.FC<OutlinerPropertiesDockProps> = ({
                       onClick={() => toggleAccordion('physics')}
                       className="w-full px-2.5 py-1.5 flex items-center justify-between bg-[#0F131B] text-[11px] font-semibold text-[#231F1D] cursor-pointer"
                     >
-                      <span>FÃ­sica (RigidBodyObject)</span>
+                      <span>Física (RigidBodyObject)</span>
                       <ChevronDown
                         className={`w-3.5 h-3.5 transition-transform ${
                           openAccordions.physics ? 'rotate-0' : '-rotate-90'
@@ -1961,9 +1961,9 @@ export const OutlinerPropertiesDock: React.FC<OutlinerPropertiesDockProps> = ({
                         <div className="grid grid-cols-3 gap-1">
                           {(
                             [
-                              { id: 'none', label: 'Sem FÃ­sica' },
-                              { id: 'static', label: 'EstÃ¡tico' },
-                              { id: 'dynamic', label: 'DinÃ¢mico' },
+                              { id: 'none', label: 'Sem Física' },
+                              { id: 'static', label: 'Estático' },
+                              { id: 'dynamic', label: 'Dinâmico' },
                             ] as { id: RigidBodyMode; label: string }[]
                           ).map((rb) => (
                             <button
@@ -1986,7 +1986,7 @@ export const OutlinerPropertiesDock: React.FC<OutlinerPropertiesDockProps> = ({
                           ))}
                         </div>
                         <p className="text-[10px] text-[#635B54]">
-                          EstÃ¡tico = colisor fixo (chÃ£o/parede); DinÃ¢mico = cai com gravidade e colide.
+                          Estático = colisor fixo (chão/parede); Dinâmico = cai com gravidade e colide.
                         </p>
                       </div>
                     )}
@@ -2029,7 +2029,7 @@ export const OutlinerPropertiesDock: React.FC<OutlinerPropertiesDockProps> = ({
                 </div>
               ) : (
                 <div className="p-4 rounded-lg bg-[#141923] border border-[#231F1D]/15 text-[11px] text-[#635B54] text-center">
-                  Clique em uma malha na cena 3D ou no Outliner acima para editar Transform, FÃ­sica e Keyframes.
+                  Clique em uma malha na cena 3D ou no Outliner acima para editar Transform, Física e Keyframes.
                 </div>
               )}
             </>
@@ -2089,7 +2089,7 @@ export const OutlinerPropertiesDock: React.FC<OutlinerPropertiesDockProps> = ({
                       onChange={(v) => onUpdateInspector({ roughness: v })}
                     />
                     <PbrSlider
-                      label="TransmissÃ£o (Vidro)"
+                      label="Transmissão (Vidro)"
                       blenderSocket="Transmission Weight"
                       value={selectedInspector.transmission}
                       min={0}
@@ -2099,7 +2099,7 @@ export const OutlinerPropertiesDock: React.FC<OutlinerPropertiesDockProps> = ({
                       onChange={(v) => onUpdateInspector({ transmission: v })}
                     />
                     <PbrSlider
-                      label="EmissÃ£o (Emission)"
+                      label="Emissão (Emission)"
                       blenderSocket="Emission Strength"
                       value={selectedInspector.emissiveIntensity}
                       min={0}
@@ -2150,7 +2150,7 @@ export const OutlinerPropertiesDock: React.FC<OutlinerPropertiesDockProps> = ({
                           <button
                             type="button"
                             onClick={() => batchFileRef.current?.click()}
-                            title="Selecionar mÃºltiplos mapas PBR (_albedo, _normal, _roughness, _metallic, _ao)"
+                            title="Selecionar múltiplos mapas PBR (_albedo, _normal, _roughness, _metallic, _ao)"
                             className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-orange-600/20 border border-orange-500/50 hover:bg-orange-600 text-[10px] font-medium text-orange-200 hover:text-[#231F1D] cursor-pointer"
                           >
                             <Upload className="w-3 h-3" />
@@ -2276,9 +2276,9 @@ export const OutlinerPropertiesDock: React.FC<OutlinerPropertiesDockProps> = ({
                         [
                           { id: 'none', label: 'Desativado' },
                           { id: 'fresnel', label: 'Fresnel Borda' },
-                          { id: 'dissolve', label: 'Dissolve RuÃ­do' },
+                          { id: 'dissolve', label: 'Dissolve Ruído' },
                           { id: 'hologram', label: 'Holograma' },
-                          { id: 'distortion', label: 'DistorÃ§Ã£o Onda' },
+                          { id: 'distortion', label: 'Distorção Onda' },
                         ] as { id: ReactiveShaderEffect; label: string }[]
                       ).map((fx) => (
                         <button
@@ -2364,7 +2364,7 @@ export const OutlinerPropertiesDock: React.FC<OutlinerPropertiesDockProps> = ({
                     onClick={onRunAutoRig}
                     className="w-full py-2 rounded-lg bg-orange-600 hover:bg-orange-500 text-[#231F1D] font-semibold text-[11px] cursor-pointer"
                   >
-                    Aplicar Auto-Rig AutomÃ¡tico
+                    Aplicar Auto-Rig Automático
                   </button>
                 ) : (
                   <div className="space-y-1.5">
@@ -2392,7 +2392,7 @@ export const OutlinerPropertiesDock: React.FC<OutlinerPropertiesDockProps> = ({
                           : 'bg-[#090C12] border-[#231F1D]/15 text-slate-300'
                       }`}
                     >
-                      <span>Alvos IK (MÃ£os/PÃ©s)</span>
+                      <span>Alvos IK (Mãos/Pés)</span>
                       <span>{ikEnabled ? 'ON' : 'OFF'}</span>
                     </button>
 
@@ -2405,7 +2405,7 @@ export const OutlinerPropertiesDock: React.FC<OutlinerPropertiesDockProps> = ({
                           : 'bg-[#090C12] border-[#231F1D]/15 text-slate-300'
                       }`}
                     >
-                      <span>Fixar PÃ©s no ChÃ£o</span>
+                      <span>Fixar Pés no Chão</span>
                       <span>{floorContactEnabled ? 'ON' : 'OFF'}</span>
                     </button>
 
@@ -2473,7 +2473,7 @@ export const OutlinerPropertiesDock: React.FC<OutlinerPropertiesDockProps> = ({
             <div className="space-y-2.5">
               <div className="rounded-lg bg-[#141923] border border-[#231F1D]/15 p-2.5 space-y-2.5">
                 <div className="font-semibold text-[#231F1D] text-[11px]">
-                  Scene EEVEE & PÃ³s-Processamento
+                  Scene EEVEE & Pós-Processamento
                 </div>
                 <label className="flex flex-col gap-1 text-[10px] text-[#635B54]">
                   <span>View Transform (Tone Mapping)</span>
@@ -2494,7 +2494,7 @@ export const OutlinerPropertiesDock: React.FC<OutlinerPropertiesDockProps> = ({
                 </label>
 
                 <PbrSlider
-                  label="ExposiÃ§Ã£o EV"
+                  label="Exposição EV"
                   value={lighting.exposure}
                   min={0.2}
                   max={2.4}
@@ -2548,7 +2548,7 @@ export const OutlinerPropertiesDock: React.FC<OutlinerPropertiesDockProps> = ({
                 <div className="flex items-center justify-between">
                   <span className="text-[11px] font-semibold text-[#231F1D] flex items-center gap-1">
                     <Activity className="w-3.5 h-3.5 text-orange-400" />
-                    <span>PartÃ­culas ({emitters.length})</span>
+                    <span>Partículas ({emitters.length})</span>
                   </span>
                   <button
                     type="button"
@@ -2561,7 +2561,7 @@ export const OutlinerPropertiesDock: React.FC<OutlinerPropertiesDockProps> = ({
 
                 {emitters.length === 0 ? (
                   <p className="text-[10px] text-[#635B54]">
-                    Crie um emissor de partÃ­culas para fogo, faÃ­scas, fumaÃ§a ou energia mÃ¡gica.
+                    Crie um emissor de partículas para fogo, faíscas, fumaça ou energia mágica.
                   </p>
                 ) : (
                   <div className="flex flex-wrap gap-1">
@@ -2615,14 +2615,14 @@ export const OutlinerPropertiesDock: React.FC<OutlinerPropertiesDockProps> = ({
                       className="w-full px-2 py-1 rounded bg-[#090C12] border border-[#231F1D]/15 text-[11px] text-slate-200"
                     >
                       <option value="glow">Brilho Suave (Glow)</option>
-                      <option value="spark">FaÃ­sca (Spark)</option>
-                      <option value="smoke">FumaÃ§a (Smoke)</option>
+                      <option value="spark">Faísca (Spark)</option>
+                      <option value="smoke">Fumaça (Smoke)</option>
                       <option value="star">Estrela (Star)</option>
                       <option value="ring">Anel Energia (Ring)</option>
                     </select>
 
                     <PbrSlider
-                      label="Taxa EmissÃ£o (/s)"
+                      label="Taxa Emissão (/s)"
                       value={activeEmitter.rate}
                       min={5}
                       max={180}
@@ -2650,7 +2650,7 @@ export const OutlinerPropertiesDock: React.FC<OutlinerPropertiesDockProps> = ({
                     />
                     <div className="grid grid-cols-2 gap-2">
                       <label className="flex items-center justify-between text-[10px] text-[#635B54]">
-                        <span>InÃ­cio</span>
+                        <span>Início</span>
                         <input
                           type="color"
                           value={activeEmitter.startColor}

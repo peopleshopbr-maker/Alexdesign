@@ -198,12 +198,12 @@ export const SplineDesignPanel: React.FC<SplineDesignPanelProps> = ({
       <div className="rounded-xl bg-[#141923] border border-[#231F1D]/15 p-3 space-y-3">
         <div className="flex items-center gap-2">
           <Layers className="w-4 h-4 text-cyan-400" />
-          <span className="font-semibold text-[#231F1D]">CSG, FÃ­sica Rigid Body & Shaders</span>
+          <span className="font-semibold text-[#231F1D]">CSG, Física Rigid Body & Shaders</span>
         </div>
 
         <div className="space-y-1.5">
           <div className="text-[11px] text-[#635B54]">
-            Combina as 2 Ãºltimas primitivas adicionadas na cena:
+            Combina as 2 últimas primitivas adicionadas na cena:
           </div>
           <div className="grid grid-cols-3 gap-1.5">
             <button
@@ -212,7 +212,7 @@ export const SplineDesignPanel: React.FC<SplineDesignPanelProps> = ({
               onClick={() => onRunBoolean('union')}
               className="h-8 rounded-lg bg-[#0D1017] border border-[#231F1D]/15 hover:border-cyan-500 disabled:opacity-40 text-[11px] font-medium text-slate-200 cursor-pointer"
             >
-              UniÃ£o
+              União
             </button>
             <button
               type="button"
@@ -228,7 +228,7 @@ export const SplineDesignPanel: React.FC<SplineDesignPanelProps> = ({
               onClick={() => onRunBoolean('intersect')}
               className="h-8 rounded-lg bg-[#0D1017] border border-[#231F1D]/15 hover:border-cyan-500 disabled:opacity-40 text-[11px] font-medium text-slate-200 cursor-pointer"
             >
-              InterseÃ§Ã£o
+              Interseção
             </button>
           </div>
         </div>
@@ -243,7 +243,7 @@ export const SplineDesignPanel: React.FC<SplineDesignPanelProps> = ({
                 : 'border-slate-700 bg-[#0D1017] text-slate-300'
             }`}
           >
-            SimulaÃ§Ã£o FÃ­sica {physicsActive ? 'ON' : 'OFF'}
+            Simulação Física {physicsActive ? 'ON' : 'OFF'}
           </button>
           <button
             type="button"
@@ -265,13 +265,13 @@ export const SplineDesignPanel: React.FC<SplineDesignPanelProps> = ({
             </div>
 
             <div className="space-y-1">
-              <span className="text-[10px] text-[#635B54]">Corpo RÃ­gido (RigidBodyObject)</span>
+              <span className="text-[10px] text-[#635B54]">Corpo Rígido (RigidBodyObject)</span>
               <div className="grid grid-cols-3 gap-1">
                 {(
                   [
-                    { id: 'none', label: 'Sem FÃ­sica' },
-                    { id: 'static', label: 'EstÃ¡tico' },
-                    { id: 'dynamic', label: 'DinÃ¢mico' },
+                    { id: 'none', label: 'Sem Física' },
+                    { id: 'static', label: 'Estático' },
+                    { id: 'dynamic', label: 'Dinâmico' },
                   ] as { id: RigidBodyMode; label: string }[]
                 ).map((rb) => (
                   <button
@@ -297,7 +297,7 @@ export const SplineDesignPanel: React.FC<SplineDesignPanelProps> = ({
 
             <div className="grid grid-cols-2 gap-2">
               <label className="flex flex-col gap-1">
-                <span className="text-[10px] text-[#635B54]">InteraÃ§Ã£o Web</span>
+                <span className="text-[10px] text-[#635B54]">Interação Web</span>
                 <select
                   value={selectedObject.interaction}
                   onChange={(e) =>
@@ -327,11 +327,11 @@ export const SplineDesignPanel: React.FC<SplineDesignPanelProps> = ({
                   }
                   className="px-2 py-1 rounded bg-[#141923] border border-slate-700 text-[11px] text-[#231F1D]"
                 >
-                  <option value="none">PadrÃ£o PBR</option>
+                  <option value="none">Padrão PBR</option>
                   <option value="fresnel">Fresnel Borda</option>
-                  <option value="dissolve">Dissolve RuÃ­do</option>
+                  <option value="dissolve">Dissolve Ruído</option>
                   <option value="hologram">Holograma</option>
-                  <option value="distortion">DistorÃ§Ã£o Onda</option>
+                  <option value="distortion">Distorção Onda</option>
                 </select>
               </label>
             </div>
@@ -342,12 +342,12 @@ export const SplineDesignPanel: React.FC<SplineDesignPanelProps> = ({
               className="w-full inline-flex items-center justify-center gap-1.5 px-2.5 py-1.5 rounded bg-[#FAF8F5] hover:bg-slate-700 text-[11px] text-slate-200 cursor-pointer"
             >
               <Video className="w-3.5 h-3.5 text-sky-400" />
-              <span>Aplicar Textura VÃ­deo (MP4/WebM)</span>
+              <span>Aplicar Textura Vídeo (MP4/WebM)</span>
             </button>
           </div>
         ) : (
           <div className="p-2.5 rounded-lg bg-[#0D1017] border border-[#231F1D]/15 text-[11px] text-[#635B54]">
-            Clique em qualquer malha no viewport 3D para configurar fÃ­sica Static/Dynamic e shaders.
+            Clique em qualquer malha no viewport 3D para configurar física Static/Dynamic e shaders.
           </div>
         )}
       </div>
@@ -358,7 +358,7 @@ export const SplineDesignPanel: React.FC<SplineDesignPanelProps> = ({
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Flame className="w-4 h-4 text-orange-400" />
-              <span className="font-semibold text-[#231F1D]">Sistema de PartÃ­culas ({emitters.length})</span>
+              <span className="font-semibold text-[#231F1D]">Sistema de Partículas ({emitters.length})</span>
             </div>
             <button
               type="button"
@@ -399,7 +399,7 @@ export const SplineDesignPanel: React.FC<SplineDesignPanelProps> = ({
                     onChange={(e) => onUpdateEmitter(activeEmitter.id, { enabled: e.target.checked })}
                     className="accent-orange-500"
                   />
-                  <span>Emitir PartÃ­culas</span>
+                  <span>Emitir Partículas</span>
                 </label>
                 <div className="flex items-center gap-1.5">
                   {onUploadParticleSprite && (
@@ -436,8 +436,8 @@ export const SplineDesignPanel: React.FC<SplineDesignPanelProps> = ({
                     className="px-2 py-1 rounded bg-[#141923] border border-slate-700 text-[11px] text-[#231F1D]"
                   >
                     <option value="glow">Brilho (Glow)</option>
-                    <option value="spark">FaÃ­sca (Spark)</option>
-                    <option value="smoke">FumaÃ§a (Smoke)</option>
+                    <option value="spark">Faísca (Spark)</option>
+                    <option value="smoke">Fumaça (Smoke)</option>
                     <option value="star">Estrela (Star)</option>
                     <option value="ring">Anel (Ring)</option>
                   </select>
@@ -502,7 +502,7 @@ export const SplineDesignPanel: React.FC<SplineDesignPanelProps> = ({
 
               <div className="grid grid-cols-2 gap-2 text-[10px] text-[#635B54] pt-1">
                 <label className="flex items-center justify-between">
-                  <span>Cor InÃ­cio</span>
+                  <span>Cor Início</span>
                   <input
                     type="color"
                     value={activeEmitter.startColor}

@@ -366,7 +366,7 @@ export const ActionForgeTimeline: React.FC<ActionForgeTimelineProps> = ({
                 <span className="truncate">{clip.label}</span>
                 <div className="flex items-center gap-0.5 shrink-0">
                   {clip.hasTransitionArrow && (
-                    <ArrowRight className="w-3 h-3 text-amber-400/80" aria-label="TransiÃ§Ã£o encadeada" />
+                    <ArrowRight className="w-3 h-3 text-amber-400/80" aria-label="Transição encadeada" />
                   )}
                   <button
                     type="button"
@@ -412,7 +412,7 @@ export const ActionForgeTimeline: React.FC<ActionForgeTimelineProps> = ({
           <button
             type="button"
             onClick={() => onSeekNormalized(0)}
-            title="InÃ­cio (|â—€)"
+            title="Início (|â—€)"
             className="w-7 h-7 rounded bg-[#0D1017] border border-[#231F1D]/15 hover:border-slate-600 text-slate-300 flex items-center justify-center cursor-pointer"
           >
             <SkipBack className="w-3.5 h-3.5" />
@@ -449,7 +449,7 @@ export const ActionForgeTimeline: React.FC<ActionForgeTimelineProps> = ({
           <button
             type="button"
             onClick={() => onStepFrame(1)}
-            title="AvanÃ§ar 1 frame"
+            title="Avançar 1 frame"
             className="w-7 h-7 rounded bg-[#0D1017] border border-[#231F1D]/15 hover:border-slate-600 text-slate-300 flex items-center justify-center cursor-pointer"
           >
             <ChevronRight className="w-3.5 h-3.5" />
@@ -457,7 +457,7 @@ export const ActionForgeTimeline: React.FC<ActionForgeTimelineProps> = ({
           <button
             type="button"
             onClick={() => jumpKeyframe(1)}
-            title="PrÃ³ximo keyframe (â—†â–¸)"
+            title="Próximo keyframe (â—†â–¸)"
             className="px-1.5 h-7 rounded bg-[#0D1017] border border-[#231F1D]/15 hover:border-slate-600 text-[10px] font-mono text-slate-300 flex items-center gap-0.5 cursor-pointer"
           >
             <Diamond className="w-2.5 h-2.5 text-amber-400" />
@@ -510,7 +510,7 @@ export const ActionForgeTimeline: React.FC<ActionForgeTimelineProps> = ({
               type="button"
               onClick={onDeleteKeyframe}
               disabled={!isRigged}
-              title="Apagar Keyframe prÃ³ximo ao frame atual"
+              title="Apagar Keyframe próximo ao frame atual"
               className="w-7 h-7 rounded bg-[#0D1017] border border-[#231F1D]/15 hover:border-red-500/70 disabled:opacity-40 text-red-300 flex items-center justify-center cursor-pointer"
             >
               <Eraser className="w-3 h-3" />
@@ -521,8 +521,8 @@ export const ActionForgeTimeline: React.FC<ActionForgeTimelineProps> = ({
             <select
               value={interpolationMode}
               onChange={(e) => onChangeInterpolationMode(e.target.value as KeyframeInterpolationMode)}
-              title="Curva de InterpolaÃ§Ã£o (FCurve Blender: BÃ©zier / Linear / Constant)"
-              aria-label="Curva de interpolaÃ§Ã£o"
+              title="Curva de Interpolação (FCurve Blender: Bézier / Linear / Constant)"
+              aria-label="Curva de interpolação"
               className="h-7 px-1.5 rounded bg-[#0D1017] border border-[#231F1D]/15 text-[10px] text-slate-200 cursor-pointer"
             >
               <option value="ease">Ease In/Out</option>
@@ -608,7 +608,7 @@ export const ActionForgeTimeline: React.FC<ActionForgeTimelineProps> = ({
             Frame: {currentFrame}
           </span>
           <span className="px-2 py-1 rounded bg-[#0D1017] border border-[#231F1D]/15 font-mono text-slate-300 tabular-nums">
-            {hasCustomRange ? `Trecho: ${inFrame}â€“${outFrame}f` : `InÃ­cio: 1 Â· Fim: ${totalFrames}`}
+            {hasCustomRange ? `Trecho: ${inFrame}â€“${outFrame}f` : `Início: 1 Â· Fim: ${totalFrames}`}
           </span>
 
           {onSetPlayRange && (
@@ -621,7 +621,7 @@ export const ActionForgeTimeline: React.FC<ActionForgeTimelineProps> = ({
                     clampedOut
                   )
                 }
-                title="Definir frame atual como InÃ­cio (In) do trecho de reproduÃ§Ã£o"
+                title="Definir frame atual como Início (In) do trecho de reprodução"
                 className="px-1.5 h-6 text-[10px] font-mono text-amber-300 hover:bg-[#FAF8F5] cursor-pointer"
               >
                 [ In
@@ -634,7 +634,7 @@ export const ActionForgeTimeline: React.FC<ActionForgeTimelineProps> = ({
                     Math.max(animProgress, clampedIn + 0.04)
                   )
                 }
-                title="Definir frame atual como Fim (Out) do trecho de reproduÃ§Ã£o"
+                title="Definir frame atual como Fim (Out) do trecho de reprodução"
                 className="px-1.5 h-6 text-[10px] font-mono text-amber-300 hover:bg-[#FAF8F5] cursor-pointer"
               >
                 Out ]
@@ -655,7 +655,7 @@ export const ActionForgeTimeline: React.FC<ActionForgeTimelineProps> = ({
           <button
             type="button"
             onClick={onToggleLoop}
-            title="Loop contÃ­nuo"
+            title="Loop contínuo"
             className={`inline-flex items-center gap-1 px-2 py-1 rounded border cursor-pointer ${
               animLoop
                 ? 'bg-orange-600/20 border-orange-500 text-orange-300'
@@ -683,7 +683,7 @@ export const ActionForgeTimeline: React.FC<ActionForgeTimelineProps> = ({
           <button
             type="button"
             onClick={onToggleReverse}
-            title="Reverso: reproduzir clipe de trÃ¡s para frente"
+            title="Reverso: reproduzir clipe de trás para frente"
             className={`inline-flex items-center gap-1 px-2 py-1 rounded border cursor-pointer ${
               reverseClip
                 ? 'bg-violet-600/20 border-violet-500 text-violet-300'
@@ -711,7 +711,7 @@ export const ActionForgeTimeline: React.FC<ActionForgeTimelineProps> = ({
           <select
             value={animSpeed}
             onChange={(e) => onChangeSpeed(Number(e.target.value))}
-            aria-label="Velocidade da animaÃ§Ã£o"
+            aria-label="Velocidade da animação"
             className="px-1.5 py-1 rounded bg-[#0D1017] border border-[#231F1D]/15 font-mono text-slate-200"
           >
             {[0.25, 0.5, 0.75, 1, 1.25, 1.5, 2].map((sp) => (
@@ -757,7 +757,7 @@ export const ActionForgeTimeline: React.FC<ActionForgeTimelineProps> = ({
         <button
           type="button"
           onClick={() => setTimeUnit((u) => (u === 'sec' ? 'frm' : 'sec'))}
-          title="Alternar exibiÃ§Ã£o entre segundos e frames"
+          title="Alternar exibição entre segundos e frames"
           className="px-1.5 py-0.5 rounded bg-[#141923] border border-[#231F1D]/15 hover:border-slate-600 text-[10px] font-mono text-slate-300 cursor-pointer"
         >
           {timeUnit === 'sec' ? 'SEC' : 'FRM'}
@@ -869,7 +869,7 @@ export const ActionForgeTimeline: React.FC<ActionForgeTimelineProps> = ({
                   onChange={(e) =>
                     onSetOverlayLayer(overlayClipId, e.target.value as BoneMaskRegion, overlayWeight)
                   }
-                  aria-label="MÃ¡scara de ossos da camada"
+                  aria-label="Máscara de ossos da camada"
                   className="px-2 py-1 rounded bg-[#0D1017] border border-slate-700 text-slate-200"
                 >
                   {BONE_MASK_OPTIONS.map((m) => (
@@ -955,7 +955,7 @@ export const ActionForgeTimeline: React.FC<ActionForgeTimelineProps> = ({
                 </svg>
               ) : (
                 <div className="h-24 flex items-center justify-center text-[11px] text-slate-500">
-                  Aplique o Auto-Rig ou selecione um clipe com faixas de rotaÃ§Ã£o para visualizar as curvas X/Y/Z.
+                  Aplique o Auto-Rig ou selecione um clipe com faixas de rotação para visualizar as curvas X/Y/Z.
                 </div>
               )}
             </div>

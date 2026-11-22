@@ -33,7 +33,7 @@ export const WelcomeLandingPage: React.FC<WelcomeLandingPageProps> = ({
 
   return (
     <section
-      aria-label="PÃ¡gina Inicial AlexDesign"
+      aria-label="Página Inicial AlexDesign"
       className="flex-1 min-h-0 overflow-y-auto bg-[#0B0E14] relative flex items-center justify-center p-4 sm:p-8"
       style={{
         backgroundImage:
@@ -75,7 +75,7 @@ export const WelcomeLandingPage: React.FC<WelcomeLandingPageProps> = ({
           <p className="max-w-xl mx-auto text-xs sm:text-sm text-[#635B54]">
             Solte um arquivo <span className="font-mono text-slate-200">.glb</span> ou{' '}
             <span className="font-mono text-slate-200">.gltf</span> com ou sem esqueleto para
-            explorar a armature, ajustar materiais PBR, criar animaÃ§Ãµes com keyframes e exportar.
+            explorar a armature, ajustar materiais PBR, criar animações com keyframes e exportar.
           </p>
         </div>
 
@@ -152,8 +152,8 @@ export const WelcomeLandingPage: React.FC<WelcomeLandingPageProps> = ({
                   Testar Rig de Exemplo
                 </h3>
                 <p className="text-[11px] text-[#635B54] mt-0.5 leading-relaxed">
-                  Explore o humanoide procedural jÃ¡ rigado com esqueleto X-Ray, guias IK e
-                  biblioteca de animaÃ§Ãµes.
+                  Explore o humanoide procedural já rigado com esqueleto X-Ray, guias IK e
+                  biblioteca de animações.
                 </p>
               </div>
               <div className="inline-flex items-center gap-1 text-xs font-semibold text-cyan-300 group-hover:translate-x-0.5 transition-transform">
@@ -181,7 +181,7 @@ export const WelcomeLandingPage: React.FC<WelcomeLandingPageProps> = ({
                   Criar painel de HTML â†’ 3D
                 </h3>
                 <p className="text-[11px] text-[#635B54] mt-0.5 leading-relaxed">
-                  Converta interfaces e layouts HTML em painÃ©is 3D PBR para referenciar e posicionar
+                  Converta interfaces e layouts HTML em painéis 3D PBR para referenciar e posicionar
                   na cena.
                 </p>
               </div>
@@ -208,7 +208,7 @@ export const WelcomeLandingPage: React.FC<WelcomeLandingPageProps> = ({
               <div>
                 <h3 className="text-xs sm:text-sm font-semibold text-[#231F1D] flex items-center gap-1.5">
                   <Layers className="w-3.5 h-3.5 text-indigo-300" />
-                  <span>Abrir EstÃºdio 3D Completo</span>
+                  <span>Abrir Estúdio 3D Completo</span>
                 </h3>
                 <p className="text-[11px] text-slate-300/80 mt-0.5 leading-relaxed">
                   Entre direto no Viewport 3D com Blender 5.3, PBR Atlas, Motion Lab, MoGraph e

@@ -61,14 +61,14 @@ class ViewportErrorBoundary extends Component<{ children: ReactNode }, ErrorBoun
   state: ErrorBoundaryState = { errorMessage: null };
 
   static getDerivedStateFromError(error: Error): ErrorBoundaryState {
-    return { errorMessage: error?.message || 'Erro inesperado no estÃºdio 3D.' };
+    return { errorMessage: error?.message || 'Erro inesperado no estúdio 3D.' };
   }
 
   render() {
     if (this.state.errorMessage) {
       return (
         <div className="flex-1 min-h-[360px] flex flex-col items-center justify-center gap-3 bg-[#0D1017] p-6 text-center">
-          <div className="text-sm font-semibold text-red-300">Falha ao inicializar o EstÃºdio 3D</div>
+          <div className="text-sm font-semibold text-red-300">Falha ao inicializar o Estúdio 3D</div>
           <div className="max-w-md text-xs text-[#635B54]">{this.state.errorMessage}</div>
           <button
             type="button"
@@ -120,7 +120,7 @@ const UNIFIED_WORKSPACE_LINKS: { id: UnifiedWorkspaceChipId; label: string }[] =
 const RIGHT_DOCK_TITLES: Partial<Record<WorkspacePageTab, string>> = {
   rigging: 'Rig & Anim (ActionForge)',
   lighting: 'Luz & Render 4K',
-  studio_notes: 'VariÃ¡veis & Notas (MoGraph)',
+  studio_notes: 'Variáveis & Notas (MoGraph)',
   guide: 'Fluxo de Trabalho 3D',
   export: 'Exportar Blender (API Atual) / GLB / PNG',
 };
@@ -549,11 +549,11 @@ export default function App() {
             </span>
           </a>
           <span className="hidden xl:inline text-[11px] font-mono text-[#635B54] truncate max-w-[170px]">
-            {activeTab === 'home' ? 'PÃ¡gina Inicial' : stats.activeAssetName}
+            {activeTab === 'home' ? 'Página Inicial' : stats.activeAssetName}
           </span>
         </div>
 
-        <div className="gsap-nav-item flex items-center gap-0.5 shrink-0" role="group" aria-label="HistÃ³rico">
+        <div className="gsap-nav-item flex items-center gap-0.5 shrink-0" role="group" aria-label="Histórico">
           <button
             type="button"
             disabled={activeTab === 'home' || !viewportStatus.canUndo}
@@ -614,7 +614,7 @@ export default function App() {
         <button
           type="button"
           onClick={() => setSearchOpen(true)}
-          title="Buscar ferramentas e pÃ¡ginas (Ctrl+K)"
+          title="Buscar ferramentas e páginas (Ctrl+K)"
           className="gsap-nav-item inline-flex items-center gap-1.5 h-8 px-2.5 rounded-lg border border-[#231F1D]/15 bg-[#EDE6DA]/70 text-slate-300 hover:border-slate-700 hover:text-[#231F1D] text-[11px] font-medium transition-colors shrink-0 cursor-pointer whitespace-nowrap"
         >
           <Search className="w-3.5 h-3.5 text-orange-400" />
@@ -638,7 +638,7 @@ export default function App() {
         </button>
       </header>
 
-      {/* STUDIO UNIFICADO Quick Workspace Links Bar (PÃ¡gina 2) */}
+      {/* STUDIO UNIFICADO Quick Workspace Links Bar (Página 2) */}
       {activeTab !== 'home' && (
         <nav
           aria-label="Links do Studio Unificado"
@@ -680,7 +680,7 @@ export default function App() {
         </nav>
       )}
 
-      {/* Main Content Area: PÃ¡gina 1 (Welcome) OR PÃ¡gina 2 (Persistent 3D Engine + Contextual Dock) */}
+      {/* Main Content Area: Página 1 (Welcome) OR Página 2 (Persistent 3D Engine + Contextual Dock) */}
       <main className="relative flex-1 flex flex-col min-h-0 overflow-hidden pb-12 sm:pb-0">
         {activeTab === 'home' ? (
           <WelcomeLandingPage
@@ -758,7 +758,7 @@ export default function App() {
                   <button
                     type="button"
                     onClick={() => setBottomDockExpanded((v) => !v)}
-                    title={bottomDockExpanded ? 'Altura padrÃ£o' : 'Expandir Ã¡rea de comandos'}
+                    title={bottomDockExpanded ? 'Altura padrão' : 'Expandir área de comandos'}
                     className="inline-flex items-center gap-1 h-7 px-2.5 rounded-md bg-[#FAF8F5]/80 hover:bg-slate-700 text-[11px] text-slate-300 hover:text-[#231F1D] cursor-pointer whitespace-nowrap"
                   >
                     {bottomDockExpanded ? (
@@ -766,7 +766,7 @@ export default function App() {
                     ) : (
                       <ChevronUp className="w-3.5 h-3.5 text-orange-400" />
                     )}
-                    <span>{bottomDockExpanded ? 'Tamanho PadrÃ£o' : 'Expandir Comandos'}</span>
+                    <span>{bottomDockExpanded ? 'Tamanho Padrão' : 'Expandir Comandos'}</span>
                   </button>
                   <button
                     type="button"
@@ -987,7 +987,7 @@ export default function App() {
 
       {/* Mobile Fixed Thumb-Zone Bottom Tab Bar */}
       <nav
-        aria-label="NavegaÃ§Ã£o mÃ³vel do estÃºdio"
+        aria-label="Navegação móvel do estúdio"
         className="sm:hidden fixed bottom-0 left-0 right-0 z-40 bg-[#0D1017] border-t border-[#231F1D]/15/90 pb-safe"
       >
         <div className="flex items-center gap-1 h-12 px-1.5 overflow-x-auto no-scrollbar">

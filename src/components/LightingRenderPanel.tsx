@@ -78,7 +78,7 @@ export const LightingRenderPanel: React.FC<LightingRenderPanelProps> = ({
   return (
     <div className="rounded-xl bg-[#141923] border border-[#231F1D]/15 p-3 space-y-3 text-xs">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <span className="font-semibold text-[#231F1D]">Luzes, PÃ³s-Processamento & Render PNG</span>
+        <span className="font-semibold text-[#231F1D]">Luzes, Pós-Processamento & Render PNG</span>
         <div className="flex items-center gap-1.5">
           <button
             type="button"
@@ -140,7 +140,7 @@ export const LightingRenderPanel: React.FC<LightingRenderPanelProps> = ({
             </div>
 
             <label className="flex items-center gap-2 text-[11px] text-[#635B54]">
-              <span className="w-16 shrink-0">ForÃ§a</span>
+              <span className="w-16 shrink-0">Força</span>
               <input
                 type="range"
                 min={0}
@@ -175,7 +175,7 @@ export const LightingRenderPanel: React.FC<LightingRenderPanelProps> = ({
 
         <label className="flex flex-col gap-1">
           <span className="flex justify-between text-[11px] text-[#635B54]">
-            <span>ExposiÃ§Ã£o EV</span>
+            <span>Exposição EV</span>
             <span className="font-mono text-slate-200 tabular-nums">{exposure.toFixed(2)}</span>
           </span>
           <input
@@ -194,7 +194,7 @@ export const LightingRenderPanel: React.FC<LightingRenderPanelProps> = ({
       {/* Real-time Post-Processing Pipeline */}
       {onPostProcessingChange && (
         <div className="p-2.5 rounded-lg bg-[#0D1017] border border-[#231F1D]/15 space-y-2.5">
-          <div className="text-[11px] font-semibold text-[#231F1D]">PÃ³s-Processamento (Compositor WebGL)</div>
+          <div className="text-[11px] font-semibold text-[#231F1D]">Pós-Processamento (Compositor WebGL)</div>
 
           <div className="space-y-1.5">
             <label className="flex items-center justify-between text-[11px] text-slate-200 cursor-pointer">
@@ -288,7 +288,7 @@ export const LightingRenderPanel: React.FC<LightingRenderPanelProps> = ({
             </label>
             {motionBlurEnabled && (
               <label className="flex flex-col gap-0.5 text-[10px] text-[#635B54] pl-2">
-                <span>PersistÃªncia ({Math.round(motionBlurDamp * 100)}%)</span>
+                <span>Persistência ({Math.round(motionBlurDamp * 100)}%)</span>
                 <input
                   type="range"
                   min={0.35}
@@ -306,7 +306,7 @@ export const LightingRenderPanel: React.FC<LightingRenderPanelProps> = ({
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-[#231F1D]/15">
         <label className="flex flex-col gap-1">
-          <span className="text-[11px] text-[#635B54]">ResoluÃ§Ã£o Render PNG</span>
+          <span className="text-[11px] text-[#635B54]">Resolução Render PNG</span>
           <select
             value={resolution}
             onChange={(e) => onResolutionChange(e.target.value as RenderResolutionPreset)}

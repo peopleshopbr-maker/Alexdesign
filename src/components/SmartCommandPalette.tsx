@@ -42,42 +42,42 @@ const COMMAND_ITEMS: CommandItem[] = [
   {
     id: 'stage1',
     title: 'Importar Modelo 3D (GLB / glTF / OBJ / STL / ZIP)',
-    subtitle: 'Carregar malha ou cena externa no estÃºdio',
+    subtitle: 'Carregar malha ou cena externa no estúdio',
     keywords: ['importar', 'glb', 'gltf', 'obj', 'stl', 'zip', 'arquivo'],
     icon: <Upload className="w-4 h-4 text-sky-400" />,
   },
   {
     id: 'viewport',
-    title: 'EstÃºdio 3D (Viewport Principal)',
-    subtitle: 'Modelagem, gizmos Q/W/E/R, pintura e cÃ¢mera ao vivo',
+    title: 'Estúdio 3D (Viewport Principal)',
+    subtitle: 'Modelagem, gizmos Q/W/E/R, pintura e câmera ao vivo',
     keywords: ['viewport', 'estudio', '3d', 'camera'],
     icon: <Box className="w-4 h-4 text-orange-400" />,
   },
   {
     id: 'stage5',
     title: 'Adicionar Primitivas, Vetores 3D & Templates',
-    subtitle: 'Cubo, esfera, nÃ³ 3D, estrela, coraÃ§Ã£o, templates',
+    subtitle: 'Cubo, esfera, nó 3D, estrela, coração, templates',
     keywords: ['primitiva', 'objeto', 'formas', 'vetor', 'cubo', 'esfera', 'template'],
     icon: <Shapes className="w-4 h-4 text-purple-400" />,
   },
   {
     id: 'html3d',
     title: 'HTML â†’ 3D (Criar Painel Web 3D PBR)',
-    subtitle: 'Converter cÃ³digo HTML em placa 3D exportÃ¡vel no .GLB',
+    subtitle: 'Converter código HTML em placa 3D exportável no .GLB',
     keywords: ['html', '3d', 'ui', 'placa', 'painel', 'card', 'web', 'texto'],
     icon: <Code2 className="w-4 h-4 text-orange-400" />,
   },
   {
     id: 'reference',
-    title: 'Importar Imagem de ReferÃªncia (Frente / Lado / Topo)',
+    title: 'Importar Imagem de Referência (Frente / Lado / Topo)',
     subtitle: 'Plano guia semi-transparente para modelagem e rigging',
     keywords: ['referencia', 'imagem', 'blueprint', 'trace', 'guia', 'foto'],
     icon: <ImageIcon className="w-4 h-4 text-sky-400" />,
   },
   {
     id: 'stage6',
-    title: 'OperaÃ§Ãµes Booleanas CSG, FÃ­sica & Eventos',
-    subtitle: 'UniÃ£o, subtraÃ§Ã£o, interseÃ§Ã£o, gravidade e interaÃ§Ãµes web',
+    title: 'Operações Booleanas CSG, Física & Eventos',
+    subtitle: 'União, subtração, interseção, gravidade e interações web',
     keywords: ['csg', 'booleano', 'uniao', 'subtrair', 'fisica', 'gravidade', 'eventos'],
     icon: <Box className="w-4 h-4 text-cyan-400" />,
   },
@@ -91,35 +91,35 @@ const COMMAND_ITEMS: CommandItem[] = [
   {
     id: 'rigging',
     title: 'Rig & Anim (Auto-Rig, IK/FK, Timeline & Motion Lab)',
-    subtitle: 'Marcadores Mixamo, IK mÃ£os/pÃ©s, Dope Sheet, 84 clipes e blendshapes',
+    subtitle: 'Marcadores Mixamo, IK mãos/pés, Dope Sheet, 84 clipes e blendshapes',
     keywords: ['rig', 'rigging', 'ossos', 'armature', 'skin', 'esqueleto', 'animacao', 'chest_open', 'actionforge', 'ik', 'motion'],
     icon: <Bone className="w-4 h-4 text-orange-400" />,
   },
   {
     id: 'lighting',
-    title: 'Luz & HDRI, PÃ³s-Processamento & Render PNG 4K',
+    title: 'Luz & HDRI, Pós-Processamento & Render PNG 4K',
     subtitle: 'Ambientes HDRI, Bloom, DOF, Motion Blur e Tone Mapping AgX / ACES',
     keywords: ['hdri', 'luz', 'render', 'png', 'aces', 'agx', 'sombra', '4k', 'bloom', 'dof'],
     icon: <Sun className="w-4 h-4 text-yellow-400" />,
   },
   {
     id: 'studio_notes',
-    title: 'VariÃ¡veis, VÃ­nculos Web & Custom Properties (IDProperty)',
-    subtitle: 'Mouse/Scroll/Clique ligados a Shaders/VFX + notas de revisÃ£o',
+    title: 'Variáveis, Vínculos Web & Custom Properties (IDProperty)',
+    subtitle: 'Mouse/Scroll/Clique ligados a Shaders/VFX + notas de revisão',
     keywords: ['variaveis', 'dados', 'notas', 'comentarios', 'revisao', 'idproperty', 'vfx', 'particulas'],
     icon: <Sliders className="w-4 h-4 text-sky-400" />,
   },
   {
     id: 'guide',
     title: 'Fluxo de Trabalho 3D Unificado (Passo a Passo)',
-    subtitle: 'Atalhos diretos para cada etapa de produÃ§Ã£o na cena',
+    subtitle: 'Atalhos diretos para cada etapa de produção na cena',
     keywords: ['fluxo', 'guia', 'pipeline', 'etapas'],
     icon: <BookOpen className="w-4 h-4 text-emerald-400" />,
   },
   {
     id: 'export',
-    title: 'Auditoria GLB, Blender 5.3 bpy & ExportaÃ§Ã£o (.GLB / .FBX / .ZIP)',
-    subtitle: 'Auditoria completa, script Blender 5.3, embed HTML/React/Next/Three e link pÃºblico',
+    title: 'Auditoria GLB, Blender 5.3 bpy & Exportação (.GLB / .FBX / .ZIP)',
+    subtitle: 'Auditoria completa, script Blender 5.3, embed HTML/React/Next/Three e link público',
     keywords: ['exportar', 'publicar', 'codigo', 'html', 'react', 'next', 'three', 'glb', 'fbx', 'zip', 'blender', 'auditoria'],
     icon: <Archive className="w-4 h-4 text-teal-400" />,
   },
@@ -193,7 +193,7 @@ export const SmartCommandPalette: React.FC<SmartCommandPaletteProps> = ({
       className="fixed inset-0 z-50 bg-[#F5F1EA]/70 flex items-start justify-center pt-16 px-4"
       onClick={onClose}
       role="dialog"
-      aria-label="Busca de pÃ¡ginas, ferramentas e acessibilidade"
+      aria-label="Busca de páginas, ferramentas e acessibilidade"
     >
       <div
         className="w-full max-w-xl rounded-xl bg-[#141923] border border-slate-700 shadow-2xl overflow-hidden"
@@ -206,7 +206,7 @@ export const SmartCommandPalette: React.FC<SmartCommandPaletteProps> = ({
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Buscar pÃ¡gina ou ferramenta (ex: Rig, chest_open, HDRI, CÃ³digo, Exportar)..."
+            placeholder="Buscar página ou ferramenta (ex: Rig, chest_open, HDRI, Código, Exportar)..."
             className="flex-1 bg-transparent text-sm text-[#231F1D] placeholder-slate-500 focus:outline-none"
           />
           <button

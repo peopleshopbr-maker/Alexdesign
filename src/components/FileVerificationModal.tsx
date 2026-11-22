@@ -61,7 +61,7 @@ export const FileVerificationModal: React.FC<FileVerificationModalProps> = ({
       className="fixed inset-0 z-50 bg-[#F5F1EA]/75 flex items-center justify-center p-4"
       onClick={onClose}
       role="dialog"
-      aria-label="Auditoria e verificaÃ§Ã£o tÃ©cnica GLB/glTF"
+      aria-label="Auditoria e verificação técnica GLB/glTF"
     >
       <div
         className="w-full max-w-2xl rounded-xl bg-[#141923] border border-slate-700 shadow-2xl overflow-hidden flex flex-col max-h-[86vh]"
@@ -70,7 +70,7 @@ export const FileVerificationModal: React.FC<FileVerificationModalProps> = ({
         <div className="px-4 py-3 border-b border-[#231F1D]/15 flex items-center justify-between gap-2">
           <div className="flex items-center gap-2">
             <FileSearch className="w-4 h-4 text-orange-400" />
-            <span className="text-sm font-semibold text-[#231F1D]">VerificaÃ§Ã£o TÃ©cnica GLB / glTF</span>
+            <span className="text-sm font-semibold text-[#231F1D]">Verificação Técnica GLB / glTF</span>
           </div>
           <div className="flex items-center gap-1.5">
             <input
@@ -128,7 +128,7 @@ export const FileVerificationModal: React.FC<FileVerificationModalProps> = ({
 
           {!report ? (
             <div className="py-10 text-center text-[#635B54]">
-              Clique em &ldquo;Cena Atual&rdquo; ou envie um arquivo .glb/.gltf para auditar malhas, UVs, normais e animaÃ§Ãµes.
+              Clique em &ldquo;Cena Atual&rdquo; ou envie um arquivo .glb/.gltf para auditar malhas, UVs, normais e animações.
             </div>
           ) : (
             <>
@@ -148,7 +148,7 @@ export const FileVerificationModal: React.FC<FileVerificationModalProps> = ({
                   ) : (
                     <>
                       <AlertTriangle className="w-4 h-4 text-amber-400" />
-                      <span className="text-amber-400">AtenÃ§Ã£o ({report.warnings.length})</span>
+                      <span className="text-amber-400">Atenção ({report.warnings.length})</span>
                     </>
                   )}
                 </div>
@@ -157,11 +157,11 @@ export const FileVerificationModal: React.FC<FileVerificationModalProps> = ({
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                 {[
                   { label: 'Malhas', val: report.meshes },
-                  { label: 'TriÃ¢ngulos', val: report.triangles.toLocaleString() },
+                  { label: 'Triângulos', val: report.triangles.toLocaleString() },
                   { label: 'Materiais', val: report.materials },
                   { label: 'Texturas', val: report.textures },
                   { label: 'Ossos / Skins', val: `${report.bones} (${report.skins})` },
-                  { label: 'AnimaÃ§Ãµes', val: report.animations },
+                  { label: 'Animações', val: report.animations },
                   { label: 'Canal UV0', val: report.hasUv0 ? 'Presente' : 'Ausente' },
                   { label: 'Normais', val: report.hasNormals ? 'Presentes' : 'Ausentes' },
                 ].map((stat) => (

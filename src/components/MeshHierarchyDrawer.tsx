@@ -87,7 +87,7 @@ export const MeshHierarchyDrawer: React.FC<MeshHierarchyDrawerProps> = ({
 
   return (
     <aside
-      aria-label="Hierarquia Flutuante de ColeÃ§Ãµes e Assets"
+      aria-label="Hierarquia Flutuante de Coleções e Assets"
       className="absolute top-13 left-3 bottom-12 w-68 rounded-xl bg-[#0D1017]/85 backdrop-blur-md border border-slate-700/80 shadow-2xl flex flex-col z-20 overflow-hidden"
     >
       <div className="px-2.5 py-2 border-b border-[#231F1D]/15/90 flex items-center justify-between gap-1.5">
@@ -102,7 +102,7 @@ export const MeshHierarchyDrawer: React.FC<MeshHierarchyDrawerProps> = ({
             }`}
           >
             <Layers className="w-3 h-3 text-orange-400" />
-            <span>ColeÃ§Ãµes ({meshes.length})</span>
+            <span>Coleções ({meshes.length})</span>
           </button>
           <button
             type="button"
@@ -223,7 +223,7 @@ export const MeshHierarchyDrawer: React.FC<MeshHierarchyDrawerProps> = ({
                               e.stopPropagation();
                               onToggleLock(item.id);
                             }}
-                            title={item.locked ? 'Destravar seleÃ§Ã£o' : 'Travar seleÃ§Ã£o'}
+                            title={item.locked ? 'Destravar seleção' : 'Travar seleção'}
                             className="w-6 h-6 rounded hover:bg-[#FAF8F5] text-[#635B54] hover:text-amber-300 flex items-center justify-center cursor-pointer"
                           >
                             {item.locked ? (

@@ -171,7 +171,7 @@ export const PublishExportPage: React.FC<PublishExportPageProps> = ({
             Exportar Blender 5.3 (bpy), .FBX, .GLB, PNG Transparente & Link Interativo
           </h1>
           <p className="text-xs text-[#635B54]">
-            Exporte criaÃ§Ãµes 100% compatÃ­veis com docs.blender.org/api/current (Collections, KinematicConstraint, Principled BSDF, IDProperty, ParticleSettings e RigidBodyObject).
+            Exporte criações 100% compatíveis com docs.blender.org/api/current (Collections, KinematicConstraint, Principled BSDF, IDProperty, ParticleSettings e RigidBodyObject).
           </p>
         </div>
 
@@ -179,11 +179,11 @@ export const PublishExportPage: React.FC<PublishExportPageProps> = ({
           <button
             type="button"
             onClick={onBakeIkPhysics}
-            title="Assar poses IK e fÃ­sica em keyframes puros antes de exportar"
+            title="Assar poses IK e física em keyframes puros antes de exportar"
             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-600/20 border border-amber-500/50 hover:bg-amber-600/30 text-xs font-semibold text-amber-200 cursor-pointer whitespace-nowrap"
           >
             <Sparkles className="w-3.5 h-3.5" />
-            <span>Bake AnimaÃ§Ã£o & FÃ­sica</span>
+            <span>Bake Animação & Física</span>
           </button>
 
           <button
@@ -192,7 +192,7 @@ export const PublishExportPage: React.FC<PublishExportPageProps> = ({
             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-sky-600/20 border border-sky-500/50 hover:bg-sky-600/30 text-xs font-semibold text-sky-200 cursor-pointer whitespace-nowrap"
           >
             {linkCopied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Link2 className="w-3.5 h-3.5" />}
-            <span>{linkCopied ? 'Link Copiado!' : 'Copiar Link PÃºblico'}</span>
+            <span>{linkCopied ? 'Link Copiado!' : 'Copiar Link Público'}</span>
           </button>
 
           <button
@@ -201,7 +201,7 @@ export const PublishExportPage: React.FC<PublishExportPageProps> = ({
             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#FAF8F5] hover:bg-slate-700 text-xs font-semibold text-[#231F1D] cursor-pointer whitespace-nowrap"
           >
             <Box className="w-3.5 h-3.5 text-orange-400" />
-            <span>EstÃºdio 3D</span>
+            <span>Estúdio 3D</span>
           </button>
         </div>
       </div>
@@ -232,7 +232,7 @@ export const PublishExportPage: React.FC<PublishExportPageProps> = ({
           </div>
           <div className="min-w-0">
             <div className="text-xs font-semibold text-[#231F1D]">Exportar .GLB</div>
-            <div className="text-[11px] text-[#635B54] truncate">BinÃ¡rio glTF 2.0 + Extras bpy</div>
+            <div className="text-[11px] text-[#635B54] truncate">Binário glTF 2.0 + Extras bpy</div>
           </div>
         </button>
 
@@ -246,7 +246,7 @@ export const PublishExportPage: React.FC<PublishExportPageProps> = ({
           </div>
           <div className="min-w-0">
             <div className="text-xs font-semibold text-[#231F1D]">Exportar .FBX (7.4)</div>
-            <div className="text-[11px] text-[#635B54] truncate">Malhas, Skin & AnimaÃ§Ãµes</div>
+            <div className="text-[11px] text-[#635B54] truncate">Malhas, Skin & Animações</div>
           </div>
         </button>
 
@@ -260,7 +260,7 @@ export const PublishExportPage: React.FC<PublishExportPageProps> = ({
           </div>
           <div className="min-w-0">
             <div className="text-xs font-semibold text-[#231F1D]">Exportar .glTF</div>
-            <div className="text-[11px] text-[#635B54] truncate">JSON legÃ­vel glTF 2.0</div>
+            <div className="text-[11px] text-[#635B54] truncate">JSON legível glTF 2.0</div>
           </div>
         </button>
 
@@ -315,7 +315,7 @@ export const PublishExportPage: React.FC<PublishExportPageProps> = ({
             <RotateCcw className="w-4 h-4 text-slate-300" />
           </div>
           <div className="min-w-0">
-            <div className="text-xs font-semibold text-[#231F1D]">Restaurar Cena PadrÃ£o</div>
+            <div className="text-xs font-semibold text-[#231F1D]">Restaurar Cena Padrão</div>
             <div className="text-[11px] text-[#635B54] truncate">Reiniciar modelo AlexDesign</div>
           </div>
         </button>
@@ -336,7 +336,7 @@ export const PublishExportPage: React.FC<PublishExportPageProps> = ({
                 className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-md bg-[#FAF8F5] hover:bg-slate-700 text-xs font-medium text-[#231F1D] cursor-pointer whitespace-nowrap"
               >
                 {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
-                <span>{copied ? 'Copiado' : 'Copiar CÃ³digo'}</span>
+                <span>{copied ? 'Copiado' : 'Copiar Código'}</span>
               </button>
               <button
                 type="button"
@@ -378,7 +378,7 @@ export const PublishExportPage: React.FC<PublishExportPageProps> = ({
           <div className="flex flex-wrap items-center justify-between gap-2">
             <div className="flex items-center gap-2">
               <FileSearch className="w-4 h-4 text-amber-400" />
-              <h2 className="text-sm font-semibold text-[#231F1D]">Auditoria TÃ©cnica GLB / glTF</h2>
+              <h2 className="text-sm font-semibold text-[#231F1D]">Auditoria Técnica GLB / glTF</h2>
             </div>
             <div className="flex items-center gap-1.5">
               <input
@@ -445,7 +445,7 @@ export const PublishExportPage: React.FC<PublishExportPageProps> = ({
                   ) : (
                     <>
                       <AlertTriangle className="w-4 h-4 text-amber-400" />
-                      <span className="text-amber-400">AtenÃ§Ã£o ({auditReport.warnings.length})</span>
+                      <span className="text-amber-400">Atenção ({auditReport.warnings.length})</span>
                     </>
                   )}
                 </div>
@@ -454,7 +454,7 @@ export const PublishExportPage: React.FC<PublishExportPageProps> = ({
               <div className="grid grid-cols-2 gap-2">
                 {[
                   { label: 'Malhas', val: auditReport.meshes },
-                  { label: 'TriÃ¢ngulos', val: auditReport.triangles.toLocaleString() },
+                  { label: 'Triângulos', val: auditReport.triangles.toLocaleString() },
                   { label: 'Materiais', val: auditReport.materials },
                   { label: 'Ossos / Skins', val: `${auditReport.bones} (${auditReport.skins})` },
                   { label: 'Canal UV0', val: auditReport.hasUv0 ? 'Presente' : 'Ausente' },

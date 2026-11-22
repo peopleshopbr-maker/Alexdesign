@@ -1535,7 +1535,7 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
           mesh.name = targetFile.name.replace(/\.[^.]+$/, '');
           loadedGroup.add(mesh);
         } else {
-          flashBanner(`Formato nÃ£o suportado: .${ext} (use .glb, .gltf, .fbx, .obj, .stl ou .zip).`);
+          flashBanner(`Formato não suportado: .${ext} (use .glb, .gltf, .fbx, .obj, .stl ou .zip).`);
           return;
         }
 
@@ -1912,7 +1912,7 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
     if (selectedObjectRef.current && (selectedObjectRef.current as THREE.Bone).isBone) {
       syncSelectedInspectorFromObject(selectedObjectRef.current);
     }
-    flashBanner('Pose restaurada para posiÃ§Ã£o neutra (Rest Pose).');
+    flashBanner('Pose restaurada para posição neutra (Rest Pose).');
   }, [flashBanner, syncSelectedInspectorFromObject]);
 
   const handleRemoveRig = useCallback(() => {
@@ -2192,7 +2192,7 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
         setAnimLoop(true);
         animLoopRef.current = true;
         playClipInstance(compiled, activeClipIdx, nextStrips[0].clipId, true);
-        flashBanner(`SequÃªncia NLA compilada (${nextStrips.length} clipe(s), ${compiled.duration.toFixed(2)}s).`);
+        flashBanner(`Sequência NLA compilada (${nextStrips.length} clipe(s), ${compiled.duration.toFixed(2)}s).`);
       }
     },
     [activeClipIdx, flashBanner, handleRunAutoRig, playClipInstance]
@@ -2560,7 +2560,7 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
       playClipInstance(updated, activeClipIdx, updated.name, animLoopRef.current);
       setIsPlaying(false);
       handleSeekNormalized(resumePct);
-      flashBanner(`Curva de interpolaÃ§Ã£o alterada para: ${mode.toUpperCase()}.`);
+      flashBanner(`Curva de interpolação alterada para: ${mode.toUpperCase()}.`);
     },
     [activeClipIdx, animProgress, flashBanner, handleSeekNormalized, playClipInstance]
   );
@@ -2612,7 +2612,7 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
         }
         grp.visible = true;
         setIsPlaying(false);
-        flashBanner('Alvos IK ativos! Arraste os octaedros nas mÃ£os ou pÃ©s com Mover (W).');
+        flashBanner('Alvos IK ativos! Arraste os octaedros nas mãos ou pés com Mover (W).');
       } else if (ikTargetsGroupRef.current) {
         ikTargetsGroupRef.current.visible = false;
         if (selectedObjectRef.current?.userData?.isIkTarget) {
@@ -2640,7 +2640,7 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
         incomingClips = gltf.animations || [];
       }
       if (incomingClips.length === 0) {
-        flashBanner(`Nenhuma faixa de animaÃ§Ã£o encontrada em ${file.name}.`);
+        flashBanner(`Nenhuma faixa de animação encontrada em ${file.name}.`);
         return;
       }
       const targetNames = bonesRef.current.map((b) => b.name);
@@ -2656,9 +2656,9 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
       retargeted.forEach((c) => clipPoolMapRef.current.set(c.name.toLowerCase(), c));
       setClipNames(clipsRef.current.map((c) => c.name));
       playClipInstance(retargeted[0], 0, retargeted[0].name, true);
-      flashBanner(`AnimaÃ§Ã£o importada e retargetada: ${retargeted[0].name} (${retargeted[0].tracks.length} tracks).`);
+      flashBanner(`Animação importada e retargetada: ${retargeted[0].name} (${retargeted[0].tracks.length} tracks).`);
     } catch (err) {
-      flashBanner(err instanceof Error ? err.message : 'Falha ao importar animaÃ§Ã£o FBX/GLB.');
+      flashBanner(err instanceof Error ? err.message : 'Falha ao importar animação FBX/GLB.');
     } finally {
       URL.revokeObjectURL(blobUrl);
     }
@@ -2691,7 +2691,7 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
       mixerRef.current = new THREE.AnimationMixer(modelRootRef.current);
     }
     playClipInstance(bakedClip, 0, bakedClip.name, true);
-    flashBanner(`IK & FÃ­sica assados no clipe "${bakedClip.name}"!`);
+    flashBanner(`IK & Física assados no clipe "${bakedClip.name}"!`);
   }, [activeClipId, animDuration, flashBanner, playClipInstance]);
 
   const handleCopyClipLink = useCallback(
@@ -2742,7 +2742,7 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
       const encoded = btoa(unescape(encodeURIComponent(JSON.stringify(payload))));
       window.history.replaceState(null, '', `#scene=${encoded}`);
       navigator.clipboard?.writeText(window.location.href).catch(() => {});
-      flashBanner(`Link interativo pÃºblico copiado (#scene=... Â· clip ${activeClipId})!`);
+      flashBanner(`Link interativo público copiado (#scene=... Â· clip ${activeClipId})!`);
     } catch {
       handleCopyClipLink(activeClipId);
     }
@@ -2904,7 +2904,7 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
           );
         },
         (err) => {
-          flashBanner(`Erro na exportaÃ§Ã£o: ${err instanceof Error ? err.message : 'desconhecido'}`);
+          flashBanner(`Erro na exportação: ${err instanceof Error ? err.message : 'desconhecido'}`);
         },
         { binary: format === 'glb', animations }
       );
@@ -2928,7 +2928,7 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
     a.download = `${activeAssetName}.fbx`;
     a.click();
     URL.revokeObjectURL(url);
-    flashBanner(`Exportado ${activeAssetName}.fbx (FBX 7.4 ASCII com Bones, Skin e AnimaÃ§Ãµes)!`);
+    flashBanner(`Exportado ${activeAssetName}.fbx (FBX 7.4 ASCII com Bones, Skin e Animações)!`);
   }, [activeAssetName, flashBanner, withRestoredPbrMaterials]);
 
   const handleExportZip = useCallback(() => {
@@ -3026,7 +3026,7 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
         powerPreference: 'high-performance',
       });
     } catch (err) {
-      setWebglError(err instanceof Error ? err.message : 'Contexto WebGL indisponÃ­vel.');
+      setWebglError(err instanceof Error ? err.message : 'Contexto WebGL indisponível.');
       return;
     }
 
@@ -4218,7 +4218,7 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
     const obj = selectedObjectRef.current;
     if (!obj || !obj.parent) return;
     if (obj === modelRootRef.current) {
-      flashBanner('Use "Restaurar Cena PadrÃ£o" para limpar o modelo inteiro.');
+      flashBanner('Use "Restaurar Cena Padrão" para limpar o modelo inteiro.');
       return;
     }
     const name = obj.name || 'Objeto';
@@ -4386,7 +4386,7 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
     refreshMorphTargets();
     frameCameraToScene();
     syncSelectedInspectorFromObject(fresh);
-    flashBanner('Cena restaurada: personagem padrÃ£o com Armature X-Ray & IK ativo.');
+    flashBanner('Cena restaurada: personagem padrão com Armature X-Ray & IK ativo.');
   }, [extractAndPushUvs, flashBanner, frameCameraToScene, refreshMorphTargets, syncEmitterSceneGroup, syncSceneHierarchy, syncSelectedInspectorFromObject, syncUndoRedoFlags]);
 
   const handleApplyGlobalScale = useCallback((scale: number) => {
@@ -4479,7 +4479,7 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
             aspect,
           }));
           setShowReferencePopover(true);
-          flashBanner(`ReferÃªncia carregada: ${file.name}`);
+          flashBanner(`Referência carregada: ${file.name}`);
         };
         img.src = dataUrl;
       };
@@ -5035,7 +5035,7 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
     group.add(outMesh);
     syncSceneHierarchy();
     syncSelectedInspectorFromObject(outMesh);
-    flashBanner(`OperaÃ§Ã£o CSG (${op}) aplicada.`);
+    flashBanner(`Operação CSG (${op}) aplicada.`);
   };
 
   const handleRenderPng = async (forceTransparent?: boolean) => {
@@ -5243,7 +5243,7 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
             target.material.color.setHex(0xffffff);
             target.material.needsUpdate = true;
           }
-          flashBanner(`Textura de vÃ­deo aplicada: ${f.name}`);
+          flashBanner(`Textura de vídeo aplicada: ${f.name}`);
           e.target.value = '';
         }}
       />
@@ -5259,7 +5259,7 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
         }}
       />
 
-      {/* Left Column â€” Explorer (Armature / Malhas / ReferÃªncias) */}
+      {/* Left Column â€” Explorer (Armature / Malhas / Referências) */}
       {!hideRightInspector && showMeshDrawer && (
         <ExplorerOutlinerDock
           onCollapse={() => setShowMeshDrawer(false)}
@@ -5352,7 +5352,7 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
         <div className="relative flex-1 min-h-[220px] bg-[#0D1017]">
           {webglError ? (
             <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 p-6 text-center">
-              <div className="text-sm font-semibold text-red-300">Contexto WebGL indisponÃ­vel</div>
+              <div className="text-sm font-semibold text-red-300">Contexto WebGL indisponível</div>
               <div className="max-w-md text-xs text-[#635B54]">{webglError}</div>
               <button
                 type="button"
@@ -5373,15 +5373,15 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
           {/* Top-Left Blender Mode Selector, Context Breadcrumb & Segmented Tools */}
           <div className="absolute top-3 left-3 z-10 flex flex-col gap-1.5 max-w-[calc(100%-220px)]">
             <div className="flex flex-wrap items-center gap-1.5">
-              <ShortcutTooltip label="Alternar Modo de InteraÃ§Ã£o" shortcut="Tab">
+              <ShortcutTooltip label="Alternar Modo de Interação" shortcut="Tab">
                 <select
-                  aria-label="Modo de InteraÃ§Ã£o Blender"
+                  aria-label="Modo de Interação Blender"
                   value={interactionMode}
                   onChange={(e) => handleApplyInteractionMode(e.target.value as BlenderInteractionMode)}
                   className="h-8 px-2 rounded-lg bg-[#141923] border border-[#231F1D]/15 hover:border-slate-600 text-[11px] font-semibold text-[#231F1D] cursor-pointer focus:outline-none"
                 >
                   <option value="object">Modo de Objeto</option>
-                  <option value="edit">Modo de EdiÃ§Ã£o (Wire)</option>
+                  <option value="edit">Modo de Edição (Wire)</option>
                   <option value="pose">Modo de Pose</option>
                   <option value="weight_paint">Pintura de Pesos</option>
                 </select>
@@ -5403,7 +5403,7 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
 
               <div
                 role="group"
-                aria-label="Ferramentas de ediÃ§Ã£o 3D"
+                aria-label="Ferramentas de edição 3D"
                 className="flex items-center rounded-lg border border-[#231F1D]/15 bg-[#141923] p-0.5 divide-x divide-slate-800/80"
               >
                 {(
@@ -5469,7 +5469,7 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
                       ? 'bg-cyan-600/20 border-cyan-500 text-cyan-200'
                       : 'bg-[#141923] border-[#231F1D]/15 text-slate-300 hover:border-slate-600'
                   }`}
-                  title="Alternar visualizaÃ§Ã£o X-Ray dos ossos e guias IK"
+                  title="Alternar visualização X-Ray dos ossos e guias IK"
                 >
                   <Bone className="w-3.5 h-3.5 text-cyan-400" />
                   <span className="hidden xl:inline">Ossos</span>
@@ -5491,22 +5491,22 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
                       ? 'bg-sky-600/20 border-sky-500 text-sky-200'
                       : 'bg-[#141923] border-[#231F1D]/15 text-slate-200 hover:border-slate-600'
                   }`}
-                  title="Importar ou ajustar imagem de referÃªncia (Frente / Lado / Topo)"
+                  title="Importar ou ajustar imagem de referência (Frente / Lado / Topo)"
                 >
                   <ImageIcon className="w-3.5 h-3.5 text-sky-400" />
-                  <span className="hidden xl:inline">ReferÃªncia</span>
+                  <span className="hidden xl:inline">Referência</span>
                 </button>
 
                 {showReferencePopover && refPlane.active && (
                   <div className="absolute left-0 top-10 z-30 w-64 rounded-xl bg-[#111622] border border-slate-700 shadow-2xl p-3 space-y-2.5 text-[11px]">
                     <div className="flex items-center justify-between">
                       <span className="font-semibold text-[#231F1D] truncate max-w-[160px]">
-                        {refPlane.name || 'Imagem de ReferÃªncia'}
+                        {refPlane.name || 'Imagem de Referência'}
                       </span>
                       <button
                         type="button"
                         onClick={() => setShowReferencePopover(false)}
-                        aria-label="Fechar ajustes de referÃªncia"
+                        aria-label="Fechar ajustes de referência"
                         className="text-[#635B54] hover:text-[#231F1D] cursor-pointer"
                       >
                         <X className="w-3.5 h-3.5" />
@@ -5575,7 +5575,7 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
                         className="flex-1 inline-flex items-center justify-center gap-1 py-1 rounded bg-[#090C12] border border-[#231F1D]/15 hover:border-slate-600 text-[10px] text-slate-200 cursor-pointer"
                       >
                         {refPlane.visible ? <Eye className="w-3 h-3 text-emerald-400" /> : <EyeOff className="w-3 h-3" />}
-                        <span>{refPlane.visible ? 'VisÃ­vel' : 'Oculta'}</span>
+                        <span>{refPlane.visible ? 'Visível' : 'Oculta'}</span>
                       </button>
                       <button
                         type="button"
@@ -5602,7 +5602,7 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
                           setRefPlane((p) => ({ ...p, active: false, dataUrl: '', name: '' }));
                           setShowReferencePopover(false);
                         }}
-                        title="Remover referÃªncia"
+                        title="Remover referência"
                         className="px-2 py-1 rounded bg-[#090C12] border border-[#231F1D]/15 hover:border-red-500 text-[10px] text-red-300 cursor-pointer"
                       >
                         Limpar
@@ -5617,7 +5617,7 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
             <div className="pointer-events-none inline-flex items-center gap-1.5 px-2 py-0.5 rounded bg-[#0D1017]/80 border border-[#231F1D]/15/70 text-[10px] font-mono text-[#635B54] w-fit">
               <span>Perspectiva</span>
               <ChevronRight className="w-3 h-3 text-slate-600" />
-              <span className="text-slate-300">ColeÃ§Ã£o</span>
+              <span className="text-slate-300">Coleção</span>
               <ChevronRight className="w-3 h-3 text-slate-600" />
               <span className="text-orange-300 truncate max-w-[200px]">
                 {selectedBoneName || selectedInspector?.name || activeAssetName}
@@ -5656,7 +5656,7 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
                 />
               </label>
               <label className="flex items-center gap-1 text-[10px] text-slate-300">
-                <span>ForÃ§a</span>
+                <span>Força</span>
                 <input
                   type="range"
                   min={0.1}
@@ -5689,7 +5689,7 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
                 {(
                   [
                     { id: 'wireframe', label: 'Wireframe', icon: <Grid3X3 className="w-3.5 h-3.5" /> },
-                    { id: 'solid', label: 'SÃ³lido (Clay)', icon: <CircleDot className="w-3.5 h-3.5" /> },
+                    { id: 'solid', label: 'Sólido (Clay)', icon: <CircleDot className="w-3.5 h-3.5" /> },
                     { id: 'material', label: 'Preview Material (PBR)', icon: <Palette className="w-3.5 h-3.5" /> },
                     { id: 'rendered', label: 'Renderizado (Luz & HDRI)', icon: <Sun className="w-3.5 h-3.5" /> },
                   ] as { id: ViewportShadingMode; label: string; icon: React.ReactNode }[]
@@ -5756,11 +5756,11 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
                     <Maximize2 className="w-3 h-3" />
                   </button>
                 </ShortcutTooltip>
-                <ShortcutTooltip label="CÃ¢mera 3/4" placement="top">
+                <ShortcutTooltip label="Câmera 3/4" placement="top">
                   <button
                     type="button"
                     onClick={() => setCameraPreset('q34')}
-                    aria-label="CÃ¢mera 3/4"
+                    aria-label="Câmera 3/4"
                     className="w-6 h-6 rounded flex items-center justify-center text-slate-300 hover:text-[#231F1D] hover:bg-[#FAF8F5] cursor-pointer"
                   >
                     <Camera className="w-3 h-3" />

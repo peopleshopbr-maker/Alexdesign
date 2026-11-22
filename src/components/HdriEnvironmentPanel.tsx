@@ -140,7 +140,7 @@ export const HdriEnvironmentPanel: React.FC<HdriEnvironmentPanelProps> = ({
               onChange={(e) => onBgAsEnvironmentChange(e.target.checked)}
               className="accent-orange-500"
             />
-            <span>Usar HDRI como plano de fundo visÃ­vel</span>
+            <span>Usar HDRI como plano de fundo visível</span>
           </label>
         </div>
       )}

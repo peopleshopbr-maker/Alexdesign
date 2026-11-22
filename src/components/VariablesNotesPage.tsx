@@ -35,19 +35,19 @@ interface VariablesNotesPageProps {
 const NOTES_STORAGE_KEY = 'alexdesign_scene_notes_v1';
 
 const SOURCE_LABELS: Record<VariableBindingSource, string> = {
-  mouse_x: 'Mouse X (PosiÃ§Ã£o Horizontal)',
-  mouse_y: 'Mouse Y (PosiÃ§Ã£o Vertical)',
+  mouse_x: 'Mouse X (Posição Horizontal)',
+  mouse_y: 'Mouse Y (Posição Vertical)',
   scroll: 'Scroll (Roda do Mouse)',
   click: 'Clique na Cena',
 };
 
 const TARGET_LABELS: Record<VariableBindingTarget, string> = {
   fresnel: 'Shader Fresnel (Brilho Borda)',
-  dissolve: 'Shader Dissolve (RuÃ­do)',
-  distortion: 'Shader DistorÃ§Ã£o (Ondas)',
-  particleRate: 'Taxa de PartÃ­culas VFX',
-  animSpeed: 'Velocidade da AnimaÃ§Ã£o',
-  exposure: 'ExposiÃ§Ã£o HDR (EV)',
+  dissolve: 'Shader Dissolve (Ruído)',
+  distortion: 'Shader Distorção (Ondas)',
+  particleRate: 'Taxa de Partículas VFX',
+  animSpeed: 'Velocidade da Animação',
+  exposure: 'Exposição HDR (EV)',
 };
 
 export const VariablesNotesPage: React.FC<VariablesNotesPageProps> = ({
@@ -126,7 +126,7 @@ export const VariablesNotesPage: React.FC<VariablesNotesPageProps> = ({
       <div className="rounded-xl bg-[#141923] border border-[#231F1D]/15 p-4 flex flex-wrap items-center justify-between gap-3">
         <div className="space-y-1 min-w-0">
           <h1 className="text-base font-bold text-[#231F1D]">
-            VariÃ¡veis Customizadas (Blender IDProperty) & VÃ­nculos Web Interativos
+            Variáveis Customizadas (Blender IDProperty) & Vínculos Web Interativos
           </h1>
           <p className="text-xs text-[#635B54]">
             Vincule eventos reais (Mouse, Scroll, Clique) a Shaders/VFX e exporte tudo como{' '}
@@ -141,7 +141,7 @@ export const VariablesNotesPage: React.FC<VariablesNotesPageProps> = ({
           className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-orange-600 hover:bg-orange-500 text-xs font-semibold text-[#231F1D] cursor-pointer whitespace-nowrap"
         >
           <Box className="w-3.5 h-3.5" />
-          <span>EstÃºdio 3D</span>
+          <span>Estúdio 3D</span>
         </button>
       </div>
 
@@ -150,7 +150,7 @@ export const VariablesNotesPage: React.FC<VariablesNotesPageProps> = ({
         <section className="rounded-xl bg-[#141923] border border-[#231F1D]/15 p-4 space-y-3.5">
           <div className="flex items-center gap-2">
             <Sliders className="w-4 h-4 text-sky-400" />
-            <h2 className="text-sm font-semibold text-[#231F1D]">VariÃ¡veis Reativas da Cena (IDProperty)</h2>
+            <h2 className="text-sm font-semibold text-[#231F1D]">Variáveis Reativas da Cena (IDProperty)</h2>
           </div>
 
           <div className="space-y-3">
@@ -249,7 +249,7 @@ export const VariablesNotesPage: React.FC<VariablesNotesPageProps> = ({
                   className="inline-flex items-center gap-1 px-2 py-1 rounded bg-cyan-600/20 border border-cyan-500/50 hover:bg-cyan-600/30 text-[11px] text-cyan-200 cursor-pointer"
                 >
                   <Plus className="w-3 h-3" />
-                  <span>VÃ­nculo</span>
+                  <span>Vínculo</span>
                 </button>
               </div>
 
@@ -279,7 +279,7 @@ export const VariablesNotesPage: React.FC<VariablesNotesPageProps> = ({
                         type="button"
                         onClick={() => onUpdateBindings(bindings.filter((b) => b.id !== rule.id))}
                         className="text-[#635B54] hover:text-red-400 cursor-pointer"
-                        title="Remover vÃ­nculo"
+                        title="Remover vínculo"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>
@@ -359,7 +359,7 @@ export const VariablesNotesPage: React.FC<VariablesNotesPageProps> = ({
         <section className="rounded-xl bg-[#141923] border border-[#231F1D]/15 p-4 space-y-3.5">
           <div className="flex items-center gap-2">
             <MessageSquare className="w-4 h-4 text-orange-400" />
-            <h2 className="text-sm font-semibold text-[#231F1D]">ComentÃ¡rios & Notas da Cena</h2>
+            <h2 className="text-sm font-semibold text-[#231F1D]">Comentários & Notas da Cena</h2>
           </div>
 
           <form onSubmit={handleAddNote} className="space-y-2">
@@ -375,7 +375,7 @@ export const VariablesNotesPage: React.FC<VariablesNotesPageProps> = ({
                 type="text"
                 value={noteInput}
                 onChange={(e) => setNoteInput(e.target.value)}
-                placeholder="Adicionar anotaÃ§Ã£o de ajuste ou revisÃ£o..."
+                placeholder="Adicionar anotação de ajuste ou revisão..."
                 className="px-3 py-2 rounded-lg bg-[#0D1017] border border-[#231F1D]/15 text-xs text-[#231F1D] focus:outline-none focus:border-orange-500"
               />
             </div>
@@ -384,14 +384,14 @@ export const VariablesNotesPage: React.FC<VariablesNotesPageProps> = ({
               className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-orange-600 hover:bg-orange-500 text-xs font-semibold text-[#231F1D] cursor-pointer"
             >
               <Plus className="w-3.5 h-3.5" />
-              <span>Registrar AnotaÃ§Ã£o</span>
+              <span>Registrar Anotação</span>
             </button>
           </form>
 
           <div className="space-y-2 max-h-96 overflow-y-auto">
             {notes.length === 0 ? (
               <div className="p-6 text-center text-xs text-slate-500 border border-dashed border-[#231F1D]/15 rounded-xl">
-                Nenhuma anotaÃ§Ã£o registrada nesta cena.
+                Nenhuma anotação registrada nesta cena.
               </div>
             ) : (
               notes.map((n) => (
@@ -425,7 +425,7 @@ export const VariablesNotesPage: React.FC<VariablesNotesPageProps> = ({
                           prev.map((x) => (x.id === n.id ? { ...x, resolved: !x.resolved } : x))
                         )
                       }
-                      title={n.resolved ? 'Reabrir nota' : 'Marcar como concluÃ­da'}
+                      title={n.resolved ? 'Reabrir nota' : 'Marcar como concluída'}
                       className={`w-7 h-7 rounded-md flex items-center justify-center cursor-pointer ${
                         n.resolved
                           ? 'bg-emerald-600 text-[#231F1D]'
@@ -437,7 +437,7 @@ export const VariablesNotesPage: React.FC<VariablesNotesPageProps> = ({
                     <button
                       type="button"
                       onClick={() => setNotes((prev) => prev.filter((x) => x.id !== n.id))}
-                      title="Excluir anotaÃ§Ã£o"
+                      title="Excluir anotação"
                       className="w-7 h-7 rounded-md bg-[#FAF8F5] text-[#635B54] hover:text-red-400 flex items-center justify-center cursor-pointer"
                     >
                       <Trash2 className="w-3.5 h-3.5" />

@@ -24,28 +24,28 @@ const STEPS: StepDef[] = [
   },
   {
     step: '02',
-    title: 'Pintura 3D & AparÃªncia na Malha',
+    title: 'Pintura 3D & Aparência na Malha',
     description:
-      'Pinte diretamente na superfÃ­cie 3D e ajuste cor, roughness, metalness e emissÃ£o em tempo real no inspetor do EstÃºdio 3D.',
+      'Pinte diretamente na superfície 3D e ajuste cor, roughness, metalness e emissão em tempo real no inspetor do Estúdio 3D.',
     actionLabel: 'Abrir Pintura & Cor',
     target: 'stage3',
     icon: <Paintbrush className="w-4 h-4 text-pink-400" />,
   },
   {
     step: '03',
-    title: 'IluminaÃ§Ã£o HDRI & Render PNG 4K',
+    title: 'Iluminação HDRI & Render PNG 4K',
     description:
-      'Configure ambientes HDRI, estÃºdio de 3 pontos, Tone Mapping ACES/AgX e gere capturas PNG transparentes atÃ© 4K.',
+      'Configure ambientes HDRI, estúdio de 3 pontos, Tone Mapping ACES/AgX e gere capturas PNG transparentes até 4K.',
     actionLabel: 'Abrir Luz & Render',
     target: 'lighting',
     icon: <Sun className="w-4 h-4 text-amber-400" />,
   },
   {
     step: '04',
-    title: 'Auto-Rigging por Marcadores & AnimaÃ§Ã£o WebGL',
+    title: 'Auto-Rigging por Marcadores & Animação WebGL',
     description:
-      'Ajuste marcadores anatÃ´micos com simetria, misture clipes por mÃ¡scara de ossos (como chest_open) e edite a postura em tempo real.',
-    actionLabel: 'Abrir Rig & AnimaÃ§Ã£o',
+      'Ajuste marcadores anatômicos com simetria, misture clipes por máscara de ossos (como chest_open) e edite a postura em tempo real.',
+    actionLabel: 'Abrir Rig & Animação',
     target: 'rigging',
     icon: <Bone className="w-4 h-4 text-orange-400" />,
   },
@@ -53,7 +53,7 @@ const STEPS: StepDef[] = [
     step: '05',
     title: 'Incorpore no Seu Site ou Exporte GLB / Blender bpy',
     description:
-      'Audite o ativo 3D, baixe .glb/.gltf/.zip com script Blender (API atual), PNG transparente ou copie cÃ³digo para HTML, React, Next.js e Three.js.',
+      'Audite o ativo 3D, baixe .glb/.gltf/.zip com script Blender (API atual), PNG transparente ou copie código para HTML, React, Next.js e Three.js.',
     actionLabel: 'Publicar & Exportar',
     target: 'export',
     icon: <Code2 className="w-4 h-4 text-teal-400" />,
@@ -74,7 +74,7 @@ export const PipelineGuide: React.FC<PipelineGuideProps> = ({
       <div className="rounded-xl bg-[#141923] border border-[#231F1D]/15 p-4 flex flex-wrap items-center justify-between gap-3">
         <div className="min-w-0">
           <h1 className="text-base font-bold text-[#231F1D]">
-            Fluxo de Trabalho Web 3D â€” Do Modelo Ã  PublicaÃ§Ã£o
+            Fluxo de Trabalho Web 3D â€” Do Modelo à Publicação
           </h1>
           <p className="text-xs text-[#635B54] mt-1">
             Todas as etapas permanecem sincronizadas ao vivo com o Viewport 3D acima.
@@ -85,7 +85,7 @@ export const PipelineGuide: React.FC<PipelineGuideProps> = ({
           onClick={onOpenViewport}
           className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-orange-600 hover:bg-orange-500 text-xs font-semibold text-[#231F1D] cursor-pointer whitespace-nowrap shrink-0"
         >
-          <span>Inspetor EstÃºdio 3D</span>
+          <span>Inspetor Estúdio 3D</span>
           <ArrowRight className="w-3.5 h-3.5" />
         </button>
       </div>

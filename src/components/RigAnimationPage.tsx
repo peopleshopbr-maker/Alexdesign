@@ -228,7 +228,7 @@ export const RigAnimationPage: React.FC<RigAnimationPageProps> = ({
           <button
             type="button"
             onClick={onImportAnimationFile}
-            title="Importar clipe de animaÃ§Ã£o .FBX ou .GLB com Retargeting automÃ¡tico"
+            title="Importar clipe de animação .FBX ou .GLB com Retargeting automático"
             className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-[#0D1017] border border-slate-700 hover:border-sky-500 text-xs font-medium text-sky-300 cursor-pointer whitespace-nowrap"
           >
             <Upload className="w-3.5 h-3.5" />
@@ -238,7 +238,7 @@ export const RigAnimationPage: React.FC<RigAnimationPageProps> = ({
             type="button"
             onClick={onBakeIkPhysics}
             disabled={!isRigged}
-            title="Assar poses IK e fÃ­sica em keyframes puros para exportaÃ§Ã£o"
+            title="Assar poses IK e física em keyframes puros para exportação"
             className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-[#0D1017] border border-slate-700 hover:border-amber-500 disabled:opacity-40 text-xs font-medium text-amber-300 cursor-pointer whitespace-nowrap"
           >
             <Sparkles className="w-3.5 h-3.5" />
@@ -247,7 +247,7 @@ export const RigAnimationPage: React.FC<RigAnimationPageProps> = ({
           <button
             type="button"
             onClick={onToggleClayShading}
-            title="Alternar visualizaÃ§Ã£o PBR colorida / Clay cinza neutro"
+            title="Alternar visualização PBR colorida / Clay cinza neutro"
             className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-xs font-medium cursor-pointer whitespace-nowrap ${
               clayShading
                 ? 'bg-slate-200 border-slate-100 text-slate-900'
@@ -260,7 +260,7 @@ export const RigAnimationPage: React.FC<RigAnimationPageProps> = ({
           <button
             type="button"
             onClick={onExportRestPoseGlb}
-            title="Exportar personagem e armadura sem animaÃ§Ãµes em Rest Pose (.GLB)"
+            title="Exportar personagem e armadura sem animações em Rest Pose (.GLB)"
             className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-[#0D1017] border border-slate-700 hover:border-sky-500 text-xs font-medium text-sky-300 cursor-pointer whitespace-nowrap"
           >
             <Download className="w-3.5 h-3.5" />
@@ -280,7 +280,7 @@ export const RigAnimationPage: React.FC<RigAnimationPageProps> = ({
             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-orange-600 hover:bg-orange-500 text-xs font-semibold text-[#231F1D] cursor-pointer whitespace-nowrap"
           >
             <Box className="w-3.5 h-3.5" />
-            <span>EstÃºdio 3D</span>
+            <span>Estúdio 3D</span>
           </button>
         </div>
       </div>
@@ -292,7 +292,7 @@ export const RigAnimationPage: React.FC<RigAnimationPageProps> = ({
             <div>
               <h2 className="text-sm font-semibold text-[#231F1D]">Auto-Rig (Estilo Mixamo), IK & Pintura de Pesos</h2>
               <p className="text-xs text-[#635B54] mt-0.5">
-                Clique na malha para posicionar marcadores, ative alvos IK para mÃ£os/pÃ©s ou ajuste pesos com mapa de calor.
+                Clique na malha para posicionar marcadores, ative alvos IK para mãos/pés ou ajuste pesos com mapa de calor.
               </p>
             </div>
             <label className="flex items-center gap-2 text-xs text-slate-300 cursor-pointer">
@@ -380,7 +380,7 @@ export const RigAnimationPage: React.FC<RigAnimationPageProps> = ({
                       : 'bg-[#0D1017] border-slate-700 text-slate-300'
                   }`}
                 >
-                  <span>Alvos IK (MÃ£os/PÃ©s)</span>
+                  <span>Alvos IK (Mãos/Pés)</span>
                 </button>
                 <button
                   type="button"
@@ -392,7 +392,7 @@ export const RigAnimationPage: React.FC<RigAnimationPageProps> = ({
                   }`}
                 >
                   <Anchor className="w-3.5 h-3.5" />
-                  <span>Fixar PÃ©s no ChÃ£o</span>
+                  <span>Fixar Pés no Chão</span>
                 </button>
                 <button
                   type="button"
@@ -490,7 +490,7 @@ export const RigAnimationPage: React.FC<RigAnimationPageProps> = ({
                   </label>
                   <label className="flex flex-col gap-0.5 text-[11px] text-slate-300">
                     <span className="flex justify-between">
-                      <span>ForÃ§a</span>
+                      <span>Força</span>
                       <span className="font-mono text-amber-300">{Math.round(weightBrushStrength * 100)}%</span>
                     </span>
                     <input
@@ -519,7 +519,7 @@ export const RigAnimationPage: React.FC<RigAnimationPageProps> = ({
           <div className="p-3.5 rounded-xl bg-[#0D1017] border border-[#231F1D]/15 space-y-3 text-xs">
             <label className="flex flex-col gap-1">
               <div className="flex justify-between text-slate-300">
-                <span>InclinaÃ§Ã£o da Coluna (Spine Bend)</span>
+                <span>Inclinação da Coluna (Spine Bend)</span>
                 <span className="font-mono text-orange-400 tabular-nums">
                   {postureOffsets.spineBendDeg.toFixed(0)}Â°
                 </span>
@@ -537,7 +537,7 @@ export const RigAnimationPage: React.FC<RigAnimationPageProps> = ({
 
             <label className="flex flex-col gap-1">
               <div className="flex justify-between text-slate-300">
-                <span>Altura PÃ©lvica (Pelvis Offset)</span>
+                <span>Altura Pélvica (Pelvis Offset)</span>
                 <span className="font-mono text-orange-400 tabular-nums">
                   {postureOffsets.pelvisHeight.toFixed(2)}m
                 </span>
@@ -555,7 +555,7 @@ export const RigAnimationPage: React.FC<RigAnimationPageProps> = ({
 
             <label className="flex flex-col gap-1">
               <div className="flex justify-between text-slate-300">
-                <span>Abertura dos BraÃ§os (Arm Spread)</span>
+                <span>Abertura dos Braços (Arm Spread)</span>
                 <span className="font-mono text-orange-400 tabular-nums">
                   {postureOffsets.armSpreadDeg.toFixed(0)}Â°
                 </span>
@@ -575,11 +575,11 @@ export const RigAnimationPage: React.FC<RigAnimationPageProps> = ({
           {/* Blendshapes / Morph Targets */}
           <div className="p-3 rounded-xl bg-[#0D1017] border border-[#231F1D]/15 space-y-2 text-xs">
             <div className="font-semibold text-slate-200">
-              Blendshapes / ExpressÃµes ({morphTargets.length})
+              Blendshapes / Expressões ({morphTargets.length})
             </div>
             {morphTargets.length === 0 ? (
               <p className="text-[11px] text-slate-500">
-                Importe um GLB com Shape Keys ou selecione a cabeÃ§a padrÃ£o para ajustar expressÃµes.
+                Importe um GLB com Shape Keys ou selecione a cabeça padrão para ajustar expressões.
               </p>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-32 overflow-y-auto pr-1">

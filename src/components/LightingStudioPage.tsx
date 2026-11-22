@@ -61,10 +61,10 @@ export const LightingStudioPage: React.FC<LightingStudioPageProps> = ({
         <div className="space-y-1 min-w-0">
           <h1 className="text-base font-bold text-[#231F1D] flex items-center gap-2">
             <Sun className="w-4 h-4 text-amber-400 shrink-0" />
-            <span>EstÃºdio de Luz HDRI, PÃ³s-Processamento & Render PNG 4K</span>
+            <span>Estúdio de Luz HDRI, Pós-Processamento & Render PNG 4K</span>
           </h1>
           <p className="text-xs text-[#635B54]">
-            Ajuste iluminaÃ§Ã£o IBL, Bloom, Depth of Field, Motion Blur e Tone Mapping (ACES / AgX) para{' '}
+            Ajuste iluminação IBL, Bloom, Depth of Field, Motion Blur e Tone Mapping (ACES / AgX) para{' '}
             <span className="font-mono text-slate-200">{assetName}</span>.
           </p>
         </div>
@@ -85,7 +85,7 @@ export const LightingStudioPage: React.FC<LightingStudioPageProps> = ({
             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-orange-600 hover:bg-orange-500 text-xs font-semibold text-[#231F1D] cursor-pointer whitespace-nowrap"
           >
             <Box className="w-3.5 h-3.5" />
-            <span>EstÃºdio 3D</span>
+            <span>Estúdio 3D</span>
           </button>
         </div>
       </div>

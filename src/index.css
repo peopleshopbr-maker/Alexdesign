@@ -1,4 +1,6 @@
-﻿:root {
+﻿@import "tailwindcss";
+
+:root {
   /* === BASE BEGE NEUTRA & CONFORTO VISUAL === */
   --bg-page: #F5F1EA;
   --bg-soft: #EDE6DA;

@@ -97,7 +97,7 @@ export const SplineCodeExportModal: React.FC<SplineCodeExportModalProps> = ({
       className="fixed inset-0 z-50 bg-[#F5F1EA]/75 flex items-center justify-center p-4"
       onClick={onClose}
       role="dialog"
-      aria-label="3D interativo feito para a web â€” exportar cÃ³digo"
+      aria-label="3D interativo feito para a web â€” exportar código"
     >
       <div
         className="w-full max-w-4xl rounded-xl bg-[#141923] border border-slate-700 shadow-2xl overflow-hidden flex flex-col max-h-[88vh]"
@@ -110,7 +110,7 @@ export const SplineCodeExportModal: React.FC<SplineCodeExportModalProps> = ({
               <span className="text-sm font-semibold text-[#231F1D]">3D interativo, feito para a web</span>
             </div>
             <p className="text-[11px] text-[#635B54] mt-0.5">
-              Incorpore via iframe/link pÃºblico ou exporte cÃ³digo Vanilla JS, React, Next.js e Three.js.
+              Incorpore via iframe/link público ou exporte código Vanilla JS, React, Next.js e Three.js.
             </p>
           </div>
           <div className="flex items-center gap-1.5">
@@ -121,7 +121,7 @@ export const SplineCodeExportModal: React.FC<SplineCodeExportModalProps> = ({
                 className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-md bg-sky-600/20 border border-sky-500/50 hover:bg-sky-600/30 text-xs font-medium text-sky-200 cursor-pointer whitespace-nowrap"
               >
                 <Link2 className="w-3.5 h-3.5" />
-                <span>Gerar Link PÃºblico</span>
+                <span>Gerar Link Público</span>
               </button>
             )}
             <button

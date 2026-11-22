@@ -173,7 +173,7 @@ export const NumberScrubber: React.FC<NumberScrubberProps> = ({
             if (e.key === 'Enter') commitDraft();
             if (e.key === 'Escape') setEditing(false);
           }}
-          aria-label={label || (axis ? `Eixo ${axis}` : 'Valor numÃ©rico')}
+          aria-label={label || (axis ? `Eixo ${axis}` : 'Valor numérico')}
           className="w-full px-1.5 bg-transparent text-[11px] font-mono text-[#231F1D] focus:outline-none tabular-nums"
         />
       </div>
@@ -246,7 +246,7 @@ export const PbrSlider: React.FC<PbrSliderProps> = ({
     <div
       className="flex flex-col gap-1 select-none"
       onDoubleClick={() => onChange(defaultValue)}
-      title={`Duplo clique para restaurar padrÃ£o (${defaultValue.toFixed(decimals)})${
+      title={`Duplo clique para restaurar padrão (${defaultValue.toFixed(decimals)})${
         blenderSocket ? ` Â· Blender: ${blenderSocket}` : ''
       }`}
     >
