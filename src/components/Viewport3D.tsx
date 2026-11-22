@@ -1391,7 +1391,11 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
 
   const loadModelFromFiles = useCallback(
     async (files: File[]) => {
-      if (!files.length || !sceneRef.current) return;
+      if (!files.length) return;
+    if (!sceneRef.current) {
+      console.warn('[import] viewport 3D ainda nao inicializada - import cancelado');
+      return;
+    }
       setIsImporting(true);
       const createdBlobUrls: string[] = [];
       let dracoLoader: DRACOLoader | null = null;
@@ -1502,7 +1506,7 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
           srcType = 'glb';
           const loader = new GLTFLoader(manager);
           dracoLoader = new DRACOLoader(manager);
-          dracoLoader.setDecoderPath('https://www.gstatic.com/draco/versioned/decoders/1.5.7/');
+          dracoLoader.setDecoderPath('/assets/');
           loader.setDRACOLoader(dracoLoader);
           const gltf = await loader.loadAsync(targetUrl);
           loadedGroup = gltf.scene || new THREE.Group();
