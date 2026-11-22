@@ -1,5 +1,4 @@
-Ôªø
-npm run build; if ($?) { npx wrangler pages deploy dist }
+
 import React, { useState, Suspense } from "react";
 import { useStudioIntelligence } from "../context/StudioIntelligenceContext";
 
@@ -52,7 +51,7 @@ class SafeModuleBoundary extends React.Component<
     if (this.state.hasError) {
       return (
         <div className="rounded-lg border border-amber-500/40 bg-amber-950/30 p-4 text-xs text-amber-200">
-          <p className="font-semibold">M√≥dulo {this.props.name} aguardando par√¢metros da cena:</p>
+          <p className="font-semibold">MÛdulo {this.props.name} aguardando par‚metros da cena:</p>
           <p className="mt-1 opacity-80">{this.state.errorMsg}</p>
         </div>
       );
@@ -121,7 +120,7 @@ export function AlexDesignHub({ onClose }: { onClose: () => void }) {
           onClick={onClose}
           className="rounded-md border border-zinc-700 bg-zinc-800 px-3 py-1.5 text-xs font-medium text-zinc-200 transition hover:bg-zinc-700"
         >
-          ‚Üê Voltar ao Roboticela Animator
+          ? Voltar ao Roboticela Animator
         </button>
       </div>
 
@@ -145,7 +144,7 @@ export function AlexDesignHub({ onClose }: { onClose: () => void }) {
         <Suspense
           fallback={
             <div className="flex h-full items-center justify-center text-sm text-zinc-400">
-              Carregando m√≥dulo AlexDesign 3D Studio...
+              Carregando mÛdulo AlexDesign 3D Studio...
             </div>
           }
         >
