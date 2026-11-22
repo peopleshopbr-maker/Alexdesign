@@ -1,0 +1,1745 @@
+=== DIAGNOSTICO DE RIG E ANIMACAO ===
+
+--- ARQUIVO: C:\Users\studio alex\OneDrive\Documentos\Alexdesign\Alexdesign-main\src\components\AddonCodeStudio.tsx ---
+import React, { useMemo, useState } from 'react';
+import { Check, Copy, Download, FileCode2 } from 'lucide-react';
+import {
+  AddonConfig,
+  BlenderCompatTarget,
+  RIG_PRESET_DEFINITIONS,
+  RigPreset,
+  ShaderPreset,
+  TargetEngine,
+  generateAddonFiles,
+} from '../addon/blenderAddonTemplates';
+
+interface AddonCodeStudioProps {
+  config: AddonConfig;
+  onConfigChange: (patch: Partial<AddonConfig>) => void;
+  onDownloadZip: () => void;
+  isDownloading: boolean;
+}
+
+export const AddonCodeStudio: React.FC<AddonCodeStudioProps> = ({
+  config,
+  onConfigChange,
+  onDownloadZip,
+  isDownloading,
+}) => {
+  const files = useMemo(() => generateAddonFiles(config), [config]);
+  const [activeFilename, setActiveFilename] = useState<string>('operators_uv.py');
+  const [copiedFile, setCopiedFile] = useState<string | null>(null);
+
+  const activeFile = files.find((f) => f.filename === activeFilename) || files[0];
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(activeFile.content);
+      setCopiedFile(activeFile.filename);
+      setTimeout(() => setCopiedFile(null), 1800);
+    } catch {
+      // Clipboard fallback ignored cleanly
+    }
+  };
+
+  return (
+    <div className="max-w-[1360px] mx-auto px-6 py-8 grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+      {/* Left Column: Addon Configurator */}
+      <div className="lg:col-span-4 flex flex-col gap-5">
+        <div>
+          <h2 className="text-xl font-semibold text-white">Configuração do Addon</h2>
+          <p className="mt-1 text-sm text-slate-400">
+            Personalize os parâmetros padrão gravados nos módulos Python e baixe o pacote pronto para instalar no Blender.
+          </p>
+        </div>
+
+        <div className="rounded-xl bg-[#141923] border border-slate-800 p-5 flex flex-col gap-4 text-xs">
+          <div className="text-sm font-semibold text-slate-200">Identidade & Compatibilidade</div>
+
+          <label className="flex flex-col gap-1">
+            <span className="text-slate-400">Nome do Addon</span>
+            <input
+              type="text"
+              value={config.displayName}
+              onChange={(e) => onConfigChange({ displayName: e.target.value })}
+              className="px-3 py-2 rounded-lg bg-[#0D1017] border border-slate-800 text-slate-100 focus:outline-none focus:border-orange-500"
+            />
+          </label>
+
+          <div className="grid grid-cols-2 gap-3">
+            <label className="flex flex-col gap-1">
+              <span className="text-slate-400">Versão Alvo</span>
+              <select
+                value={config.blenderTarget}
+                onChange={(e) => onConfigChange({ blenderTarget: e.target.value as BlenderCompatTarget })}
+                className="px-2.5 py-2 rounded-lg bg-[#0D1017] border border-slate-800 text-slate-100 focus:outline-none focus:border-orange-500"
+              >
+                <option value="3.5_TO_5.3">Blender 3.5 a 5.3</option>
+                <option value="5.3_EXT">Blender 5.3+ Extension</option>
+              </select>
+            </label>
+
+            <label className="flex flex-col gap-1">
+              <span className="text-slate-400">Engine Destino</span>
+              <select
+                value={config.targetEngine}
+                onChange={(e) => onConfigChange({ targetEngine: e.target.value as TargetEngine })}
+                className="px-2.5 py-2 rounded-lg bg-[#0D1017] border border-slate-800 text-slate-100 focus:outline-none focus:border-orange-500"
+              >
+                <option value="UNITY">Unity (FBX/GLB)</option>
+                <option value="UNREAL">Unreal Engine 5</option>
+                <option value="GODOT">Godot 4</option>
+                <option value="BLENDER">Blender Nativo</option>
+              </select>
+            </label>
+          </div>
+
+          <label className="flex flex-col gap-1">
+            <span className="text-slate-400">Predefinição de Rig Automático</span>
+            <select
+              value={config.rigPreset}
+              onChange={(e) => onConfigChange({ rigPreset: e.target.value as RigPreset })}
+              className="px-2.5 py-2 rounded-lg bg-[#0D1017] border border-slate-800 text-slate-100 focus:outline-none focus:border-orange-500"
+            >
+              {(Object.keys(RIG_PRESET_DEFINITIONS) as RigPreset[]).map((key) => (
+                <option key={key} value={key}>
+                  {RIG_PRESET_DEFINITIONS[key].label}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <div className="pt-3 border-t border-slate-800 text-sm font-semibold text-slate-200">
+            Mapeamento UV & Atlas
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <label className="flex flex-col gap-1">
+              <span className="flex justify-between text-slate-400">
+                <span>Seam Angle</span>
+                <span className="font-mono text-slate-200 tabular-nums">{config.seamAngleDeg}°</span>
+              </span>
+              <input
+                type="range"
+                min={15}
+                max={135}
+                step={1}
+                value={config.seamAngleDeg}
+                onChange={(e) => onConfigChange({ seamAngleDeg: Number(e.target.value) })}
+              />
+            </label>
+
+            <label className="flex flex-col gap-1">
+              <span className="flex justify-between text-slate-400">
+                <span>UV Margin</span>
+                <span className="font-mono text-slate-200 tabular-nums">{config.uvMargin.toFixed(3)}</span>
+              </span>
+              <input
+                type="range"
+                min={0.002}
+                max={0.06}
+                step={0.002}
+                value={config.uvMargin}
+                onChange={(e) => onConfigChange({ uvMargin: Number(e.target.value) })}
+              />
+            </label>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <label className="flex flex-col gap-1">
+              <span className="text-slate-400">Resolução Atlas</span>
+              <select
+                value={config.textureResolution}
+                onChange={(e) =>
+                  onConfigChange({ textureResolution: Number(e.target.value) as 1024 | 2048 | 4096 })
+                }
+                className="px-2.5 py-2 rounded-lg bg-[#0D1017] border border-slate-800 text-slate-100 focus:outline-none focus:border-orange-500"
+              >
+                <option value={1024}>1024 x 1024</option>
+                <option value={2048}>2048 x 2048</option>
+                <option value={4096}>4096 x 4096</option>
+              </select>
+            </label>
+
+            <label className="flex flex-col gap-1">
+              <span className="text-slate-400">Preset de Shader</span>
+              <select
+                value={config.shaderPreset}
+                onChange={(e) => onConfigChange({ shaderPreset: e.target.value as ShaderPreset })}
+                className="px-2.5 py-2 rounded-lg bg-[#0D1017] border border-slate-800 text-slate-100 focus:outline-none focus:border-orange-500"
+              >
+                <option value="PBR_PRINCIPLED">PBR Principled BSDF</option>
+                <option value="PBR_CEL_OUTLINE">PBR + Cel & Borde</option>
+                <option value="ANIME_TOON">Anime Toon Shader</option>
+              </select>
+            </label>
+          </div>
+
+          <div className="pt-3 border-t border-slate-800 text-sm font-semibold text-slate-200">
+            Canais Bake & Rigging
+          </div>
+
+          <div className="grid grid-cols-2 gap-2 text-slate-300">
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={config.bakeBaseColor}
+                onChange={(e) => onConfigChange({ bakeBaseColor: e.target.checked })}
+                className="accent-orange-500"
+              />
+              <span>Bake Base Color</span>
+            </label>
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={config.bakeRoughness}
+                onChange={(e) => onConfigChange({ bakeRoughness: e.target.checked })}
+                className="accent-orange-500"
+              />
+              <span>Bake Roughness</span>
+            </label>
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={config.bakeNormal}
+                onChange={(e) => onConfigChange({ bakeNormal: e.target.checked })}
+                className="accent-orange-500"
+              />
+              <span>Bake Normal Map</span>
+            </label>
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={config.bakeAO}
+                onChange={(e) => onConfigChange({ bakeAO: e.target.checked })}
+                className="accent-orange-500"
+              />
+              <span>Bake Ambient Occlusion</span>
+            </label>
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={config.exportUvLayouts}
+                onChange={(e) => onConfigChange({ exportUvLayouts: e.target.checked })}
+                className="accent-orange-500"
+              />
+              <span>Exportar UV PNGs</span>
+            </label>
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={config.exportPreviews}
+                onChange={(e) => onConfigChange({ exportPreviews: e.target.checked })}
+                className="accent-orange-500"
+              />
+              <span>Render 4 Previews</span>
+            </label>
+          </div>
+
+          <button
+            type="button"
+            onClick={onDownloadZip}
+            disabled={isDownloading}
+            className="mt-2 w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-orange-600 hover:bg-orange-500 disabled:opacity-60 text-sm font-semibold text-white transition-colors cursor-pointer"
+          >
+            <Download className="w-4 h-4" />
+            <span>{isDownloading ? 'Empacotando ZIP...' : 'Baixar Addon Completo (.zip)'}</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Right Column: Generated Python / Manifest Code Explorer */}
+      <div className="lg:col-span-8 rounded-xl bg-[#141923] border border-slate-800 overflow-hidden flex flex-col">
+        {/* File Tabs */}
+        <div className="flex items-center justify-between gap-4 px-4 py-3 border-b border-slate-800 bg-[#10141D]">
+          <div className="flex items-center gap-1.5 overflow-x-auto">
+            {files.map((file) => (
+              <button
+                key={file.filename}
+                type="button"
+                onClick={() => setActiveFilename(file.filename)}
+                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-mono transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
+                  activeFile.filename === file.filename
+                    ? 'bg-orange-600 text-white'
+                    : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800/70'
+                }`}
+              >
+                <FileCode2 className="w-3.5 h-3.5" />
+                <span>{file.filename}</span>
+              </button>
+            ))}
+          </div>
+
+          <button
+            type="button"
+            onClick={handleCopy}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-slate-800 hover:bg-slate-700 text-xs font-medium text-slate-100 transition-colors cursor-pointer whitespace-nowrap shrink-0"
+          >
+            {copiedFile === activeFile.filename ? (
+              <>
+                <Check className="w-3.5 h-3.5 text-emerald-400" />
+                <span>Copiado</span>
+              </>
+            ) : (
+              <>
+                <Copy className="w-3.5 h-3.5" />
+                <span>Copiar Arquivo</span>
+              </>
+            )}
+          </button>
+        </div>
+
+        {/* File Summary Strip */}
+        <div className="px-5 py-2.5 bg-[#0F131B] border-b border-slate-800/80 flex flex-wrap items-center justify-between gap-2 text-xs text-slate-400">
+          <span>{activeFile.summary}</span>
+          <span className="font-mono text-slate-500 tabular-nums">
+            {activeFile.content.split('\n').length} linhas
+          </span>
+        </div>
+
+        {/* Code Viewer */}
+        <div className="p-5 overflow-auto max-h-[640px] bg-[#0B0E14]">
+          <pre className="text-xs leading-relaxed font-mono text-slate-200 whitespace-pre">
+            <code>{activeFile.content}</code>
+          </pre>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+--- ARQUIVO: C:\Users\studio alex\OneDrive\Documentos\Alexdesign\Alexdesign-main\src\types\studioConfig.ts ---
+export type TargetEngine = 'BLENDER' | 'UNITY' | 'UNREAL' | 'GODOT';
+export type ShaderPreset = 'PBR_PRINCIPLED' | 'PBR_CEL_OUTLINE' | 'ANIME_TOON';
+export type RigPreset = 'HUMANOIDE' | 'BIPEDE' | 'QUADRUPEDE';
+
+export type BoneTuple = readonly [
+  name: string,
+  parent: string | null,
+  head: readonly [number, number, number],
+  tail: readonly [number, number, number],
+];
+
+export interface RigPresetDefinition {
+  id: RigPreset;
+  label: string;
+  shortLabel: string;
+  boneCount: number;
+  description: string;
+  bones: readonly BoneTuple[];
+}
+
+export const RIG_PRESET_DEFINITIONS: Record<RigPreset, RigPresetDefinition> = {
+  HUMANOIDE: {
+    id: 'HUMANOIDE',
+    label: 'Humanoide (21 Ossos)',
+    shortLabel: 'Humanoide',
+    boneCount: 21,
+    description: 'Esqueleto completo com clavículas, coluna em 3 segmentos e osso dinâmico de cabelo.',
+    bones: [
+      ['pelvis', null, [0.0, 0.0, 0.92], [0.0, 0.0, 1.04]],
+      ['spine_01', 'pelvis', [0.0, 0.0, 1.04], [0.0, 0.0, 1.18]],
+      ['spine_02', 'spine_01', [0.0, 0.0, 1.18], [0.0, 0.0, 1.32]],
+      ['chest', 'spine_02', [0.0, 0.0, 1.32], [0.0, 0.0, 1.46]],
+      ['neck', 'chest', [0.0, 0.0, 1.46], [0.0, 0.0, 1.54]],
+      ['head', 'neck', [0.0, 0.0, 1.54], [0.0, 0.0, 1.74]],
+      ['hair_dyn', 'head', [0.0, 0.07, 1.66], [0.0, 0.16, 1.46]],
+      ['clavicle_L', 'chest', [0.03, 0.0, 1.42], [0.14, 0.0, 1.42]],
+      ['upper_arm_L', 'clavicle_L', [0.14, 0.0, 1.42], [0.36, 0.0, 1.42]],
+      ['forearm_L', 'upper_arm_L', [0.36, 0.0, 1.42], [0.58, 0.0, 1.42]],
+      ['hand_L', 'forearm_L', [0.58, 0.0, 1.42], [0.68, 0.0, 1.42]],
+      ['clavicle_R', 'chest', [-0.03, 0.0, 1.42], [-0.14, 0.0, 1.42]],
+      ['upper_arm_R', 'clavicle_R', [-0.14, 0.0, 1.42], [-0.36, 0.0, 1.42]],
+      ['forearm_R', 'upper_arm_R', [-0.36, 0.0, 1.42], [-0.58, 0.0, 1.42]],
+      ['hand_R', 'forearm_R', [-0.58, 0.0, 1.42], [-0.68, 0.0, 1.42]],
+      ['thigh_L', 'pelvis', [0.09, 0.0, 0.9], [0.09, 0.0, 0.48]],
+      ['shin_L', 'thigh_L', [0.09, 0.0, 0.48], [0.09, 0.0, 0.08]],
+      ['foot_L', 'shin_L', [0.09, 0.0, 0.08], [0.09, -0.14, 0.0]],
+      ['thigh_R', 'pelvis', [-0.09, 0.0, 0.9], [-0.09, 0.0, 0.48]],
+      ['shin_R', 'thigh_R', [-0.09, 0.0, 0.48], [-0.09, 0.0, 0.08]],
+      ['foot_R', 'shin_R', [-0.09, 0.0, 0.08], [-0.09, -0.14, 0.0]],
+    ],
+  },
+  BIPEDE: {
+    id: 'BIPEDE',
+    label: 'Bípede (16 Ossos)',
+    shortLabel: 'Bípede',
+    boneCount: 16,
+    description: 'Esqueleto bípede simplificado sem clavículas, ideal para personagens estilizados e mobile.',
+    bones: [
+      ['pelvis', null, [0.0, 0.0, 0.9], [0.0, 0.0, 1.06]],
+      ['spine', 'pelvis', [0.0, 0.0, 1.06], [0.0, 0.0, 1.38]],
+      ['neck', 'spine', [0.0, 0.0, 1.38], [0.0, 0.0, 1.48]],
+      ['head', 'neck', [0.0, 0.0, 1.48], [0.0, 0.0, 1.72]],
+      ['upper_arm_L', 'spine', [0.15, 0.0, 1.36], [0.36, 0.0, 1.36]],
+      ['forearm_L', 'upper_arm_L', [0.36, 0.0, 1.36], [0.58, 0.0, 1.36]],
+      ['hand_L', 'forearm_L', [0.58, 0.0, 1.36], [0.68, 0.0, 1.36]],
+      ['upper_arm_R', 'spine', [-0.15, 0.0, 1.36], [-0.36, 0.0, 1.36]],
+      ['forearm_R', 'upper_arm_R', [-0.36, 0.0, 1.36], [-0.58, 0.0, 1.36]],
+      ['hand_R', 'forearm_R', [-0.58, 0.0, 1.36], [-0.68, 0.0, 1.36]],
+      ['thigh_L', 'pelvis', [0.09, 0.0, 0.88], [0.09, 0.0, 0.48]],
+      ['shin_L', 'thigh_L', [0.09, 0.0, 0.48], [0.09, 0.0, 0.08]],
+      ['foot_L', 'shin_L', [0.09, 0.0, 0.08], [0.09, -0.14, 0.0]],
+      ['thigh_R', 'pelvis', [-0.09, 0.0, 0.88], [-0.09, 0.0, 0.48]],
+      ['shin_R', 'thigh_R', [-0.09, 0.0, 0.48], [-0.09, 0.0, 0.08]],
+      ['foot_R', 'shin_R', [-0.09, 0.0, 0.08], [-0.09, -0.14, 0.0]],
+    ],
+  },
+  QUADRUPEDE: {
+    id: 'QUADRUPEDE',
+    label: 'Quadrúpede (20 Ossos)',
+    shortLabel: 'Quadrúpede',
+    boneCount: 20,
+    description: 'Esqueleto quadrúpede horizontal com coluna articulada, cauda e quatro membros completos.',
+    bones: [
+      ['pelvis', null, [0.0, 0.42, 0.78], [0.0, 0.24, 0.8]],
+      ['spine_01', 'pelvis', [0.0, 0.24, 0.8], [0.0, 0.0, 0.82]],
+      ['spine_02', 'spine_01', [0.0, 0.0, 0.82], [0.0, -0.24, 0.84]],
+      ['chest', 'spine_02', [0.0, -0.24, 0.84], [0.0, -0.44, 0.86]],
+      ['neck', 'chest', [0.0, -0.44, 0.86], [0.0, -0.62, 1.08]],
+      ['head', 'neck', [0.0, -0.62, 1.08], [0.0, -0.84, 1.04]],
+      ['tail_01', 'pelvis', [0.0, 0.44, 0.8], [0.0, 0.68, 0.86]],
+      ['tail_02', 'tail_01', [0.0, 0.68, 0.86], [0.0, 0.92, 0.78]],
+      ['front_thigh_L', 'chest', [0.15, -0.38, 0.74], [0.15, -0.38, 0.42]],
+      ['front_shin_L', 'front_thigh_L', [0.15, -0.38, 0.42], [0.15, -0.38, 0.08]],
+      ['front_paw_L', 'front_shin_L', [0.15, -0.38, 0.08], [0.15, -0.5, 0.0]],
+      ['front_thigh_R', 'chest', [-0.15, -0.38, 0.74], [-0.15, -0.38, 0.42]],
+      ['front_shin_R', 'front_thigh_R', [-0.15, -0.38, 0.42], [-0.15, -0.38, 0.08]],
+      ['front_paw_R', 'front_shin_R', [-0.15, -0.38, 0.08], [-0.15, -0.5, 0.0]],
+      ['hind_thigh_L', 'pelvis', [0.15, 0.38, 0.74], [0.15, 0.42, 0.42]],
+      ['hind_shin_L', 'hind_thigh_L', [0.15, 0.42, 0.42], [0.15, 0.38, 0.08]],
+      ['hind_paw_L', 'hind_shin_L', [0.15, 0.38, 0.08], [0.15, 0.24, 0.0]],
+      ['hind_thigh_R', 'pelvis', [-0.15, 0.38, 0.74], [-0.15, 0.42, 0.42]],
+      ['hind_shin_R', 'hind_thigh_R', [-0.15, 0.42, 0.42], [-0.15, 0.38, 0.08]],
+      ['hind_paw_R', 'hind_shin_R', [-0.15, 0.38, 0.08], [-0.15, 0.24, 0.0]],
+    ],
+  },
+};
+
+export interface StudioConfig {
+  targetEngine: TargetEngine;
+  rigPreset: RigPreset;
+  textureResolution: 1024 | 2048 | 4096;
+  uvMargin: number;
+  seamAngleDeg: number;
+  texelDensity: number;
+  shaderPreset: ShaderPreset;
+  outlineThickness: number;
+  normalStrength: number;
+  animEndFrame: number;
+}
+
+export const DEFAULT_STUDIO_CONFIG: StudioConfig = {
+  targetEngine: 'UNITY',
+  rigPreset: 'HUMANOIDE',
+  textureResolution: 2048,
+  uvMargin: 0.02,
+  seamAngleDeg: 66.0,
+  texelDensity: 10.24,
+  shaderPreset: 'PBR_PRINCIPLED',
+  outlineThickness: 0.008,
+  normalStrength: 1.0,
+  animEndFrame: 60,
+};
+
+--- ARQUIVO: C:\Users\studio alex\OneDrive\Documentos\Alexdesign\Alexdesign-main\src\utils\autoRigger.ts ---
+import * as THREE from 'three';
+import { RIG_PRESET_DEFINITIONS, RigPreset } from '../types/studioConfig';
+import { ImportedUvMesh } from '../components/Viewport3D';
+
+function distToSegmentSq(
+  p: THREE.Vector3,
+  a: THREE.Vector3,
+  b: THREE.Vector3,
+  scratchAb: THREE.Vector3,
+  scratchAp: THREE.Vector3
+): number {
+  scratchAb.subVectors(b, a);
+  scratchAp.subVectors(p, a);
+  const abLenSq = scratchAb.lengthSq();
+  if (abLenSq < 1e-8) return scratchAp.lengthSq();
+  const t = THREE.MathUtils.clamp(scratchAp.dot(scratchAb) / abLenSq, 0, 1);
+  scratchAb.multiplyScalar(t).add(a);
+  return p.distanceToSquared(scratchAb);
+}
+
+/**
+ * Generates clean box-projected UV0 coordinates in [0, 1] for any meshes inside `group`
+ * (or repairs missing UVs) and returns extracted UV edge arrays for the 2D UV Inspector.
+ */
+export function autoGenerateUvsForGroup(group: THREE.Object3D): ImportedUvMesh[] {
+  group.updateMatrixWorld(true);
+  const results: ImportedUvMesh[] = [];
+  const meshes: THREE.Mesh[] = [];
+
+  group.traverse((obj) => {
+    if ((obj as THREE.Mesh).isMesh) {
+      const m = obj as THREE.Mesh;
+      // Skip outline helper meshes
+      if (m.material instanceof THREE.MeshBasicMaterial && m.material.side === THREE.BackSide && !m.name) {
+        return;
+      }
+      meshes.push(m);
+    }
+  });
+
+  if (meshes.length === 0) return results;
+
+  // Pack all meshes into an NxN grid of UV tiles inside [0.02, 0.98] so islands never overlap
+  const gridCols = Math.ceil(Math.sqrt(meshes.length));
+  const cellSpan = 1 / gridCols;
+  const pad = cellSpan * 0.06;
+  const innerSpan = Math.max(0.02, cellSpan - pad * 2);
+
+  const pA = new THREE.Vector3();
+  const pB = new THREE.Vector3();
+  const pC = new THREE.Vector3();
+  const e1 = new THREE.Vector3();
+  const e2 = new THREE.Vector3();
+  const fn = new THREE.Vector3();
+
+  meshes.forEach((mesh, meshIdx) => {
+    const geo = mesh.geometry;
+    if (!geo || !geo.attributes.position) return;
+
+    // Convert to non-indexed if indexed so triplanar face projection has zero seam stretching
+    const workingGeo = geo.index ? geo.toNonIndexed() : geo;
+    if (workingGeo !== geo) {
+      mesh.geometry = workingGeo;
+      geo.dispose();
+    }
+
+    const pos = workingGeo.attributes.position;
+    workingGeo.computeBoundingBox();
+    const bbox = workingGeo.boundingBox!;
+    const size = new THREE.Vector3();
+    bbox.getSize(size);
+    const maxDim = Math.max(size.x, size.y, size.z, 1e-4);
+
+    const uvArray = new Float32Array(pos.count * 2);
+    const col = meshIdx % gridCols;
+    const row = Math.floor(meshIdx / gridCols);
+    const tileX = col * cellSpan + pad;
+    const tileY = row * cellSpan + pad;
+
+    const triCount = Math.floor(pos.count / 3);
+    for (let t = 0; t < triCount; t++) {
+      const i0 = t * 3;
+      const i1 = t * 3 + 1;
+      const i2 = t * 3 + 2;
+
+      pA.fromBufferAttribute(pos, i0);
+      pB.fromBufferAttribute(pos, i1);
+      pC.fromBufferAttribute(pos, i2);
+
+      e1.subVectors(pB, pA);
+      e2.subVectors(pC, pA);
+      fn.crossVectors(e1, e2);
+
+      const ax = Math.abs(fn.x);
+      const ay = Math.abs(fn.y);
+      const az = Math.abs(fn.z);
+
+      const verts = [pA, pB, pC];
+      for (let k = 0; k < 3; k++) {
+        const v = verts[k];
+        let uLocal = 0;
+        let vLocal = 0;
+        if (ax >= ay && ax >= az) {
+          uLocal = (v.z - bbox.min.z) / maxDim;
+          vLocal = (v.y - bbox.min.y) / maxDim;
+        } else if (ay >= ax && ay >= az) {
+          uLocal = (v.x - bbox.min.x) / maxDim;
+          vLocal = (v.z - bbox.min.z) / maxDim;
+        } else {
+          uLocal = (v.x - bbox.min.x) / maxDim;
+          vLocal = (v.y - bbox.min.y) / maxDim;
+        }
+        const vi = (t * 3 + k) * 2;
+        uvArray[vi] = tileX + THREE.MathUtils.clamp(uLocal, 0, 1) * innerSpan;
+        uvArray[vi + 1] = tileY + THREE.MathUtils.clamp(vLocal, 0, 1) * innerSpan;
+      }
+    }
+
+    const uvAttr = new THREE.BufferAttribute(uvArray, 2);
+    workingGeo.setAttribute('uv', uvAttr);
+    workingGeo.setAttribute('uv1', uvAttr);
+    workingGeo.setAttribute('uv2', uvAttr);
+    workingGeo.computeVertexNormals();
+
+    const maxEdgesTris = Math.min(triCount, 12000);
+    const edges = new Float32Array(maxEdgesTris * 12);
+    for (let t = 0; t < maxEdgesTris; t++) {
+      const i0 = t * 3;
+      const i1 = t * 3 + 1;
+      const i2 = t * 3 + 2;
+      const o = t * 12;
+      edges[o] = uvAttr.getX(i0);
+      edges[o + 1] = uvAttr.getY(i0);
+      edges[o + 2] = uvAttr.getX(i1);
+      edges[o + 3] = uvAttr.getY(i1);
+      edges[o + 4] = uvAttr.getX(i1);
+      edges[o + 5] = uvAttr.getY(i1);
+      edges[o + 6] = uvAttr.getX(i2);
+      edges[o + 7] = uvAttr.getY(i2);
+      edges[o + 8] = uvAttr.getX(i2);
+      edges[o + 9] = uvAttr.getY(i2);
+      edges[o + 10] = uvAttr.getX(i0);
+      edges[o + 11] = uvAttr.getY(i0);
+    }
+
+    results.push({
+      name: mesh.name || `Malha_${meshIdx + 1}`,
+      uvEdges: edges,
+      triCount,
+    });
+  });
+
+  return results;
+}
+
+function buildClipsForPreset(
+  preset: RigPreset,
+  bonesByName: Map<string, THREE.Bone>
+): THREE.AnimationClip[] {
+  const euler = new THREE.Euler();
+  const q = new THREE.Quaternion();
+
+  const quatTrack = (boneName: string, times: number[], eulers: [number, number, number][]) => {
+    const bone = bonesByName.get(boneName);
+    if (!bone) return null;
+    const baseQ = bone.quaternion.clone();
+    const values: number[] = [];
+    for (const [rx, ry, rz] of eulers) {
+      euler.set(rx, ry, rz, 'XYZ');
+      q.setFromEuler(euler);
+      const combined = baseQ.clone().multiply(q);
+      values.push(combined.x, combined.y, combined.z, combined.w);
+    }
+    return new THREE.QuaternionKeyframeTrack(`${boneName}.quaternion`, times, values);
+  };
+
+  const posTrack = (boneName: string, times: number[], offsets: [number, number, number][]) => {
+    const bone = bonesByName.get(boneName);
+    if (!bone) return null;
+    const baseP = bone.position.clone();
+    const values: number[] = [];
+    for (const [dx, dy, dz] of offsets) {
+      values.push(baseP.x + dx, baseP.y + dy, baseP.z + dz);
+    }
+    return new THREE.VectorKeyframeTrack(`${boneName}.position`, times, values);
+  };
+
+  const compact = (arr: (THREE.KeyframeTrack | null)[]) =>
+    arr.filter((t): t is THREE.KeyframeTrack => t !== null);
+
+  if (preset === 'QUADRUPEDE') {
+    const t5 = [0, 0.625, 1.25, 1.875, 2.5];
+    const idleTracks = compact([
+      posTrack('pelvis', t5, [[0, 0, 0], [0, 0.015, 0], [0, 0, 0], [0, 0.015, 0], [0, 0, 0]]),
+      quatTrack('neck', t5, [[0, 0, 0], [0.07, 0.08, 0], [0, 0, 0], [-0.05, -0.08, 0], [0, 0, 0]]),
+      quatTrack('head', t5, [[0, 0, 0], [0.05, 0.14, 0], [0, 0, 0], [0.05, -0.14, 0], [0, 0, 0]]),
+      quatTrack('tail_01', t5, [[0, -0.25, 0], [0, 0.25, 0], [0, -0.25, 0], [0, 0.25, 0], [0, -0.25, 0]]),
+      quatTrack('tail_02', t5, [[0, -0.3, 0], [0, 0.3, 0], [0, -0.3, 0], [0, 0.3, 0], [0, -0.3, 0]]),
+    ]);
+
+    const walkTracks = compact([
+      posTrack('pelvis', t5, [[0, 0, 0], [0, 0.03, 0], [0, 0, 0], [0, 0.03, 0], [0, 0, 0]]),
+      quatTrack('spine_01', t5, [[0, -0.05, 0], [0, 0.05, 0], [0, -0.05, 0], [0, 0.05, 0], [0, -0.05, 0]]),
+      quatTrack('front_upper_L', t5, [[0.32, 0, 0], [0, 0, 0], [-0.32, 0, 0], [0, 0, 0], [0.32, 0, 0]]),
+      quatTrack('hind_upper_R', t5, [[0.32, 0, 0], [0, 0, 0], [-0.32, 0, 0], [0, 0, 0], [0.32, 0, 0]]),
+      quatTrack('front_upper_R', t5, [[-0.32, 0, 0], [0, 0, 0], [0.32, 0, 0], [0, 0, 0], [-0.32, 0, 0]]),
+      quatTrack('hind_upper_L', t5, [[-0.32, 0, 0], [0, 0, 0], [0.32, 0, 0], [0, 0, 0], [-0.32, 0, 0]]),
+      quatTrack('tail_01', t5, [[0, -0.35, 0], [0, 0.35, 0], [0, -0.35, 0], [0, 0.35, 0], [0, -0.35, 0]]),
+    ]);
+
+    const testTracks = compact([
+      posTrack('pelvis', t5, [[0, 0, 0], [0, 0.04, 0], [0, -0.01, 0], [0, 0.03, 0], [0, 0, 0]]),
+      quatTrack('neck', t5, [[0, 0, 0], [0.18, 0.25, 0], [0, 0, 0], [-0.14, -0.25, 0], [0, 0, 0]]),
+      quatTrack('front_upper_L', t5, [[0, 0, 0], [0.45, 0, 0], [-0.35, 0, 0], [0.2, 0, 0], [0, 0, 0]]),
+      quatTrack('front_upper_R', t5, [[0, 0, 0], [-0.35, 0, 0], [0.45, 0, 0], [-0.2, 0, 0], [0, 0, 0]]),
+      quatTrack('hind_upper_L', t5, [[0, 0, 0], [-0.3, 0, 0], [0.35, 0, 0], [-0.15, 0, 0], [0, 0, 0]]),
+      quatTrack('hind_upper_R', t5, [[0, 0, 0], [0.35, 0, 0], [-0.3, 0, 0], [0.15, 0, 0], [0, 0, 0]]),
+      quatTrack('tail_01', t5, [[0, 0, 0], [0.25, 0.4, 0], [0, 0, 0], [-0.2, -0.4, 0], [0, 0, 0]]),
+    ]);
+
+    return [
+      new THREE.AnimationClip('Walk_Cycle', 2.5, walkTracks),
+      new THREE.AnimationClip('Idle_Breathing', 2.5, idleTracks),
+      new THREE.AnimationClip('Test_Rig_Animation', 2.5, testTracks),
+    ];
+  }
+
+  const t5 = [0, 0.625, 1.25, 1.875, 2.5];
+  const spineBone = bonesByName.has('spine_01') ? 'spine_01' : 'spine';
+
+  const walkTracks = compact([
+    posTrack('pelvis', t5, [[0, 0, 0], [0, 0.025, 0], [0, 0, 0], [0, 0.025, 0], [0, 0, 0]]),
+    quatTrack(spineBone, t5, [[0, -0.07, 0], [0, 0, 0], [0, 0.07, 0], [0, 0, 0], [0, -0.07, 0]]),
+    quatTrack('head', t5, [[0, 0.05, 0], [0.04, 0, 0], [0, -0.05, 0], [0.04, 0, 0], [0, 0.05, 0]]),
+    quatTrack('upper_arm_L', t5, [[0.34, 0, -0.18], [0, 0, -0.18], [-0.34, 0, -0.18], [0, 0, -0.18], [0.34, 0, -0.18]]),
+    quatTrack('forearm_L', t5, [[-0.25, 0, 0], [-0.45, 0, 0], [-0.2, 0, 0], [-0.45, 0, 0], [-0.25, 0, 0]]),
+    quatTrack('upper_arm_R', t5, [[-0.34, 0, 0.18], [0, 0, 0.18], [0.34, 0, 0.18], [0, 0, 0.18], [-0.34, 0, 0.18]]),
+    quatTrack('forearm_R', t5, [[-0.2, 0, 0], [-0.45, 0, 0], [-0.25, 0, 0], [-0.45, 0, 0], [-0.2, 0, 0]]),
+    quatTrack('thigh_L', t5, [[-0.32, 0, 0], [0, 0, 0], [0.32, 0, 0], [0, 0, 0], [-0.32, 0, 0]]),
+    quatTrack('shin_L', t5, [[0.15, 0, 0], [0.42, 0, 0], [0.05, 0, 0], [0.22, 0, 0], [0.15, 0, 0]]),
+    quatTrack('thigh_R', t5, [[0.32, 0, 0], [0, 0, 0], [-0.32, 0, 0], [0, 0, 0], [0.32, 0, 0]]),
+    quatTrack('shin_R', t5, [[0.05, 0, 0], [0.22, 0, 0], [0.15, 0, 0], [0.42, 0, 0], [0.05, 0, 0]]),
+  ]);
+
+  const idleTracks = compact([
+    posTrack('pelvis', t5, [[0, 0, 0], [0, 0.014, 0], [0, 0, 0], [0, 0.014, 0], [0, 0, 0]]),
+    quatTrack('chest', t5, [[0, 0, 0], [0.04, 0, 0], [0, 0, 0], [-0.03, 0, 0], [0, 0, 0]]),
+    quatTrack('head', t5, [[0, 0, 0], [0.04, 0.14, 0], [0, 0, 0], [0.03, -0.14, 0], [0, 0, 0]]),
+    quatTrack('upper_arm_L', t5, [[0.05, 0, -0.15], [0.08, 0, -0.12], [0.05, 0, -0.15], [0.02, 0, -0.17], [0.05, 0, -0.15]]),
+    quatTrack('upper_arm_R', t5, [[0.05, 0, 0.15], [0.02, 0, 0.17], [0.05, 0, 0.15], [0.08, 0, 0.12], [0.05, 0, 0.15]]),
+  ]);
+
+  const testTracks = compact([
+    posTrack('pelvis', t5, [[0, 0, 0], [0, 0.04, 0], [0, -0.02, 0], [0, 0.02, 0], [0, 0, 0]]),
+    quatTrack(spineBone, t5, [[0, 0, 0], [0.08, 0.18, 0], [0, 0, 0], [-0.06, -0.18, 0], [0, 0, 0]]),
+    quatTrack('head', t5, [[0, 0, 0], [0.12, 0.25, 0], [0, 0, 0], [-0.1, -0.25, 0], [0, 0, 0]]),
+    quatTrack('upper_arm_L', t5, [[0, 0, -0.15], [0.45, 0, -0.45], [-0.35, 0, -0.15], [0.2, 0, -0.25], [0, 0, -0.15]]),
+    quatTrack('upper_arm_R', t5, [[0, 0, 0.15], [-0.35, 0, 0.15], [0.45, 0, 0.45], [-0.2, 0, 0.25], [0, 0, 0.15]]),
+    quatTrack('thigh_L', t5, [[0, 0, 0], [-0.35, 0, 0], [0.35, 0, 0], [-0.15, 0, 0], [0, 0, 0]]),
+    quatTrack('thigh_R', t5, [[0, 0, 0], [0.35, 0, 0], [-0.35, 0, 0], [0.15, 0, 0], [0, 0, 0]]),
+  ]);
+
+  return [
+    new THREE.AnimationClip('Walk_Cycle', 2.5, walkTracks),
+    new THREE.AnimationClip('Idle_Breathing', 2.5, idleTracks),
+    new THREE.AnimationClip('Test_Rig_Animation', 2.5, testTracks),
+  ];
+}
+
+export interface AutoRigResult {
+  clips: THREE.AnimationClip[];
+  boneCount: number;
+  armatureRoot: THREE.Group;
+  skinnedMeshes: THREE.SkinnedMesh[];
+}
+
+/**
+ * Automatically builds a real Three.js Skeleton hierarchy matching `preset` fitted to `group`,
+ * computes inverse-distance vertex weights, converts meshes to SkinnedMeshes, and generates
+ * playable AnimationClips compatible with GLTFExporter.
+ */
+export function autoRigAndAnimateGroup(group: THREE.Group, preset: RigPreset): AutoRigResult {
+  const prevArmature = group.getObjectByName('AutoRig_Armature');
+  if (prevArmature) {
+    group.remove(prevArmature);
+  }
+
+  group.updateMatrixWorld(true);
+  const groupInvWorld = group.matrixWorld.clone().invert();
+
+  // Compute bounding box in group-local space
+  const box = new THREE.Box3();
+  const vTmp = new THREE.Vector3();
+  const targetMeshes: THREE.Mesh[] = [];
+
+  group.traverse((obj) => {
+    if ((obj as THREE.Mesh).isMesh) {
+      const m = obj as THREE.Mesh;
+      if (m.material instanceof THREE.MeshBasicMaterial && m.material.side === THREE.BackSide && !m.name) {
+        return;
+      }
+      targetMeshes.push(m);
+      const pos = m.geometry?.attributes?.position;
+      if (pos) {
+        const meshToGroup = new THREE.Matrix4().multiplyMatrices(groupInvWorld, m.matrixWorld);
+        for (let i = 0; i < pos.count; i++) {
+          vTmp.fromBufferAttribute(pos, i).applyMatrix4(meshToGroup);
+          box.expandByPoint(vTmp);
+        }
+      }
+    }
+  });
+
+  if (box.isEmpty()) {
+    box.set(new THREE.Vector3(-0.4, 0, -0.4), new THREE.Vector3(0.4, 1.75, 0.4));
+  }
+
+  const size = new THREE.Vector3();
+  const center = new THREE.Vector3();
+  box.getSize(size);
+  box.getCenter(center);
+
+  const def = RIG_PRESET_DEFINITIONS[preset] || RIG_PRESET_DEFINITIONS.HUMANOIDE;
+
+  // Determine normalized preset bounds in Three.js Y-up space
+  const refBox = new THREE.Box3();
+  const headPositions = new Map<string, THREE.Vector3>();
+  const tailPositions = new Map<string, THREE.Vector3>();
+
+  for (const [bName, , headB, tailB] of def.bones) {
+    const h = new THREE.Vector3(headB[0], headB[2], -headB[1]);
+    const t = new THREE.Vector3(tailB[0], tailB[2], -tailB[1]);
+    refBox.expandByPoint(h);
+    refBox.expandByPoint(t);
+    headPositions.set(bName, h);
+    tailPositions.set(bName, t);
+  }
+
+  const refSize = new THREE.Vector3();
+  const refCenter = new THREE.Vector3();
+  refBox.getSize(refSize);
+  refBox.getCenter(refCenter);
+
+  const scaleX = (size.x || 1) / Math.max(refSize.x, 0.15);
+  const scaleY = (size.y || 1) / Math.max(refSize.y, 0.25);
+  const scaleZ = (size.z || 1) / Math.max(refSize.z, 0.15);
+  const uniformFootprintScale = Math.min(scaleX, scaleZ);
+
+  const mapToGroupSpace = (p: THREE.Vector3) =>
+    new THREE.Vector3(
+      center.x + (p.x - refCenter.x) * uniformFootprintScale,
+      box.min.y + (p.y - refBox.min.y) * scaleY,
+      center.z + (p.z - refCenter.z) * uniformFootprintScale
+    );
+
+  // Build THREE.Bone hierarchy in group-local space
+  const armatureRoot = new THREE.Group();
+  armatureRoot.name = 'AutoRig_Armature';
+  group.add(armatureRoot);
+
+  const bones: THREE.Bone[] = [];
+  const bonesByName = new Map<string, THREE.Bone>();
+  const worldSegments: { index: number; head: THREE.Vector3; tail: THREE.Vector3 }[] = [];
+
+  for (const [bName, parentName] of def.bones) {
+    const hGroup = mapToGroupSpace(headPositions.get(bName)!);
+    const tGroup = mapToGroupSpace(tailPositions.get(bName)!);
+
+    const bone = new THREE.Bone();
+    bone.name = bName;
+
+    const parentBone = parentName ? bonesByName.get(parentName) : undefined;
+    if (parentBone) {
+      const parentHGroup = mapToGroupSpace(headPositions.get(parentName!)!);
+      bone.position.copy(hGroup).sub(parentHGroup);
+      parentBone.add(bone);
+    } else {
+      bone.position.copy(hGroup);
+      armatureRoot.add(bone);
+    }
+
+    worldSegments.push({ index: bones.length, head: hGroup, tail: tGroup });
+    bones.push(bone);
+    bonesByName.set(bName, bone);
+  }
+
+  group.updateMatrixWorld(true);
+  const skeleton = new THREE.Skeleton(bones);
+  skeleton.calculateInverses();
+
+  const skinnedMeshes: THREE.SkinnedMesh[] = [];
+  const scratchAb = new THREE.Vector3();
+  const scratchAp = new THREE.Vector3();
+
+  for (const oldMesh of targetMeshes) {
+    const geo = oldMesh.geometry;
+    if (!geo || !geo.attributes.position) continue;
+
+    // Remove any rigid outline helper child
+    const outlineChildren = oldMesh.children.filter(
+      (c) => (c as THREE.Mesh).isMesh && (c as THREE.Mesh).material instanceof THREE.MeshBasicMaterial
+    );
+    outlineChildren.forEach((c) => oldMesh.remove(c));
+
+    const posAttr = geo.attributes.position;
+    const vertCount = posAttr.count;
+    const skinIndices = new Uint16Array(vertCount * 4);
+    const skinWeights = new Float32Array(vertCount * 4);
+
+    const meshToGroup = new THREE.Matrix4().multiplyMatrices(groupInvWorld, oldMesh.matrixWorld);
+    const bestIdx = new Int32Array(4);
+    const bestW = new Float32Array(4);
+
+    for (let i = 0; i < vertCount; i++) {
+      vTmp.fromBufferAttribute(posAttr, i).applyMatrix4(meshToGroup);
+      bestIdx.fill(0);
+      bestW.fill(0);
+
+      for (let b = 0; b < worldSegments.length; b++) {
+        const seg = worldSegments[b];
+        const dSq = distToSegmentSq(vTmp, seg.head, seg.tail, scratchAb, scratchAp);
+        const w = 1 / Math.pow(dSq + 0.0025, 2.0);
+
+        // Insert into top 4
+        if (w > bestW[3]) {
+          let pos = 3;
+          while (pos > 0 && w > bestW[pos - 1]) {
+            bestW[pos] = bestW[pos - 1];
+            bestIdx[pos] = bestIdx[pos - 1];
+            pos--;
+          }
+          bestW[pos] = w;
+          bestIdx[pos] = seg.index;
+        }
+      }
+
+      const sum = bestW[0] + bestW[1] + bestW[2] + bestW[3] || 1;
+      const o = i * 4;
+      for (let k = 0; k < 4; k++) {
+        skinIndices[o + k] = bestIdx[k];
+        skinWeights[o + k] = bestW[k] / sum;
+      }
+    }
+
+    geo.setAttribute('skinIndex', new THREE.Uint16BufferAttribute(skinIndices, 4));
+    geo.setAttribute('skinWeight', new THREE.Float32BufferAttribute(skinWeights, 4));
+
+    let skinned: THREE.SkinnedMesh;
+    if ((oldMesh as THREE.SkinnedMesh).isSkinnedMesh) {
+      skinned = oldMesh as THREE.SkinnedMesh;
+    } else {
+      skinned = new THREE.SkinnedMesh(geo, oldMesh.material);
+      skinned.name = oldMesh.name;
+      skinned.position.copy(oldMesh.position);
+      skinned.quaternion.copy(oldMesh.quaternion);
+      skinned.scale.copy(oldMesh.scale);
+      skinned.castShadow = oldMesh.castShadow;
+      skinned.receiveShadow = oldMesh.receiveShadow;
+
+      const parent = oldMesh.parent;
+      if (parent) {
+        parent.add(skinned);
+        parent.remove(oldMesh);
+      }
+    }
+
+    skinned.updateMatrixWorld(true);
+    skinned.bind(skeleton, skinned.matrixWorld.clone());
+    skinnedMeshes.push(skinned);
+  }
+
+  const clips = buildClipsForPreset(preset, bonesByName);
+  return {
+    clips,
+    boneCount: bones.length,
+    armatureRoot,
+    skinnedMeshes,
+  };
+}
+
+--- ARQUIVO: C:\Users\studio alex\OneDrive\Documentos\Alexdesign\Alexdesign-main\src\utils\splineSceneObjects.ts ---
+import * as THREE from 'three';
+
+export type PrimitiveShapeKind =
+  | 'cube'
+  | 'sphere'
+  | 'torus'
+  | 'cylinder'
+  | 'cone'
+  | 'capsule'
+  | 'icosahedron'
+  | 'torus_knot'
+  | 'star'
+  | 'hex'
+  | 'ring_bevel'
+  | 'heart';
+
+export type SplineMaterialStyle = 'physical' | 'glass' | 'chrome' | 'clay' | 'neon' | 'ceramic';
+
+export type SplineInteractionType = 'none' | 'spin' | 'float' | 'hover_pulse' | 'click_toggle';
+
+export type SplineTemplateId = 'glass_neon' | 'product_showcase' | 'floating_shapes' | 'character_rig';
+
+export type SplineToolMode =
+  | 'orbit'
+  | 'translate'
+  | 'rotate'
+  | 'scale'
+  | 'paint'
+  | 'assign_mat';
+
+export interface SelectedObjectInspector {
+  id: string;
+  name: string;
+  isPrimitive: boolean;
+  position: [number, number, number];
+  rotationDeg: [number, number, number];
+  scale: [number, number, number];
+  materialStyle: SplineMaterialStyle;
+  color: string;
+  roughness: number;
+  metalness: number;
+  transmission: number;
+  emissiveIntensity: number;
+  interaction: SplineInteractionType;
+  physicsEnabled: boolean;
+}
+
+export interface PrimitiveCatalogItem {
+  kind: PrimitiveShapeKind;
+  label: string;
+  defaultColor: string;
+  category: 'primitive' | 'vector';
+}
+
+export const PRIMITIVE_CATALOG: PrimitiveCatalogItem[] = [
+  { kind: 'cube', label: 'Cubo', defaultColor: '#38BDF8', category: 'primitive' },
+  { kind: 'sphere', label: 'Esfera', defaultColor: '#F97316', category: 'primitive' },
+  { kind: 'torus', label: 'Toro', defaultColor: '#A855F7', category: 'primitive' },
+  { kind: 'cylinder', label: 'Cilindro', defaultColor: '#10B981', category: 'primitive' },
+  { kind: 'cone', label: 'Cone', defaultColor: '#F43F5E', category: 'primitive' },
+  { kind: 'capsule', label: 'Cápsula', defaultColor: '#FACC15', category: 'primitive' },
+  { kind: 'icosahedron', label: 'Cristal', defaultColor: '#06B6D4', category: 'primitive' },
+  { kind: 'torus_knot', label: 'Nó 3D', defaultColor: '#EC4899', category: 'primitive' },
+  { kind: 'star', label: 'Estrela 3D', defaultColor: '#F59E0B', category: 'vector' },
+  { kind: 'hex', label: 'Hexágono', defaultColor: '#6366F1', category: 'vector' },
+  { kind: 'ring_bevel', label: 'Anel Vetor', defaultColor: '#14B8A6', category: 'vector' },
+  { kind: 'heart', label: 'Coração 3D', defaultColor: '#FB7185', category: 'vector' },
+];
+
+export const SPLINE_TEMPLATES: { id: SplineTemplateId; label: string; subtitle: string }[] = [
+  { id: 'glass_neon', label: 'Vidro & Neon', subtitle: 'Nó de vidro refrativo + esferas luminosas' },
+  { id: 'product_showcase', label: 'Vitrine Produto', subtitle: 'Pedestal metálico + forma escultural' },
+  { id: 'floating_shapes', label: 'Formas Flutuantes', subtitle: 'Composição interativa com levitação' },
+  { id: 'character_rig', label: 'Estúdio Personagem', subtitle: 'Ativo articulado com rig e animações' },
+];
+
+export const SPLINE_MATERIAL_STYLES: { id: SplineMaterialStyle; label: string }[] = [
+  { id: 'physical', label: 'Padrão PBR' },
+  { id: 'glass', label: 'Vidro (Glass)' },
+  { id: 'chrome', label: 'Cromado' },
+  { id: 'clay', label: 'Argila Fosca' },
+  { id: 'ceramic', label: 'Cerâmica' },
+  { id: 'neon', label: 'Neon Glow' },
+];
+
+export const SPLINE_INTERACTION_OPTIONS: { id: SplineInteractionType; label: string }[] = [
+  { id: 'none', label: 'Estático' },
+  { id: 'spin', label: 'Girar Contínuo' },
+  { id: 'float', label: 'Flutuar Suave' },
+  { id: 'hover_pulse', label: 'Pulso no Hover' },
+  { id: 'click_toggle', label: 'Alternar no Clique' },
+];
+
+function createStarShape(points = 5, outerR = 0.42, innerR = 0.19): THREE.Shape {
+  const shape = new THREE.Shape();
+  for (let i = 0; i < points * 2; i++) {
+    const r = i % 2 === 0 ? outerR : innerR;
+    const angle = (i / (points * 2)) * Math.PI * 2 - Math.PI / 2;
+    const x = Math.cos(angle) * r;
+    const y = Math.sin(angle) * r;
+    if (i === 0) shape.moveTo(x, y);
+    else shape.lineTo(x, y);
+  }
+  shape.closePath();
+  return shape;
+}
+
+function createPolygonShape(sides: number, radius: number): THREE.Shape {
+  const shape = new THREE.Shape();
+  for (let i = 0; i < sides; i++) {
+    const a = (i / sides) * Math.PI * 2;
+    const x = Math.cos(a) * radius;
+    const y = Math.sin(a) * radius;
+    if (i === 0) shape.moveTo(x, y);
+    else shape.lineTo(x, y);
+  }
+  shape.closePath();
+  return shape;
+}
+
+function createRingBevelShape(outerR = 0.4, innerR = 0.2): THREE.Shape {
+  const shape = new THREE.Shape();
+  shape.absarc(0, 0, outerR, 0, Math.PI * 2, false);
+  const hole = new THREE.Path();
+  hole.absarc(0, 0, innerR, 0, Math.PI * 2, true);
+  shape.holes.push(hole);
+  return shape;
+}
+
+function createHeartShape(): THREE.Shape {
+  const shape = new THREE.Shape();
+  const s = 0.022;
+  shape.moveTo(0, 5 * s);
+  shape.bezierCurveTo(0, 5 * s, -2 * s, 12 * s, -10 * s, 12 * s);
+  shape.bezierCurveTo(-18 * s, 12 * s, -18 * s, 1 * s, -18 * s, 1 * s);
+  shape.bezierCurveTo(-18 * s, -7 * s, -10 * s, -13 * s, 0, -19 * s);
+  shape.bezierCurveTo(10 * s, -13 * s, 18 * s, -7 * s, 18 * s, 1 * s);
+  shape.bezierCurveTo(18 * s, 1 * s, 18 * s, 12 * s, 10 * s, 12 * s);
+  shape.bezierCurveTo(2 * s, 12 * s, 0, 5 * s, 0, 5 * s);
+  return shape;
+}
+
+export function createSplinePrimitiveGeometry(kind: PrimitiveShapeKind): THREE.BufferGeometry {
+  switch (kind) {
+    case 'cube':
+      return new THREE.BoxGeometry(0.65, 0.65, 0.65, 2, 2, 2);
+    case 'sphere':
+      return new THREE.SphereGeometry(0.38, 32, 22);
+    case 'torus':
+      return new THREE.TorusGeometry(0.34, 0.13, 20, 44);
+    case 'cylinder':
+      return new THREE.CylinderGeometry(0.28, 0.28, 0.72, 28);
+    case 'cone':
+      return new THREE.ConeGeometry(0.34, 0.74, 28);
+    case 'capsule':
+      return new THREE.CapsuleGeometry(0.22, 0.42, 12, 24);
+    case 'icosahedron':
+      return new THREE.IcosahedronGeometry(0.4, 0);
+    case 'torus_knot':
+      return new THREE.TorusKnotGeometry(0.28, 0.095, 96, 16);
+    case 'star': {
+      const geo = new THREE.ExtrudeGeometry(createStarShape(), {
+        depth: 0.16,
+        bevelEnabled: true,
+        bevelThickness: 0.04,
+        bevelSize: 0.03,
+        bevelSegments: 3,
+      });
+      geo.center();
+      return geo;
+    }
+    case 'hex': {
+      const geo = new THREE.ExtrudeGeometry(createPolygonShape(6, 0.38), {
+        depth: 0.2,
+        bevelEnabled: true,
+        bevelThickness: 0.045,
+        bevelSize: 0.035,
+        bevelSegments: 3,
+      });
+      geo.center();
+      return geo;
+    }
+    case 'ring_bevel': {
+      const geo = new THREE.ExtrudeGeometry(createRingBevelShape(), {
+        depth: 0.14,
+        bevelEnabled: true,
+        bevelThickness: 0.04,
+        bevelSize: 0.03,
+        bevelSegments: 3,
+        curveSegments: 32,
+      });
+      geo.center();
+      return geo;
+    }
+    case 'heart': {
+      const geo = new THREE.ExtrudeGeometry(createHeartShape(), {
+        depth: 0.14,
+        bevelEnabled: true,
+        bevelThickness: 0.05,
+        bevelSize: 0.04,
+        bevelSegments: 4,
+      });
+      geo.center();
+      return geo;
+    }
+  }
+}
+
+export function getStyleDefaults(style: SplineMaterialStyle): {
+  roughness: number;
+  metalness: number;
+  transmission: number;
+  emissiveIntensity: number;
+  clearcoat: number;
+  ior: number;
+} {
+  switch (style) {
+    case 'glass':
+      return { roughness: 0.08, metalness: 0.0, transmission: 0.9, emissiveIntensity: 0, clearcoat: 0.85, ior: 1.5 };
+    case 'chrome':
+      return { roughness: 0.08, metalness: 1.0, transmission: 0, emissiveIntensity: 0, clearcoat: 0.5, ior: 1.5 };
+    case 'clay':
+      return { roughness: 0.9, metalness: 0.0, transmission: 0, emissiveIntensity: 0, clearcoat: 0, ior: 1.4 };
+    case 'ceramic':
+      return { roughness: 0.16, metalness: 0.02, transmission: 0, emissiveIntensity: 0, clearcoat: 1.0, ior: 1.5 };
+    case 'neon':
+      return { roughness: 0.25, metalness: 0.1, transmission: 0, emissiveIntensity: 1.6, clearcoat: 0.2, ior: 1.45 };
+    case 'physical':
+    default:
+      return { roughness: 0.35, metalness: 0.12, transmission: 0, emissiveIntensity: 0, clearcoat: 0.25, ior: 1.45 };
+  }
+}
+
+export function applySplineStyleToPhysicalMaterial(
+  mat: THREE.MeshPhysicalMaterial,
+  style: SplineMaterialStyle,
+  hexColor: string,
+  overrides?: Partial<{
+    roughness: number;
+    metalness: number;
+    transmission: number;
+    emissiveIntensity: number;
+  }>
+) {
+  const defs = getStyleDefaults(style);
+  const color = new THREE.Color(hexColor);
+  mat.color.copy(color);
+  mat.roughness = overrides?.roughness ?? defs.roughness;
+  mat.metalness = overrides?.metalness ?? defs.metalness;
+  mat.transmission = overrides?.transmission ?? defs.transmission;
+  mat.clearcoat = defs.clearcoat;
+  mat.ior = defs.ior;
+  mat.thickness = mat.transmission > 0.02 ? 0.85 : 0;
+  mat.transparent = mat.transmission > 0.02;
+  mat.opacity = 1;
+  const emissiveVal = overrides?.emissiveIntensity ?? defs.emissiveIntensity;
+  if (emissiveVal > 0.01) {
+    mat.emissive.copy(color);
+    mat.emissiveIntensity = emissiveVal;
+  } else {
+    mat.emissive.setHex(0x000000);
+    mat.emissiveIntensity = 0;
+  }
+  mat.needsUpdate = true;
+}
+
+export interface CodeExportObjectSpec {
+  name: string;
+  kind: PrimitiveShapeKind | 'mesh';
+  position: [number, number, number];
+  rotationDeg: [number, number, number];
+  scale: [number, number, number];
+  color: string;
+  roughness: number;
+  metalness: number;
+  transmission: number;
+  emissiveIntensity: number;
+  interaction: SplineInteractionType;
+}
+
+function geometryExprThree(kind: PrimitiveShapeKind | 'mesh'): string {
+  switch (kind) {
+    case 'cube':
+      return 'new THREE.BoxGeometry(0.65, 0.65, 0.65)';
+    case 'sphere':
+      return 'new THREE.SphereGeometry(0.38, 32, 22)';
+    case 'torus':
+      return 'new THREE.TorusGeometry(0.34, 0.13, 20, 44)';
+    case 'cylinder':
+      return 'new THREE.CylinderGeometry(0.28, 0.28, 0.72, 28)';
+    case 'cone':
+      return 'new THREE.ConeGeometry(0.34, 0.74, 28)';
+    case 'capsule':
+      return 'new THREE.CapsuleGeometry(0.22, 0.42, 12, 24)';
+    case 'icosahedron':
+      return 'new THREE.IcosahedronGeometry(0.4, 0)';
+    case 'torus_knot':
+      return 'new THREE.TorusKnotGeometry(0.28, 0.095, 96, 16)';
+    case 'star':
+    case 'hex':
+    case 'ring_bevel':
+    case 'heart':
+      return 'new THREE.OctahedronGeometry(0.42, 0)';
+    default:
+      return 'new THREE.BoxGeometry(0.65, 0.65, 0.65)';
+  }
+}
+
+export function generateThreeJsSceneCode(
+  objects: CodeExportObjectSpec[],
+  assetName: string | null,
+  bgHex: string
+): string {
+  const safeObjects =
+    objects.length > 0
+      ? objects
+      : [
+          {
+            name: 'Objeto_Principal',
+            kind: 'torus_knot' as const,
+            position: [0, 0.9, 0] as [number, number, number],
+            rotationDeg: [0, 0, 0] as [number, number, number],
+            scale: [1, 1, 1] as [number, number, number],
+            color: '#F97316',
+            roughness: 0.25,
+            metalness: 0.2,
+            transmission: 0,
+            emissiveIntensity: 0,
+            interaction: 'spin' as const,
+          },
+        ];
+
+  const objectBlocks = safeObjects
+    .map((o, idx) => {
+      const varName = `mesh${idx + 1}`;
+      const r = o.rotationDeg.map((d) => ((d * Math.PI) / 180).toFixed(3));
+      const emissiveLine =
+        o.emissiveIntensity > 0.01
+          ? `\n  emissive: '${o.color}',\n  emissiveIntensity: ${o.emissiveIntensity.toFixed(2)},`
+          : '';
+      const transLine =
+        o.transmission > 0.02
+          ? `\n  transmission: ${o.transmission.toFixed(2)},\n  ior: 1.5,\n  thickness: 0.85,`
+          : '';
+      return `// ${o.name} (${o.interaction})
+const ${varName} = new THREE.Mesh(
+  ${geometryExprThree(o.kind)},
+  new THREE.MeshPhysicalMaterial({
+    color: '${o.color}',
+    roughness: ${o.roughness.toFixed(2)},
+    metalness: ${o.metalness.toFixed(2)},${transLine}${emissiveLine}
+  })
+);
+${varName}.position.set(${o.position.map((v) => v.toFixed(3)).join(', ')});
+${varName}.rotation.set(${r.join(', ')});
+${varName}.scale.set(${o.scale.map((v) => v.toFixed(3)).join(', ')});
+${varName}.userData.interaction = '${o.interaction}';
+${varName}.userData.baseY = ${o.position[1].toFixed(3)};
+scene.add(${varName});
+interactiveMeshes.push(${varName});`;
+    })
+    .join('\n\n');
+
+  const glbHint = assetName
+    ? `\n// Para carregar o modelo GLB exportado (${assetName}):\n// new GLTFLoader().load('./${assetName}', (gltf) => scene.add(gltf.scene));\n`
+    : '';
+
+  return `import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color('${bgHex}');
+
+const camera = new THREE.PerspectiveCamera(40, window.innerWidth / window.innerHeight, 0.1, 100);
+camera.position.set(1.85, 1.45, 2.35);
+
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+document.body.appendChild(renderer.domElement);
+
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.target.set(0, 0.9, 0);
+
+const keyLight = new THREE.DirectionalLight(0xfff1e0, 2.3);
+keyLight.position.set(2.6, 4.2, 2.8);
+scene.add(keyLight, new THREE.AmbientLight(0xdbeafe, 0.8));
+
+const interactiveMeshes = [];
+${glbHint}
+${objectBlocks}
+
+const clock = new THREE.Clock();
+function animate() {
+  requestAnimationFrame(animate);
+  const t = clock.getElapsedTime();
+  for (const m of interactiveMeshes) {
+    if (m.userData.interaction === 'spin') m.rotation.y += 0.012;
+    if (m.userData.interaction === 'float') m.position.y = m.userData.baseY + Math.sin(t * 2) * 0.12;
+  }
+  controls.update();
+  renderer.render(scene, camera);
+}
+animate();`;
+}
+
+export function generateReactThreeFiberCode(objects: CodeExportObjectSpec[], bgHex: string): string {
+  const safeObjects =
+    objects.length > 0
+      ? objects
+      : [
+          {
+            name: 'Objeto_Principal',
+            kind: 'torus_knot' as const,
+            position: [0, 0.9, 0] as [number, number, number],
+            rotationDeg: [0, 0, 0] as [number, number, number],
+            scale: [1, 1, 1] as [number, number, number],
+            color: '#F97316',
+            roughness: 0.25,
+            metalness: 0.2,
+            transmission: 0,
+            emissiveIntensity: 0,
+            interaction: 'spin' as const,
+          },
+        ];
+
+  const meshesJsx = safeObjects
+    .map((o) => {
+      const geoTag =
+        o.kind === 'sphere'
+          ? '<sphereGeometry args={[0.38, 32, 22]} />'
+          : o.kind === 'torus'
+          ? '<torusGeometry args={[0.34, 0.13, 20, 44]} />'
+          : o.kind === 'cylinder'
+          ? '<cylinderGeometry args={[0.28, 0.28, 0.72, 28]} />'
+          : o.kind === 'cone'
+          ? '<coneGeometry args={[0.34, 0.74, 28]} />'
+          : o.kind === 'torus_knot'
+          ? '<torusKnotGeometry args={[0.28, 0.095, 96, 16]} />'
+          : '<boxGeometry args={[0.65, 0.65, 0.65]} />';
+      const rot = o.rotationDeg.map((d) => ((d * Math.PI) / 180).toFixed(3)).join(', ');
+      return `      <mesh position={[${o.position.map((v) => v.toFixed(2)).join(', ')}]} rotation={[${rot}]} scale={[${o.scale.map((v) => v.toFixed(2)).join(', ')}]}>
+        ${geoTag}
+        <meshPhysicalMaterial color="${o.color}" roughness={${o.roughness.toFixed(2)}} metalness={${o.metalness.toFixed(2)}} transmission={${o.transmission.toFixed(2)}} />
+      </mesh>`;
+    })
+    .join('\n');
+
+  return `import { Canvas } from '@react-three/fiber';
+import { OrbitControls, Environment } from '@react-three/drei';
+
+export function CenaAlexDesign() {
+  return (
+    <Canvas camera={{ position: [1.85, 1.45, 2.35], fov: 40 }} style={{ background: '${bgHex}' }}>
+      <ambientLight intensity={0.8} />
+      <directionalLight position={[2.6, 4.2, 2.8]} intensity={2.3} />
+      <Environment preset="studio" />
+${meshesJsx}
+      <OrbitControls target={[0, 0.9, 0]} />
+    </Canvas>
+  );
+}`;
+}
+
+--- ARQUIVO: C:\Users\studio alex\OneDrive\Documentos\Alexdesign\Alexdesign-main\src\utils\studioLighting.ts ---
+import * as THREE from 'three';
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+
+export type ToneMappingPreset = 'aces' | 'agx' | 'neutral' | 'none';
+export type StudioLightType = 'dir' | 'point' | 'spot' | 'amb';
+export type HdriEnvironmentId =
+  | 'room'
+  | 'softbox_warm'
+  | 'sunset'
+  | 'daylight'
+  | 'neon'
+  | 'warehouse'
+  | 'royal_esplanade_1k.hdr'
+  | 'venice_sunset_1k.hdr'
+  | 'quarry_01_1k.hdr'
+  | 'pedestrian_overpass_1k.hdr'
+  | 'none'
+  | 'custom';
+
+export type RenderResolutionPreset =
+  | 'view'
+  | '1920x1080'
+  | '2560x1440'
+  | '3840x2160'
+  | '2048x2048';
+
+export interface StudioLightSpec {
+  id: string;
+  name: string;
+  type: StudioLightType;
+  color: string;
+  intensity: number;
+  position: [number, number, number];
+}
+
+export interface HdriPresetMeta {
+  id: HdriEnvironmentId;
+  label: string;
+  subtitle: string;
+  kind: 'procedural' | 'cdn' | 'none';
+  swatches: [string, string, string];
+}
+
+export const HDRI_ENVIRONMENT_OPTIONS: HdriPresetMeta[] = [
+  {
+    id: 'room',
+    label: 'Estúdio Neutro',
+    subtitle: 'Difusores balanceados',
+    kind: 'procedural',
+    swatches: ['#e2e8f0', '#94a3b8', '#1e293b'],
+  },
+  {
+    id: 'softbox_warm',
+    label: 'Softbox Comercial',
+    subtitle: 'Chave quente + recorte frio',
+    kind: 'procedural',
+    swatches: ['#fef3c7', '#f59e0b', '#38bdf8'],
+  },
+  {
+    id: 'sunset',
+    label: 'Pôr do Sol',
+    subtitle: 'Golden hour + horizonte âmbar',
+    kind: 'procedural',
+    swatches: ['#312e81', '#f97316', '#fde68a'],
+  },
+  {
+    id: 'daylight',
+    label: 'Céu Aberto',
+    subtitle: 'Luz solar diurna intensa',
+    kind: 'procedural',
+    swatches: ['#38bdf8', '#e0f2fe', '#fef08a'],
+  },
+  {
+    id: 'neon',
+    label: 'Neon Contraste',
+    subtitle: 'Ciano & magenta especular',
+    kind: 'procedural',
+    swatches: ['#090d16', '#06b6d4', '#ec4899'],
+  },
+  {
+    id: 'warehouse',
+    label: 'Galpão Industrial',
+    subtitle: 'Painéis de teto + vapor sódio',
+    kind: 'procedural',
+    swatches: ['#334155', '#e2e8f0', '#fbbf24'],
+  },
+  {
+    id: 'royal_esplanade_1k.hdr',
+    label: 'Palácio (HDR Web)',
+    subtitle: 'Interior claro equiretangular',
+    kind: 'cdn',
+    swatches: ['#f8fafc', '#cbd5e1', '#64748b'],
+  },
+  {
+    id: 'venice_sunset_1k.hdr',
+    label: 'Veneza (HDR Web)',
+    subtitle: 'Entardecer equiretangular',
+    kind: 'cdn',
+    swatches: ['#4c1d95', '#fb923c', '#fde047'],
+  },
+  {
+    id: 'quarry_01_1k.hdr',
+    label: 'Pedreira (HDR Web)',
+    subtitle: 'Exterior rochoso diurno',
+    kind: 'cdn',
+    swatches: ['#60a5fa', '#d6d3d1', '#78716c'],
+  },
+  {
+    id: 'pedestrian_overpass_1k.hdr',
+    label: 'Passarela (HDR Web)',
+    subtitle: 'Ambiente urbano nublado',
+    kind: 'cdn',
+    swatches: ['#94a3b8', '#475569', '#0f172a'],
+  },
+  {
+    id: 'none',
+    label: 'Sem HDRI',
+    subtitle: 'Apenas luzes diretas da cena',
+    kind: 'none',
+    swatches: ['#0f172a', '#1e293b', '#090d16'],
+  },
+];
+
+export const HDRI_CDN_BASE =
+  'https://cdn.jsdelivr.net/gh/mrdoob/three.js@r160/examples/textures/equirectangular/';
+
+export const TONE_MAPPING_MAP: Record<ToneMappingPreset, THREE.ToneMapping> = {
+  aces: THREE.ACESFilmicToneMapping,
+  agx: THREE.AgXToneMapping,
+  neutral: THREE.NeutralToneMapping ?? THREE.ReinhardToneMapping,
+  none: THREE.NoToneMapping,
+};
+
+function createGradientDomeTexture(topHex: string, horizonHex: string, bottomHex: string): THREE.CanvasTexture {
+  const canvas = document.createElement('canvas');
+  canvas.width = 16;
+  canvas.height = 256;
+  const ctx = canvas.getContext('2d')!;
+  const grad = ctx.createLinearGradient(0, 0, 0, 256);
+  grad.addColorStop(0, topHex);
+  grad.addColorStop(0.5, horizonHex);
+  grad.addColorStop(0.56, bottomHex);
+  grad.addColorStop(1, bottomHex);
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, 16, 256);
+  const tex = new THREE.CanvasTexture(canvas);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  tex.needsUpdate = true;
+  return tex;
+}
+
+export function buildProceduralHdriTexture(
+  id: HdriEnvironmentId,
+  pmremGenerator: THREE.PMREMGenerator
+): THREE.Texture | null {
+  if (id === 'room') {
+    const room = new RoomEnvironment();
+    const tex = pmremGenerator.fromScene(room, 0.04).texture;
+    room.dispose();
+    return tex;
+  }
+
+  const presets: Record<
+    string,
+    {
+      top: string;
+      horizon: string;
+      bottom: string;
+      panels: { color: number; intensity: number; pos: [number, number, number]; scale: [number, number, number]; rotY?: number; rotX?: number }[];
+    }
+  > = {
+    softbox_warm: {
+      top: '#1e293b',
+      horizon: '#334155',
+      bottom: '#0f172a',
+      panels: [
+        { color: 0xfff3d6, intensity: 14, pos: [8, 6, 8], scale: [6, 5, 0.2], rotY: -Math.PI / 4 },
+        { color: 0x7dd3fc, intensity: 9, pos: [-9, 4, -6], scale: [5, 6, 0.2], rotY: (Math.PI * 3) / 4 },
+        { color: 0xffffff, intensity: 10, pos: [0, 12, 0], scale: [7, 7, 0.2], rotX: Math.PI / 2 },
+        { color: 0x94a3b8, intensity: 2.5, pos: [0, -8, 0], scale: [14, 14, 0.2], rotX: Math.PI / 2 },
+      ],
+    },
+    sunset: {
+      top: '#1e1b4b',
+      horizon: '#ea580c',
+      bottom: '#29150b',
+      panels: [
+        { color: 0xfde68a, intensity: 28, pos: [12, 2.5, -6], scale: [3.2, 3.2, 0.2], rotY: -Math.PI / 3 },
+        { color: 0xfb923c, intensity: 8, pos: [8, 1.5, 4], scale: [8, 3.5, 0.2], rotY: -Math.PI / 2 },
+        { color: 0x818cf8, intensity: 4.5, pos: [-8, 6, 7], scale: [9, 6, 0.2], rotY: (Math.PI * 3) / 4 },
+        { color: 0x7c2d12, intensity: 2.0, pos: [0, -8, 0], scale: [14, 14, 0.2], rotX: Math.PI / 2 },
+      ],
+    },
+    daylight: {
+      top: '#2563eb',
+      horizon: '#bae6fd',
+      bottom: '#334155',
+      panels: [
+        { color: 0xfffbeb, intensity: 32, pos: [7, 11, 6], scale: [3.4, 3.4, 0.2], rotX: Math.PI / 3 },
+        { color: 0x93c5fd, intensity: 7, pos: [-8, 7, -7], scale: [10, 6, 0.2], rotY: (Math.PI * 3) / 4 },
+        { color: 0xe0f2fe, intensity: 6, pos: [0, 12, -4], scale: [10, 8, 0.2], rotX: Math.PI / 2 },
+        { color: 0x64748b, intensity: 3.0, pos: [0, -8, 0], scale: [16, 16, 0.2], rotX: Math.PI / 2 },
+      ],
+    },
+    neon: {
+      top: '#090d16',
+      horizon: '#111827',
+      bottom: '#05070c',
+      panels: [
+        { color: 0x06b6d4, intensity: 18, pos: [-8, 3, 6], scale: [1.8, 9, 0.2], rotY: Math.PI / 3 },
+        { color: 0xec4899, intensity: 18, pos: [8, 3.5, -5], scale: [1.8, 9, 0.2], rotY: -Math.PI / 3 },
+        { color: 0xa855f7, intensity: 10, pos: [0, 10, 0], scale: [8, 1.8, 0.2], rotX: Math.PI / 2 },
+        { color: 0xe2e8f0, intensity: 6, pos: [0, 4, 10], scale: [6, 1.2, 0.2] },
+      ],
+    },
+    warehouse: {
+      top: '#1e293b',
+      horizon: '#334155',
+      bottom: '#1c1917',
+      panels: [
+        { color: 0xf1f5f9, intensity: 15, pos: [-5, 11, 0], scale: [1.5, 10, 0.2], rotX: Math.PI / 2 },
+        { color: 0xf1f5f9, intensity: 15, pos: [5, 11, 0], scale: [1.5, 10, 0.2], rotX: Math.PI / 2 },
+        { color: 0xfbbf24, intensity: 12, pos: [0, 6, -10], scale: [3.5, 3.5, 0.2] },
+        { color: 0x94a3b8, intensity: 5, pos: [10, 4, 6], scale: [5, 5, 0.2], rotY: -Math.PI / 2 },
+      ],
+    },
+  };
+
+  const spec = presets[id];
+  if (!spec) return null;
+
+  const envScene = new THREE.Scene();
+  const domeGeo = new THREE.SphereGeometry(28, 24, 16);
+  const domeTex = createGradientDomeTexture(spec.top, spec.horizon, spec.bottom);
+  const domeMat = new THREE.MeshBasicMaterial({ map: domeTex, side: THREE.BackSide });
+  envScene.add(new THREE.Mesh(domeGeo, domeMat));
+
+  const boxGeo = new THREE.BoxGeometry(1, 1, 1);
+  const createdMats: THREE.Material[] = [domeMat];
+  for (const p of spec.panels) {
+    const mat = new THREE.MeshLambertMaterial({
+      color: 0x000000,
+      emissive: p.color,
+      emissiveIntensity: p.intensity,
+    });
+    createdMats.push(mat);
+    const mesh = new THREE.Mesh(boxGeo, mat);
+    mesh.position.set(...p.pos);
+    mesh.scale.set(...p.scale);
+    if (p.rotY) mesh.rotation.y = p.rotY;
+    if (p.rotX) mesh.rotation.x = p.rotX;
+    envScene.add(mesh);
+  }
+
+  const tex = pmremGenerator.fromScene(envScene, 0.04).texture;
+  domeGeo.dispose();
+  boxGeo.dispose();
+  domeTex.dispose();
+  createdMats.forEach((m) => m.dispose());
+  return tex;
+}
+
+export function buildThreeLightFromSpec(
+  spec: StudioLightSpec,
+  castShadow: boolean
+): THREE.Light {
+  let light: THREE.Light;
+  if (spec.type === 'dir') {
+    light = new THREE.DirectionalLight(spec.color, spec.intensity);
+  } else if (spec.type === 'point') {
+    light = new THREE.PointLight(spec.color, spec.intensity);
+  } else if (spec.type === 'spot') {
+    light = new THREE.SpotLight(spec.color, spec.intensity, 0, 0.52, 0.4);
+  } else {
+    light = new THREE.AmbientLight(spec.color, spec.intensity);
+  }
+
+  light.name = spec.name;
+  if (spec.type !== 'amb') {
+    light.position.set(...spec.position);
+    light.castShadow = castShadow;
+    const shadowLight = light as THREE.DirectionalLight | THREE.PointLight | THREE.SpotLight;
+    if (shadowLight.shadow) {
+      shadowLight.shadow.mapSize.set(1024, 1024);
+      shadowLight.shadow.bias = -0.0005;
+    }
+  }
+  return light;
+}
+
+export function renderSceneToPngBlob(options: {
+  renderer: THREE.WebGLRenderer;
+  scene: THREE.Scene;
+  camera: THREE.PerspectiveCamera;
+  container: HTMLElement;
+  resolution: RenderResolutionPreset;
+  transparentBg: boolean;
+  hideObjects?: THREE.Object3D[];
+}): Promise<Blob | null> {
+  const {
+    renderer,
+    scene,
+    camera,
+    container,
+    resolution,
+    transparentBg,
+    hideObjects = [],
+  } = options;
+
+  const cw = Math.max(1, container.clientWidth);
+  const ch = Math.max(1, container.clientHeight);
+  const [targetW, targetH] =
+    resolution === 'view' ? [cw, ch] : resolution.split('x').map(Number);
+
+  const prevPixelRatio = renderer.getPixelRatio();
+  const prevAspect = camera.aspect;
+  const prevBg = scene.background;
+  const prevFog = scene.fog;
+  const prevClearAlpha = renderer.getClearAlpha();
+  const prevVis = hideObjects.map((o) => o.visible);
+
+  hideObjects.forEach((o) => {
+    o.visible = false;
+  });
+
+  if (transparentBg) {
+    scene.background = null;
+    scene.fog = null;
+    renderer.setClearAlpha(0);
+  }
+
+  renderer.setPixelRatio(1);
+  renderer.setSize(targetW, targetH, false);
+  camera.aspect = targetW / targetH;
+  camera.updateProjectionMatrix();
+  renderer.render(scene, camera);
+
+  return new Promise((resolve) => {
+    renderer.domElement.toBlob((blob) => {
+      renderer.setPixelRatio(prevPixelRatio);
+      renderer.setSize(cw, ch, false);
+      camera.aspect = prevAspect;
+      camera.updateProjectionMatrix();
+      scene.background = prevBg;
+      scene.fog = prevFog;
+      renderer.setClearAlpha(prevClearAlpha);
+      hideObjects.forEach((o, idx) => {
+        o.visible = prevVis[idx];
+      });
+      renderer.render(scene, camera);
+      resolve(blob);
+    }, 'image/png');
+  });
+}

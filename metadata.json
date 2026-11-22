@@ -1,0 +1,6 @@
+{
+  "name": "AlexDesign — Estúdio Web 3D PBR, UV, HDRI, Rigging & GLB/glTF",
+  "description": "Importe e edite modelos 3D GLB/glTF em tempo real com UV automático, materiais PBR separados, iluminação HDRI, rigging, animação e exportação direta no navegador.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

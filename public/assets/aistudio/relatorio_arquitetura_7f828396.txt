@@ -1,0 +1,183 @@
+=== AUDITORIA DE LOGICA, ROTAS E DUPLICIDADES ===
+Data: 16/11/2026 00:38:35
+
+--- 1. ESTRUTURA E TAMANHO DOS ARQUIVOS (TOP MAIS PESADOS) ---
+
+Linhas Arquivo                                  
+------ -------                                  
+  5549 src\components\Viewport3D.tsx            
+  1468 src\addon\blenderAddonTemplates.ts       
+   801 src\utils\substanceImporter.ts           
+   571 src\utils\gltfVerifier.ts                
+   560 src\components\AtlasUvInspector.tsx      
+   558 src\components\SplineDesignPanel.tsx     
+   492 src\components\SubstanceImporterPanel.tsx
+   479 src\utils\autoRigger.ts                  
+   463 src\utils\splineSceneObjects.ts          
+   443 src\utils\pbrTextureGenerator.ts         
+   397 src\components\PbrAtlasPanel.tsx         
+   361 src\components\FileVerificationModal.tsx 
+   354 src\utils\studioLighting.ts              
+   327 src\utils\csgBoolean.ts                  
+   306 src\components\AddonCodeStudio.tsx       
+   253 src\utils\projectZipExporter.ts          
+   207 src\components\LightingRenderPanel.tsx   
+   204 src\components\HdriEnvironmentPanel.tsx  
+   173 src\components\MeshHierarchyDrawer.tsx   
+   155 src\App.tsx                              
+   132 src\types\studioConfig.ts                
+   118 src\components\PipelineGuide.tsx         
+    91 src\components\SplineCodeExportModal.tsx 
+    31 src\addon\zipBuilder.ts                  
+    25 src\components\MaterialEcosystemView.tsx 
+     5 src\main.tsx                             
+
+
+
+--- 2. POSSIVEIS DUPLICIDADES DE FUNCOES/COMPONENTES ---
+[DUPLICADO] 'TargetEngine' aparece 2 vezes:
+   -> src\addon\blenderAddonTemplates.ts:1
+   -> src\types\studioConfig.ts:1
+[DUPLICADO] 'ShaderPreset' aparece 2 vezes:
+   -> src\addon\blenderAddonTemplates.ts:2
+   -> src\types\studioConfig.ts:2
+[DUPLICADO] 'RigPreset' aparece 2 vezes:
+   -> src\addon\blenderAddonTemplates.ts:4
+   -> src\types\studioConfig.ts:3
+[DUPLICADO] 'BoneTuple' aparece 2 vezes:
+   -> src\addon\blenderAddonTemplates.ts:6
+   -> src\types\studioConfig.ts:5
+[DUPLICADO] 'RigPresetDefinition' aparece 2 vezes:
+   -> src\addon\blenderAddonTemplates.ts:13
+   -> src\types\studioConfig.ts:12
+[DUPLICADO] 'RIG_PRESET_DEFINITIONS' aparece 2 vezes:
+   -> src\addon\blenderAddonTemplates.ts:22
+   -> src\types\studioConfig.ts:21
+
+--- 3. MAPA DE INTERACOES E ACOES DA UI (onClick / Handlers) ---
+src\components\AddonCodeStudio.tsx:32 -> const handleCopy = async () => {
+src\components\AddonCodeStudio.tsx:238 -> onClick={onDownloadZip}
+src\components\AddonCodeStudio.tsx:257 -> onClick={() => setActiveFilename(file.filename)}
+src\components\AddonCodeStudio.tsx:272 -> onClick={handleCopy}
+src\components\AtlasUvInspector.tsx:289 -> const handleImportTexture = (file: File) => {
+src\components\AtlasUvInspector.tsx:301 -> const handleExportPng = () => {
+src\components\AtlasUvInspector.tsx:376 -> onClick={onGenerateAutoUv}
+src\components\AtlasUvInspector.tsx:387 -> onClick={onGenerateAutoUv}
+src\components\AtlasUvInspector.tsx:460 -> onClick={() => setSelectedImportedIdx('all')}
+src\components\AtlasUvInspector.tsx:473 -> onClick={() => setSelectedImportedIdx(idx)}
+src\components\AtlasUvInspector.tsx:496 -> onClick={() => setSelectedLayer(layer.id)}
+src\components\AtlasUvInspector.tsx:521 -> onClick={() => textureInputRef.current?.click()}
+src\components\AtlasUvInspector.tsx:530 -> onClick={() => setCustomTexture(null)}
+src\components\AtlasUvInspector.tsx:539 -> onClick={handleExportPng}
+src\components\FileVerificationModal.tsx:58 -> const handleVerifyExternalFiles = async (files: FileList | null) => {
+src\components\FileVerificationModal.tsx:74 -> const handleDownloadJsonReport = () => {
+src\components\FileVerificationModal.tsx:133 -> onClick={() => verifyInputRef.current?.click()}
+src\components\FileVerificationModal.tsx:142 -> onClick={onVerifyCurrentScene}
+src\components\FileVerificationModal.tsx:150 -> onClick={handleDownloadJsonReport}
+src\components\FileVerificationModal.tsx:159 -> onClick={onClose}
+src\components\HdriEnvironmentPanel.tsx:50 -> onClick={() => setExpanded((v) => !v)}
+src\components\HdriEnvironmentPanel.tsx:82 -> onClick={() => onSelectHdri(opt.id)}
+src\components\HdriEnvironmentPanel.tsx:128 -> onClick={onUploadHdriClick}
+src\components\LightingRenderPanel.tsx:59 -> onClick={onApplyThreePointPreset}
+src\components\LightingRenderPanel.tsx:84 -> onClick={onAddLight}
+src\components\LightingRenderPanel.tsx:122 -> onClick={() => onRemoveLight(light.id)}
+src\components\LightingRenderPanel.tsx:198 -> onClick={onRenderPng}
+src\components\MeshHierarchyDrawer.tsx:60 -> onClick={onShowAllMeshes}
+src\components\MeshHierarchyDrawer.tsx:68 -> onClick={onClose}
+src\components\MeshHierarchyDrawer.tsx:81 -> onClick={() => onSelectMesh(null)}
+src\components\MeshHierarchyDrawer.tsx:99 -> onClick={() => onSelectMesh(item.id)}
+src\components\MeshHierarchyDrawer.tsx:120 -> onClick={(e) => {
+src\components\MeshHierarchyDrawer.tsx:132 -> onClick={(e) => {
+src\components\PbrAtlasPanel.tsx:212 -> const handleImportTexture = (file: File) => {
+src\components\PbrAtlasPanel.tsx:224 -> const handleExportPng = () => {
+src\components\PbrAtlasPanel.tsx:259 -> onClick={() => setOverlayUvOnAtlas((v) => !v)}
+src\components\PbrAtlasPanel.tsx:271 -> onClick={() => textureInputRef.current?.click()}
+src\components\PbrAtlasPanel.tsx:280 -> onClick={() => setCustomTexture(null)}
+src\components\PbrAtlasPanel.tsx:289 -> onClick={handleExportPng}
+src\components\PbrAtlasPanel.tsx:310 -> onClick={() => setSelectedImportedIdx('all')}
+src\components\PbrAtlasPanel.tsx:323 -> onClick={() => setSelectedImportedIdx(idx)}
+src\components\PbrAtlasPanel.tsx:339 -> onClick={() => setSelectedIsland('all')}
+src\components\PbrAtlasPanel.tsx:352 -> onClick={() => setSelectedIsland(isl.part)}
+src\components\PbrAtlasPanel.tsx:380 -> onClick={() => setChannel(tab.id)}
+src\components\SplineCodeExportModal.tsx:24 -> const handleCopy = async () => {
+src\components\SplineCodeExportModal.tsx:46 -> onClick={() => setTab('react')}
+src\components\SplineCodeExportModal.tsx:55 -> onClick={() => setTab('three')}
+src\components\SplineCodeExportModal.tsx:67 -> onClick={handleCopy}
+src\components\SplineCodeExportModal.tsx:75 -> onClick={onClose}
+src\components\SplineDesignPanel.tsx:113 -> onClick={() => setExpanded((v) => !v)}
+src\components\SplineDesignPanel.tsx:142 -> onClick={() => onTogglePlayMode(false)}
+src\components\SplineDesignPanel.tsx:152 -> onClick={() => onTogglePlayMode(true)}
+src\components\SplineDesignPanel.tsx:183 -> onClick={() => onApplyTemplate(activeTemplate)}
+src\components\SplineDesignPanel.tsx:198 -> onClick={onToggleHideDefaultBase}
+src\components\SplineDesignPanel.tsx:221 -> onClick={() => onSelectToolMode(id)}
+src\components\SplineDesignPanel.tsx:245 -> onClick={() => setShapeFilter('primitive')}
+src\components\SplineDesignPanel.tsx:254 -> onClick={() => setShapeFilter('vector')}
+src\components\SplineDesignPanel.tsx:268 -> onClick={() => onAddPrimitive(item.kind)}
+src\components\SplineDesignPanel.tsx:289 -> onClick={() => onRunBoolean('union')}
+src\components\SplineDesignPanel.tsx:296 -> onClick={() => onRunBoolean('subtract')}
+src\components\SplineDesignPanel.tsx:303 -> onClick={() => onRunBoolean('intersect')}
+src\components\SplineDesignPanel.tsx:316 -> onClick={onTogglePhysicsActive}
+src\components\SplineDesignPanel.tsx:327 -> onClick={onToggleBloom}
+src\components\SplineDesignPanel.tsx:367 -> onClick={onFocusSelected}
+src\components\SplineDesignPanel.tsx:377 -> onClick={onDuplicateSelected}
+src\components\SplineDesignPanel.tsx:385 -> onClick={onDeleteSelected}
+src\components\SplineDesignPanel.tsx:444 -> onClick={onUploadVideoTexture}
+src\components\SubstanceImporterPanel.tsx:67 -> const handleBulkFiles = async (files: FileList | File[]) => {
+src\components\SubstanceImporterPanel.tsx:84 -> const handleSingleSlotUpload = async (channel: SubstanceChannelId, file: File) => {
+src\components\SubstanceImporterPanel.tsx:105 -> const handleClearSlot = (channel: SubstanceChannelId) => {
+src\components\SubstanceImporterPanel.tsx:113 -> const handleResetAll = () => {
+src\components\SubstanceImporterPanel.tsx:123 -> const handleApplyToViewport = () => {
+src\components\SubstanceImporterPanel.tsx:128 -> const handleExportBlenderZip = async () => {
+src\components\SubstanceImporterPanel.tsx:149 -> const handleDownloadBlenderAddon = () => {
+src\components\SubstanceImporterPanel.tsx:182 -> onClick={() => setMode('auto')}
+src\components\SubstanceImporterPanel.tsx:191 -> onClick={() => setMode('manual')}
+src\components\SubstanceImporterPanel.tsx:202 -> onClick={handleDownloadBlenderAddon}
+src\components\SubstanceImporterPanel.tsx:231 -> onClick={() => multiInputRef.current?.click()}
+src\components\SubstanceImporterPanel.tsx:249 -> onClick={() => folderInputRef.current?.click()}
+src\components\SubstanceImporterPanel.tsx:325 -> onClick={handleApplyToViewport}
+src\components\SubstanceImporterPanel.tsx:335 -> onClick={handleResetAll}
+src\components\SubstanceImporterPanel.tsx:346 -> onClick={handleExportBlenderZip}
+src\components\SubstanceImporterPanel.tsx:378 -> onClick={() => handleClearSlot(ch.id)}
+src\components\SubstanceImporterPanel.tsx:407 -> onClick={() => {
+src\components\Viewport3D.tsx:4140 -> const handleResize = () => {
+src\components\Viewport3D.tsx:4346 -> const handleSelectPreset = (preset: CameraPreset) => {
+src\components\Viewport3D.tsx:4352 -> const handleScrubFrame = (frame: number) => {
+src\components\Viewport3D.tsx:4474 -> onClick={() => setDockExpanded(false)}
+src\components\Viewport3D.tsx:4522 -> onClick={() => toggleSection('file')}
+src\components\Viewport3D.tsx:4549 -> onClick={() => fileInputRef.current?.click()}
+src\components\Viewport3D.tsx:4560 -> onClick={() => setShowMeshDrawer((v) => !v)}
+src\components\Viewport3D.tsx:4581 -> onClick={() => verifyCurrentSceneRef.current?.()}
+src\components\Viewport3D.tsx:4600 -> onClick={() => exportZipRef.current?.()}
+src\components\Viewport3D.tsx:4611 -> onClick={() => exportModelRef.current?.('glb')}
+src\components\Viewport3D.tsx:4620 -> onClick={() => exportModelRef.current?.('gltf')}
+src\components\Viewport3D.tsx:4629 -> onClick={() => openCodeExportRef.current?.()}
+src\components\Viewport3D.tsx:4645 -> onClick={() => toggleSection('view')}
+src\components\Viewport3D.tsx:4715 -> onClick={() => frameSceneRef.current?.()}
+src\components\Viewport3D.tsx:4724 -> onClick={() => handleSelectPreset('q34')}
+src\components\Viewport3D.tsx:4741 -> onClick={() => toggleSection('anim')}
+src\components\Viewport3D.tsx:4787 -> onClick={() => setIsPlaying((p) => !p)}
+src\components\Viewport3D.tsx:4821 -> onClick={() => toggleSection('rig')}
+src\components\Viewport3D.tsx:4872 -> onClick={() => setShowSkeleton((s) => !s)}
+src\components\Viewport3D.tsx:4886 -> onClick={() => generateRigAndAnimRef.current?.()}
+src\components\Viewport3D.tsx:4896 -> onClick={() => generateAutoUvRef.current?.()}
+src\components\Viewport3D.tsx:4911 -> onClick={() => toggleSection('tools')}
+src\components\Viewport3D.tsx:4938 -> onClick={() => setDoubleSided((v) => !v)}
+src\components\Viewport3D.tsx:4949 -> onClick={() => setWireframeMode((v) => !v)}
+src\components\Viewport3D.tsx:4960 -> onClick={() => setShowGrid((v) => !v)}
+src\components\Viewport3D.tsx:4975 -> onClick={() => setShowLightingPanel((v) => !v)}
+src\components\Viewport3D.tsx:5065 -> onClick={() => {
+src\components\Viewport3D.tsx:5094 -> onClick={() => setToolMode('orbit')}
+src\components\Viewport3D.tsx:5104 -> onClick={() => setToolMode('assign_mat')}
+src\components\Viewport3D.tsx:5116 -> onClick={() => setToolMode('paint')}
+src\components\Viewport3D.tsx:5132 -> onClick={() => undoPaintRef.current?.()}
+src\components\Viewport3D.tsx:5141 -> onClick={() => clearPaintTexturesRef.current?.()}
+src\components\Viewport3D.tsx:5151 -> onClick={() => textureFileInputRef.current?.click()}
+src\components\Viewport3D.tsx:5176 -> onClick={() => {
+src\components\Viewport3D.tsx:5198 -> onClick={() => applyMaterialToAllRef.current?.()}
+src\components\Viewport3D.tsx:5214 -> onClick={() => {
+src\components\Viewport3D.tsx:5260 -> onClick={() => applyProceduralBundleRef.current?.(pr.defaultParams)}
+src\components\Viewport3D.tsx:5286 -> onClick={() => {
+src\components\Viewport3D.tsx:5309 -> onClick={() => toggleSection('pbr')}
+src\components\Viewport3D.tsx:5435 -> onClick={() => setRetryWebglNonce((n) => n + 1)}
+src\components\Viewport3D.tsx:5467 -> onClick={() => setDockExpanded(true)}
+src\components\Viewport3D.tsx:5494 -> onClick={() => resetAssetRef.current?.()}

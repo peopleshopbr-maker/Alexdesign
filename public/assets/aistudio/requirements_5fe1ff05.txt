@@ -1,0 +1,2 @@
+# Dependência opcional apenas para o subcomando `check-render` (análise de pixels PNG)
+Pillow>=10.0.0
