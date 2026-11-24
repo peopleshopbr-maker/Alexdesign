@@ -1,6 +1,0 @@
-{
-  "name": "PBR AutoPipeline — Blender 5.3 Addon Studio",
-  "description": "Estúdio de geração, configuração e visualização 3D PBR/UV para addon Blender 5.3 de automação de mapeamento UV, shading PBR/Toon, texturização em atlas e rigging com animação de teste.",
-  "requestFramePermissions": [],
-  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
-}
